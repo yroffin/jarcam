@@ -1,0 +1,6 @@
+<button mat-button [matMenuTriggerFor]="appMenu">Click me!</button>
+
+<mat-menu #appMenu="matMenu">
+  <button mat-menu-item routerLink="/stl-view">Stl</button>
+</mat-menu>
+<router-outlet></router-outlet>
