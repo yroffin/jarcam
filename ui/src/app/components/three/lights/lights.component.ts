@@ -9,8 +9,8 @@ import { Directive } from '@angular/core';
 })
 export class LightsComponent implements OnInit {
 
-  @Input() color: string = '#FFFF00';
-  @Input() position: number[] = [0, 250, 0];
+  @Input() color: string = '#FFFFFF';
+  @Input() position: number[] = [250, 250, 0];
 
   object: THREE.PointLight;
 

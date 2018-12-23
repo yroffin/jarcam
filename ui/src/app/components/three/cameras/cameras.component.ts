@@ -10,7 +10,7 @@ export class CamerasComponent implements OnInit {
 
   @Input() height: number;
   @Input() width: number;
-  @Input() positions = [0, 0, 0];
+  @Input() public positions = [0, 0, 0];
 
   viewAngle: number = 75;
   near: number = 0.1;
@@ -32,6 +32,8 @@ export class CamerasComponent implements OnInit {
       this.positions[0],
       this.positions[1],
       this.positions[2]);
+
+      this.updateAspect(this.width / this.height);
   }
 
   ngOnChanges(changes) {

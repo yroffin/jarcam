@@ -19,11 +19,11 @@ export class StlViewComponent implements OnInit, OnChanges, AfterContentInit {
   constructor() { }
 
   ngOnInit() {
-    this.resetWidthHeight();
   }
 
   ngAfterContentInit() {
     this.rendererComponent.load('/assets/sittingMeerkat_L.stl');
+    this.resetWidthHeight();
   }
 
   ngOnChanges(changes) {
