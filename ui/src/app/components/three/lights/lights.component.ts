@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterContentInit } from '@angular/core';
 import { Input } from '@angular/core';
 
 import * as THREE from 'three';
@@ -7,26 +7,35 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: 'three-point-light'
 })
-export class LightsComponent implements OnInit {
+export class LightsComponent implements OnInit, AfterContentInit {
 
-  @Input() color: string = '#FFFFFF';
-  @Input() position: number[] = [250, 250, 250];
+  @Input() color: number = 0xffffff;
+  @Input() position: number[];
 
-  object: THREE.DirectionalLight;
+  public light: THREE.PointLight;
+  public helper: THREE.PointLightHelper;
+
+  constructor() {
+  }
 
   ngOnInit() {
-    this.object = new THREE.DirectionalLight(this.color);
+    this.light = new THREE.PointLight(this.color, 1, 1000);
     this.setPosition(this.position);
+    this.helper = new THREE.PointLightHelper( this.light, 10, 0xff0000 );
+  }
+
+  ngAfterContentInit() {
   }
 
   ngOnChanges(changes) {
-    if(changes.position && changes.position.currentValue) {
+    if (this.light && changes.position && changes.position.currentValue) {
       this.setPosition(this.position);
     }
   }
 
   setPosition(position) {
-    this.object.position.set(
+    console.log('pisition', position);
+    this.light.position.set(
       position[0],
       position[1],
       position[2]);

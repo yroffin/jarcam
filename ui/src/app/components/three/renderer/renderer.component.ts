@@ -53,6 +53,7 @@ export class RendererComponent {
       antialias: true,
       alpha: true
     });
+    this.renderer.shadowMap.enabled = true;
 
     this.gui = new dat.GUI({
       width: 400,

@@ -26,10 +26,9 @@
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26",
-    "three": "^0.80.1",
+    "three": "~0.99.0",
     "@types/three": "~0.93.13",
     "three-orbit-controls": "~82.1.0",
-    "three-stl-loader": "~1.0.6",
     "dat.gui": "~0.7.3"
   },
   "devDependencies": {

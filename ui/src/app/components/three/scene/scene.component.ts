@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Directive, ElementRef, Input, ContentChild, ContentChildren } from '@angular/core';
+import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
 
 import * as THREE from 'three';
 
@@ -21,10 +21,14 @@ export class SceneComponent implements OnInit {
   constructor() {
     this.scene = new THREE.Scene();
     this.scene.add(new THREE.GridHelper(500, 50));
+
+
+    this.scene.background = new THREE.Color().setHSL( 0.6, 0, 1 );
+    this.scene.fog = new THREE.Fog(0xffffff, 1, 5000);
   }
 
   @ContentChild(CamerasComponent) cameraComp: CamerasComponent;
-  @ContentChildren(LightsComponent) lightComps: LightsComponent;
+  @ContentChild(LightsComponent) lightComps: LightsComponent;
 
   ngOnInit() {
   }
@@ -36,6 +40,8 @@ export class SceneComponent implements OnInit {
   ngAfterContentInit() {
     this.camera.lookAt(this.scene.position);
     this.scene.add(this.camera);
+    this.scene.add(this.lightComps.light);
+    this.scene.add(this.lightComps.helper);
 
     const meshes = [
     ];
@@ -49,12 +55,23 @@ export class SceneComponent implements OnInit {
     }
   }
 
-  setGeometryPiece(geometry: THREE.BufferGeometry) {
-    let material = new THREE.MeshPhysicalMaterial({
-      lights: false,
-      transparent: false,
+  setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
+    // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
+    class MeshToonMaterial extends THREE.MeshPhongMaterial{
+      public isMeshToonMaterial(): boolean {
+        return true;
+      }
+    }
+
+    let geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
+    geometry.computeVertexNormals();
+
+    let material = new MeshToonMaterial({
+      lights: true,
+      transparent: true,
       opacity: 0.5,
     });
+
     let m = new THREE.Matrix4()
 
     m = m.premultiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
@@ -75,6 +92,10 @@ export class SceneComponent implements OnInit {
     }())
 
     this.mesh = new THREE.Mesh(geometry, material);
+    this.mesh.name ='piece';
+    this.mesh.receiveShadow = true;
+    this.mesh.castShadow = true;
+
     console.log('setPiece', this.mesh);
     this.scene.add(this.mesh);
   }
@@ -85,9 +106,8 @@ export class SceneComponent implements OnInit {
 
   normals(enable: boolean) {
     if (!this.helper) {
-      let geometry = new THREE.Geometry().fromBufferGeometry(<THREE.BufferGeometry>this.mesh.geometry);
       let material = new THREE.MeshNormalMaterial();
-      this.normal = new THREE.Mesh(geometry, material);
+      this.normal = new THREE.Mesh(this.mesh.geometry, material);
       this.helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
       this.scene.add(this.helper);
     }
