@@ -34,11 +34,11 @@ export class RendererComponent {
     points: false,
 
     camera: {
-      position: {x: 0, y: 0, z: 0},
+      position: { x: 0, y: 0, z: 0 },
     },
 
-    rotation: {x: 0, y: 0, z: 0},
-    scale: {x: 1, y: 1, z: 1},
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
 
     // internal
     epsilon: 1e-10, // in mm,
@@ -59,12 +59,21 @@ export class RendererComponent {
 
 
     let target = this;
-    let onCameraChange = function() {
+    let onCameraChange = function () {
       target.camera.position.x = this.object.x;
       target.camera.position.y = this.object.y;
       target.camera.position.z = this.object.z;
     }
-  
+
+    let updateDebugVisibility = function () {
+      // activate normals
+      target.scene.normals(this.object.normals);
+      // activate wireframe
+      target.scene.wireframe(this.object.wireframe);
+      // activate axis
+      target.scene.axis(this.object.axesHelper);
+    }
+
     let cameras = this.gui.addFolder('Camera')
     let camera = cameras.addFolder('Position')
     let xp = camera.add(this.options.camera.position, 'x', -500, 500).onChange(onCameraChange);
@@ -81,14 +90,19 @@ export class RendererComponent {
     scale.add(this.options.scale, 'x').onChange(this.onObjectLoaded);
     scale.add(this.options.scale, 'y').onChange(this.onObjectLoaded);
     scale.add(this.options.scale, 'z').onChange(this.onObjectLoaded);
+
+    let debug = this.gui.addFolder('Debugging Options')
+    debug.add(this.options, 'axesHelper').onChange(updateDebugVisibility)
+    debug.add(this.options, 'wireframe').onChange(updateDebugVisibility)
+    debug.add(this.options, 'normals').onChange(updateDebugVisibility)
   }
 
   load(url: string) {
     this.stlLoaderService.loadStl(
       this.sceneComp.scene,
       url,
-      () => {
-        console.log('loaded', url);
+      (geometry: THREE.BufferGeometry) => {
+        this.scene.setGeometryPiece(geometry)
       },
       () => {
       },
@@ -97,7 +111,7 @@ export class RendererComponent {
   }
 
   get scene() {
-    return this.sceneComp.scene;
+    return this.sceneComp;
   }
 
   get camera() {
@@ -130,11 +144,11 @@ export class RendererComponent {
 
   render() {
     if (this.orbitComponent) {
-      this.orbitComponent.updateControls(this.scene, this.camera);
+      this.orbitComponent.updateControls(this.scene.scene, this.camera);
     }
 
-    this.camera.lookAt(this.scene.position);
-    this.renderer.render(this.scene, this.camera);
+    this.camera.lookAt(this.scene.scene.position);
+    this.renderer.render(this.scene.scene, this.camera);
 
     this.options.camera.position.x = this.camera.position.x;
     this.options.camera.position.y = this.camera.position.y;

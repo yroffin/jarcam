@@ -42,12 +42,9 @@ export class StlLoaderService {
   constructor() {
   }
 
-  public loadStl(scene: THREE.Scene, url, onLoadStl, onProgress, onError) {
+  public loadStl(scene: THREE.Scene, url, onLoadStl: (geometry: THREE.BufferGeometry) => void, onProgress, onError) {
     this.load(url, (geometry) => {
-      let material = new THREE.MeshNormalMaterial();
-      let mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh)
-      onLoadStl(scene);
+      onLoadStl(geometry);
     })
   }
 
