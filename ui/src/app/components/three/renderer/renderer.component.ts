@@ -28,10 +28,13 @@ export class RendererComponent {
     nozzleSize: 0.4,
     contours: true,
     extrusionLines: true,
+    points: false,
+
+    // debug
     axesHelper: false,
     wireframe: false,
     normals: false,
-    points: false,
+    ground: false,
 
     camera: {
       position: { x: 0, y: 0, z: 0 },
@@ -47,7 +50,8 @@ export class RendererComponent {
 
   constructor(private element: ElementRef, private stlLoaderService: StlLoaderService) {
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true
+      antialias: true,
+      alpha: true
     });
 
     this.gui = new dat.GUI({
@@ -72,6 +76,8 @@ export class RendererComponent {
       target.scene.wireframe(this.object.wireframe);
       // activate axis
       target.scene.axis(this.object.axesHelper);
+      // activate ground
+      target.scene.showGround(this.object.ground);
     }
 
     let cameras = this.gui.addFolder('Camera')
@@ -95,6 +101,7 @@ export class RendererComponent {
     debug.add(this.options, 'axesHelper').onChange(updateDebugVisibility)
     debug.add(this.options, 'wireframe').onChange(updateDebugVisibility)
     debug.add(this.options, 'normals').onChange(updateDebugVisibility)
+    debug.add(this.options, 'ground').onChange(updateDebugVisibility)
   }
 
   load(url: string) {

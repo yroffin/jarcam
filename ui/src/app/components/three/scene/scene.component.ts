@@ -20,6 +20,7 @@ export class SceneComponent implements OnInit {
 
   constructor() {
     this.scene = new THREE.Scene();
+    this.scene.add(new THREE.GridHelper(500, 50));
   }
 
   @ContentChild(CamerasComponent) cameraComp: CamerasComponent;
@@ -49,7 +50,30 @@ export class SceneComponent implements OnInit {
   }
 
   setGeometryPiece(geometry: THREE.BufferGeometry) {
-    let material = new THREE.MeshNormalMaterial();
+    let material = new THREE.MeshPhysicalMaterial({
+      lights: false,
+      transparent: false,
+      opacity: 0.5,
+    });
+    let m = new THREE.Matrix4()
+
+    m = m.premultiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+    m = m.premultiply(new THREE.Matrix4().makeRotationX(0 / 180 * Math.PI));
+    m = m.premultiply(new THREE.Matrix4().makeRotationY(0 / 180 * Math.PI));
+    m = m.premultiply(new THREE.Matrix4().makeRotationZ(0 / 180 * Math.PI));
+    m = m.premultiply(new THREE.Matrix4().makeScale(1, 1, 1));
+
+    geometry.applyMatrix(m)
+    geometry.applyMatrix(function () {
+      geometry.computeBoundingBox()
+      let minX = geometry.boundingBox.min.x
+      let minY = geometry.boundingBox.min.y
+      let minZ = geometry.boundingBox.min.z
+      let m = new THREE.Matrix4()
+      m = m.premultiply(new THREE.Matrix4().makeTranslation(-minX, -minY, -minZ))
+      return m
+    }())
+
     this.mesh = new THREE.Mesh(geometry, material);
     console.log('setPiece', this.mesh);
     this.scene.add(this.mesh);
@@ -71,8 +95,8 @@ export class SceneComponent implements OnInit {
     this.normal.visible = enable;
   }
 
-  private radius: number = 0.05;
-  private height: number = 200;
+  private radius: number = 0.5;
+  private height: number = 50;
   private xAxisMesh: THREE.Mesh;
   private yAxisMesh: THREE.Mesh;
   private zAxisMesh: THREE.Mesh;
@@ -114,4 +138,23 @@ export class SceneComponent implements OnInit {
     this.yAxisMesh.visible = enable;
     this.zAxisMesh.visible = enable;
   }
+
+  private ground: THREE.Mesh;
+
+  public showGround(enable: boolean) {
+    if (!this.ground) {
+      this.ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(500, 500),
+        new THREE.MeshBasicMaterial({
+          color: 0xFF0000,
+          transparent: true,
+          opacity: 0.3,
+          side: THREE.DoubleSide,
+        }));
+      this.ground.rotateX(Math.PI / 2);
+      this.scene.add(this.ground);
+    }
+    this.ground.visible = enable;
+  }
+
 }
