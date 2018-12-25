@@ -29,7 +29,8 @@
     "three": "~0.99.0",
     "@types/three": "~0.93.13",
     "three-orbit-controls": "~82.1.0",
-    "dat.gui": "~0.7.3"
+    "dat.gui": "~0.7.3",
+    "lodash": "~4.17.11"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.11.0",

@@ -1,6 +1,9 @@
-<button mat-button [matMenuTriggerFor]="appMenu">Click me!</button>
+<mat-toolbar color="primary">
+  <mat-toolbar-row>
+    <mat-icon class="example-icon" routerLink="/">home</mat-icon>
+    <span class="example-spacer"></span>
+    <mat-icon class="example-icon" routerLink="/stl-view">map</mat-icon>
+  </mat-toolbar-row>
+</mat-toolbar>
 
-<mat-menu #appMenu="matMenu">
-  <button mat-menu-item routerLink="/stl-view">Stl</button>
-</mat-menu>
 <router-outlet></router-outlet>

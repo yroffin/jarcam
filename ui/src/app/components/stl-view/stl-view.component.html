@@ -1,12 +1,9 @@
-<p>
-  stl-view works!
-</p>
-<three-renderer [height]="height" [width]="600">
+<three-renderer [height]="height" [width]="800">
   <three-orbit-controls [enabled]="true">
   </three-orbit-controls>
   <three-scene>
     <three-perspective-camera [height]="height" [width]="width" [positions]="[-50, 0, 0]">
     </three-perspective-camera>
-    <three-point-light [position]="[0, 100, 100]"></three-point-light>
+    <three-point-light [position]="[0, 100, 0]"></three-point-light>
   </three-scene>
 </three-renderer>

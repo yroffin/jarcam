@@ -2,9 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
 
 import * as THREE from 'three';
+import * as _ from 'lodash';
 
 import { CamerasComponent } from '../cameras/cameras.component';
 import { LightsComponent } from '../lights/lights.component';
+
+class Segment {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  linked: boolean;
+}
 
 @Directive({
   selector: 'three-scene'
@@ -14,6 +21,7 @@ export class SceneComponent implements OnInit {
   public scene: THREE.Scene;
 
   private mesh: THREE.Mesh;
+  private slice: THREE.Object3D[];
 
   private normal: THREE.Mesh;
   private helper: THREE.FaceNormalsHelper;
@@ -22,8 +30,15 @@ export class SceneComponent implements OnInit {
     this.scene = new THREE.Scene();
     this.scene.add(new THREE.GridHelper(500, 50));
 
+    // Add layer
+    this.layer = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+    this.layerHelper = new THREE.PlaneHelper(this.layer, 1, 0xffff00);
+    this.scene.add(this.layerHelper);
 
-    this.scene.background = new THREE.Color().setHSL( 0.6, 0, 1 );
+    // slice group
+    this.slice = [];
+
+    this.scene.background = new THREE.Color().setHSL(0.6, 0, 1);
     this.scene.fog = new THREE.Fog(0xffffff, 1, 5000);
   }
 
@@ -57,7 +72,7 @@ export class SceneComponent implements OnInit {
 
   setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
     // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
-    class MeshToonMaterial extends THREE.MeshPhongMaterial{
+    class MeshToonMaterial extends THREE.MeshPhongMaterial {
       public isMeshToonMaterial(): boolean {
         return true;
       }
@@ -92,12 +107,132 @@ export class SceneComponent implements OnInit {
     }())
 
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.name ='piece';
+    this.mesh.name = 'piece';
     this.mesh.receiveShadow = true;
     this.mesh.castShadow = true;
 
     console.log('setPiece', this.mesh);
     this.scene.add(this.mesh);
+  }
+
+  public onLayerChange(layer: any) {
+    this.planeIntersect(layer);
+  }
+
+  public planeIntersect(layer: any) {
+    let mesh = (<THREE.Geometry>this.mesh.geometry);
+    this.layer.constant = layer.top / 1000;
+
+    // find all matching faces
+    let keep: THREE.Face3[] = _.filter((<THREE.Geometry>this.mesh.geometry).faces, (face: THREE.Face3) => {
+      let l1 = new THREE.Line3(mesh.vertices[face.a], mesh.vertices[face.b]);
+      let l2 = new THREE.Line3(mesh.vertices[face.b], mesh.vertices[face.c]);
+      let l3 = new THREE.Line3(mesh.vertices[face.c], mesh.vertices[face.a]);
+      return this.layer.intersectsLine(l1) || this.layer.intersectsLine(l2) || this.layer.intersectsLine(l3);
+    });
+
+    // find all intersections as segments
+    let segments: Segment[] = [];
+    _.each(keep, (face) => {
+      let l1 = new THREE.Line3(mesh.vertices[face.a], mesh.vertices[face.b]);
+      let l2 = new THREE.Line3(mesh.vertices[face.b], mesh.vertices[face.c]);
+      let l3 = new THREE.Line3(mesh.vertices[face.c], mesh.vertices[face.a]);
+      let arr: THREE.Vector3[] = [];
+      let output;
+      output = new THREE.Vector3();
+      let i1 = this.layer.intersectLine(l1, output);
+      if (i1) arr.push(output);
+      output = new THREE.Vector3();
+      let i2 = this.layer.intersectLine(l2, output);
+      if (i2) arr.push(output);
+      output = new THREE.Vector3();
+      let i3 = this.layer.intersectLine(l3, output);
+      if (i3) arr.push(output);
+
+      // push it
+      segments.push({
+        start: arr[0],
+        end: arr[1],
+        linked: false
+      });
+    });
+
+    // remove previous slicing object
+    _.each(this.slice, (child) => {
+      this.scene.remove(child);
+    });
+    this.slice = [];
+
+    // Find all chain
+    let chain: Segment[];
+    chain = this.findNextChain(segments);
+    while (chain && chain.length > 0) {
+
+      let geometry = new THREE.Geometry();
+      _.each(chain, (line: Segment) => {
+        geometry.vertices.push(line.start);
+        geometry.vertices.push(line.end);
+      });
+
+      let line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+        color: 0x3949AB,
+        linewidth: 10,
+      }))
+
+      this.slice.push(line);
+      this.scene.add(line);
+
+      // Find next chain
+      chain = this.findNextChain(segments);
+    }
+  }
+
+  findNextChain(segments: Segment[]): Segment[] {
+    let chain: Segment[] = [];
+    let current = _.find(segments, (segment) => {
+      return segment.linked === false;
+    })
+    if (current) {
+      current.linked = true;
+      while (current) {
+        chain.push(current);
+        current = this.findNext(current, segments);
+      }
+    }
+    return chain;
+  }
+
+  findNext(current: Segment, segments: Segment[]): Segment {
+    let nextByStart = _.find(segments, (it: Segment) => {
+      if (it.linked === true) return false;
+      return this.compare(current.end, it.start);
+    });
+    if (nextByStart) {
+      nextByStart.linked = true;
+      return {
+        start: nextByStart.start,
+        end: nextByStart.end,
+        linked: true
+      };
+    }
+    let nextByEnd = _.find(segments, (it: Segment) => {
+      if (it.linked === true) return false;
+      return this.compare(current.end, it.end);
+    });
+    if (nextByEnd) {
+      nextByEnd.linked = true;
+      return {
+        start: nextByEnd.end,
+        end: nextByEnd.start,
+        linked: true
+      };
+    }
+  }
+
+  compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
+    return Math.round(left.x * 10000 + Number.EPSILON) / 10000 === Math.round(right.x * 10000 + Number.EPSILON) / 10000
+      && Math.round(left.y * 10000 + Number.EPSILON) / 10000 === Math.round(right.y * 10000 + Number.EPSILON) / 10000
+      && Math.round(left.z * 10000 + Number.EPSILON) / 10000 === Math.round(right.z * 10000 + Number.EPSILON) / 10000;
   }
 
   wireframe(enable: boolean) {
@@ -177,4 +312,13 @@ export class SceneComponent implements OnInit {
     this.ground.visible = enable;
   }
 
+  private layer: THREE.Plane;
+  private layerHelper: THREE.PlaneHelper;
+
+  public showLayer(enable: boolean) {
+    this.layerHelper.visible = enable;
+    _.each(this.slice, (slice: THREE.Object3D) => {
+      slice.visible = enable;
+    });
+  }
 }

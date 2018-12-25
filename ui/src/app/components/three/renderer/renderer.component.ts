@@ -21,14 +21,11 @@ export class RendererComponent {
   private gui: any;
 
   private options = {
-    // controlled by menu
-    //loadUrl: getQueryParam('loadUrl') || "", // to load a STL from a link
-    currentLayerNumber: 0,
-    layerHeight: 0.2,
-    nozzleSize: 0.4,
-    contours: true,
-    extrusionLines: true,
-    points: false,
+    // layers
+    layer: {
+      visible: false,
+      top: 4000,
+    },
 
     // debug
     axesHelper: false,
@@ -39,13 +36,6 @@ export class RendererComponent {
     camera: {
       position: { x: 0, y: 0, z: 0 },
     },
-
-    rotation: { x: 0, y: 0, z: 0 },
-    scale: { x: 1, y: 1, z: 1 },
-
-    // internal
-    epsilon: 1e-10, // in mm,
-    target: undefined
   }
 
   constructor(private element: ElementRef, private stlLoaderService: StlLoaderService) {
@@ -64,6 +54,13 @@ export class RendererComponent {
 
 
     let target = this;
+
+    let onLayerChange = function () {
+      target.onLayerChange(this.object);
+      // activate layer
+      target.scene.showLayer(this.object.visible);
+    }
+
     let onCameraChange = function () {
       target.camera.position.x = this.object.x;
       target.camera.position.y = this.object.y;
@@ -81,22 +78,16 @@ export class RendererComponent {
       target.scene.showGround(this.object.ground);
     }
 
+    let layers = this.gui.addFolder('Layer')
+    let layer = layers.addFolder('Control')
+    layer.add(this.options.layer, 'top', 0, 10000).onChange(onLayerChange);
+    layer.add(this.options.layer, 'visible').onChange(onLayerChange)
+
     let cameras = this.gui.addFolder('Camera')
     let camera = cameras.addFolder('Position')
-    let xp = camera.add(this.options.camera.position, 'x', -500, 500).onChange(onCameraChange);
+    camera.add(this.options.camera.position, 'x', -500, 500).onChange(onCameraChange);
     camera.add(this.options.camera.position, 'y', -500, 500).onChange(onCameraChange);
     camera.add(this.options.camera.position, 'z', -500, 500).onChange(onCameraChange);
-
-    let transformations = this.gui.addFolder('Transformations')
-    let rotation = transformations.addFolder('Rotation')
-    rotation.add(this.options.rotation, 'x', -100, 100).onChange(this.onObjectLoaded);
-    rotation.add(this.options.rotation, 'y', -100, 100).onChange(this.onObjectLoaded);
-    rotation.add(this.options.rotation, 'z', -100, 100).onChange(this.onObjectLoaded);
-
-    let scale = transformations.addFolder('Scale')
-    scale.add(this.options.scale, 'x').onChange(this.onObjectLoaded);
-    scale.add(this.options.scale, 'y').onChange(this.onObjectLoaded);
-    scale.add(this.options.scale, 'z').onChange(this.onObjectLoaded);
 
     let debug = this.gui.addFolder('Debugging Options')
     debug.add(this.options, 'axesHelper').onChange(updateDebugVisibility)
@@ -116,6 +107,10 @@ export class RendererComponent {
       },
       () => {
       });
+  }
+
+  private onLayerChange(layer: any) {
+    this.scene.onLayerChange(layer);
   }
 
   get scene() {
