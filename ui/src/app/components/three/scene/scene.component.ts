@@ -111,7 +111,6 @@ export class SceneComponent implements OnInit {
     this.mesh.receiveShadow = true;
     this.mesh.castShadow = true;
 
-    console.log('setPiece', this.mesh);
     this.scene.add(this.mesh);
   }
 

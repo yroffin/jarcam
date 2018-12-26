@@ -19,6 +19,7 @@ export class StlViewComponent implements OnInit, OnChanges {
   @Input() height: number;
   @Input() width: number;
 
+  @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
 
   private options = {
@@ -46,23 +47,18 @@ export class StlViewComponent implements OnInit, OnChanges {
 
   ngAfterContentInit() {
     this.rendererComponent.load('/assets/cube.stl');
-    console.log('dims', this.getContainerDimensions());
     this.resetWidthHeight();
   }
 
-  private getContainerDimensions(): any{
-    var rootElement = this.elementRef.nativeElement;
-    var childElement = rootElement.firstElementChild;
-    var contentElement =  childElement.firstElementChild;
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.height = this.rendererView.nativeElement.clientHeight;
+      this.width = this.rendererView.nativeElement.clientWidth;
+    });
+  }
 
-    return {
-        height:contentElement.clientHeight,
-        width: contentElement.clientWidth
-    };
-}
   ngOnChanges(changes) {
     if (changes.ngModel && changes.ngModel.currentValue) {
-      console.log('changes', changes);
     }
   }
 

@@ -75,22 +75,15 @@ export class RendererComponent {
     return this.sceneComp.camera;
   }
 
-  public resize(width: number, height: number) {
-    console.log('res', width, height);
-    this.renderer.setSize(this.width, this.height);
-  }
-
   ngOnChanges(changes) {
     const widthChng = changes.width && changes.width.currentValue;
     const heightChng = changes.height && changes.height.currentValue;
     if (widthChng || heightChng) {
-      console.log('cheange/resize', this.width, this.height)
       this.renderer.setSize(this.width, this.height);
     }
   }
 
   ngAfterViewInit() {
-    console.log('add child render');
     this.elementRef.nativeElement.appendChild(this.renderer.domElement);
     this.renderer.setPixelRatio(Math.floor(window.devicePixelRatio));
     this.renderer.setSize(this.width, this.height);

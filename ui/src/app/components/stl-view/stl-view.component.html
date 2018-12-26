@@ -67,9 +67,9 @@
 
   </mat-drawer>
 
-  <div #renderView (dblclick)="drawer.toggle()">
+  <div #renderView class="max-width" (dblclick)="drawer.toggle()">
 
-    <three-renderer [options]="options" [height]="height" [width]="800">
+    <three-renderer [options]="options" [height]="height" [width]="width">
       <three-orbit-controls [enabled]="true">
       </three-orbit-controls>
       <three-scene>
@@ -78,6 +78,7 @@
         <three-point-light [position]="[0, 100, 0]"></three-point-light>
       </three-scene>
     </three-renderer>
+  
   </div>
 
 </mat-drawer-container>

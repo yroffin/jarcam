@@ -34,7 +34,6 @@ export class LightsComponent implements OnInit, AfterContentInit {
   }
 
   setPosition(position) {
-    console.log('pisition', position);
     this.light.position.set(
       position[0],
       position[1],
