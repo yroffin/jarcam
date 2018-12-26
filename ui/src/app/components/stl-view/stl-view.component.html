@@ -1,9 +1,83 @@
-<three-renderer [height]="height" [width]="800">
-  <three-orbit-controls [enabled]="true">
-  </three-orbit-controls>
-  <three-scene>
-    <three-perspective-camera [height]="height" [width]="width" [positions]="[-50, 0, 0]">
-    </three-perspective-camera>
-    <three-point-light [position]="[0, 100, 0]"></three-point-light>
-  </three-scene>
-</three-renderer>
+<mat-drawer-container class="example-container" autosize>
+  <mat-drawer #drawer class="example-sidenav" mode="side">
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Layer
+        </mat-panel-title>
+        <mat-panel-description>
+          {{options.layer.top / 1000 + 'mm'}}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="max-width">
+        <mat-checkbox (change)="onLayerVisibilityChange($event)" [checked]="options.layer.visible">Visible</mat-checkbox>
+        <mat-slider (change)="onLayerChange($event)" thumbLabel min="0" max="10000" step="1" [(value)]="options.layer.top"></mat-slider>
+      </div>
+
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Camera
+        </mat-panel-title>
+        <mat-panel-description>
+          {{format()}}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="max-width">
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.x"></mat-slider>
+      </div>
+      <div class="max-width">
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.y"></mat-slider>
+      </div>
+      <div class="max-width">
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.z"></mat-slider>
+      </div>
+
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Debug
+        </mat-panel-title>
+        <mat-panel-description>
+          debug options
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="max-width">
+        <mat-checkbox (change)="onDebugChange($event)" name="axisHelper" [checked]="options.axesHelper">Axis helper</mat-checkbox>
+      </div>
+      <div class="max-width">
+        <mat-checkbox (change)="onDebugChange($event)" name="wireframe" [checked]="options.wireframe">Wireframe</mat-checkbox>
+      </div>
+      <div class="max-width">
+        <mat-checkbox (change)="onDebugChange($event)" name="normals" [checked]="options.normals">Normals</mat-checkbox>
+      </div>
+      <div class="max-width">
+        <mat-checkbox (change)="onDebugChange($event)" name="ground" [checked]="options.ground">Ground</mat-checkbox>
+      </div>
+
+    </mat-expansion-panel>
+
+  </mat-drawer>
+
+  <div #renderView (dblclick)="drawer.toggle()">
+
+    <three-renderer [options]="options" [height]="height" [width]="800">
+      <three-orbit-controls [enabled]="true">
+      </three-orbit-controls>
+      <three-scene>
+        <three-perspective-camera [height]="height" [width]="width" [positions]="[-50, 0, 0]">
+        </three-perspective-camera>
+        <three-point-light [position]="[0, 100, 0]"></three-point-light>
+      </three-scene>
+    </three-renderer>
+  </div>
+
+</mat-drawer-container>

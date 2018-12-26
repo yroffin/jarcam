@@ -9,6 +9,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatInputModule } from '@angular/material/input';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material/checkbox';
+import { MatCardModule } from '@angular/material/card';
+
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
@@ -19,6 +27,8 @@ import { RendererComponent } from './components/three/renderer/renderer.componen
 import { SceneComponent } from './components/three/scene/scene.component';
 
 import { StlLoaderService } from './services/three/stl-loader.service';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 @NgModule({
   declarations: [
@@ -38,11 +48,24 @@ import { StlLoaderService } from './services/three/stl-loader.service';
     MatMenuModule,
     MatButtonModule,
     MatToolbarModule,
-    MatIconModule
+    MatIconModule,
+    MatDialogModule,
+    MatSliderModule,
+    MatInputModule,
+    MatSidenavModule,
+    MatExpansionModule,
+    MatCheckboxModule,
+    MatCardModule
   ],
   providers: [
-    StlLoaderService
+    StlLoaderService,
+    {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}}
   ],
-  bootstrap: [AppComponent]
+  entryComponents: [
+  ],
+  bootstrap: [AppComponent],
+  schemas: [
+    NO_ERRORS_SCHEMA
+  ]
 })
 export class AppModule { }

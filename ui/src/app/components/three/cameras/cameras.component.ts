@@ -1,4 +1,4 @@
-import { Directive, OnInit } from '@angular/core';
+import { Directive, OnInit, AfterContentInit } from '@angular/core';
 import { Input } from '@angular/core';
 
 import * as THREE from 'three';
@@ -6,34 +6,39 @@ import * as THREE from 'three';
 @Directive({
   selector: 'three-perspective-camera'
 })
-export class CamerasComponent implements OnInit {
+export class CamerasComponent implements OnInit, AfterContentInit {
 
   @Input() height: number;
   @Input() width: number;
-  @Input() public positions = [0, 0, 0];
+  @Input() positions;
 
   viewAngle: number = 75;
   near: number = 0.1;
   far: number = 10000;
   camera: THREE.PerspectiveCamera;
 
-  get aspect(): number {
-    return this.height / this.width;
-  }
-
-  ngOnInit() {
+  constructor() {
     this.camera = new THREE.PerspectiveCamera(
       this.viewAngle,
       this.aspect,
       this.near,
       this.far);
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+  }
 
+  get aspect(): number {
+    return this.height / this.width;
+  }
+
+  ngOnInit() {
+  }
+
+  ngAfterContentInit() {
     this.camera.position.set(
       this.positions[0],
       this.positions[1],
       this.positions[2]);
-
-      this.updateAspect(this.width / this.height);
+    this.updateAspect(this.width / this.height);
   }
 
   ngOnChanges(changes) {
