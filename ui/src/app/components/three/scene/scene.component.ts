@@ -28,11 +28,13 @@ export class SceneComponent implements OnInit {
 
   constructor() {
     this.scene = new THREE.Scene();
-    this.scene.add(new THREE.GridHelper(500, 50));
+
+    let helper = this.GridHelper(500, 50);
+    this.scene.add(helper);
 
     // Add layer
-    this.layer = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
-    this.layerHelper = new THREE.PlaneHelper(this.layer, 1, 0xffff00);
+    this.layer = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+    this.layerHelper = new THREE.PlaneHelper(this.layer, 5, 0xffffff);
     this.scene.add(this.layerHelper);
 
     // slice group
@@ -40,6 +42,41 @@ export class SceneComponent implements OnInit {
 
     this.scene.background = new THREE.Color().setHSL(0.6, 0, 1);
     this.scene.fog = new THREE.Fog(0xffffff, 1, 5000);
+  }
+
+  GridHelper( size, divisions, color1?, color2? ) {
+    size = size || 10;
+    divisions = divisions || 10;
+    color1 = new THREE.Color( color1 !== undefined ? color1 : 0x444444 );
+    color2 = new THREE.Color( color2 !== undefined ? color2 : 0x888888 );
+  
+    var center = divisions / 2;
+    var step = size / divisions;
+    var halfSize = size / 2;
+  
+    var vertices = [], colors = [];
+  
+    for ( var i = 0, j = 0, k = - halfSize; i <= divisions; i ++, k += step ) {
+  
+      vertices.push( - halfSize, k, 0, halfSize, k, 0 );
+      vertices.push( k, - halfSize, 0, k, halfSize, 0 );
+  
+      var color = i === center ? color1 : color2;
+  
+      color.toArray( colors, j ); j += 3;
+      color.toArray( colors, j ); j += 3;
+      color.toArray( colors, j ); j += 3;
+      color.toArray( colors, j ); j += 3;
+  
+    }
+  
+    var geometry = new THREE.BufferGeometry();
+    geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+    geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+  
+    var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
+  
+    return new THREE.LineSegments( geometry, material );
   }
 
   @ContentChild(CamerasComponent) cameraComp: CamerasComponent;
@@ -87,15 +124,8 @@ export class SceneComponent implements OnInit {
       opacity: 0.5,
     });
 
-    let m = new THREE.Matrix4()
-
-    m = m.premultiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
-    m = m.premultiply(new THREE.Matrix4().makeRotationX(0 / 180 * Math.PI));
-    m = m.premultiply(new THREE.Matrix4().makeRotationY(0 / 180 * Math.PI));
-    m = m.premultiply(new THREE.Matrix4().makeRotationZ(0 / 180 * Math.PI));
-    m = m.premultiply(new THREE.Matrix4().makeScale(1, 1, 1));
-
-    geometry.applyMatrix(m)
+    /*
+    geometry.applyMatrix(this.matrix)
     geometry.applyMatrix(function () {
       geometry.computeBoundingBox()
       let minX = geometry.boundingBox.min.x
@@ -105,6 +135,7 @@ export class SceneComponent implements OnInit {
       m = m.premultiply(new THREE.Matrix4().makeTranslation(-minX, -minY, -minZ))
       return m
     }())
+    */
 
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.name = 'piece';
@@ -180,6 +211,25 @@ export class SceneComponent implements OnInit {
 
       this.slice.push(line);
       this.scene.add(line);
+
+      // Build a shape
+      let shape = new THREE.Shape();
+      let it = 0;
+      _.each(chain, (line: Segment) => {
+        if (it === 0) {
+          shape.moveTo(line.start.x, line.start.y);
+        } else {
+          shape.lineTo(line.start.x, line.start.y);
+        }
+        shape.lineTo(line.end.x, line.end.y);
+        it++;
+      });
+      let extrudeSettings = { amount: 0.2, bevelEnabled: false, bevelSegments: 20, steps: 40, bevelSize: 10, bevelThickness: 1 };
+
+      let shapeGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+      let mesh = new THREE.Mesh(shapeGeometry, new THREE.MeshPhongMaterial());
+      this.scene.add(mesh);
 
       // Find next chain
       chain = this.findNextChain(segments);
@@ -259,6 +309,7 @@ export class SceneComponent implements OnInit {
     if (!this.xAxisMesh) {
       let arrowGeometry = new THREE.CylinderGeometry(0, 2 * this.radius, this.height / 5);
 
+      // Red for X
       let xAxisMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
       let xAxisGeometry = new THREE.CylinderGeometry(this.radius, this.radius, this.height);
       this.xAxisMesh = new THREE.Mesh(xAxisGeometry, xAxisMaterial);
@@ -269,6 +320,7 @@ export class SceneComponent implements OnInit {
       this.xAxisMesh.position.x += this.height / 2;
       this.scene.add(this.xAxisMesh);
 
+      // Green for Y
       let yAxisMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
       let yAxisGeometry = new THREE.CylinderGeometry(this.radius, this.radius, this.height);
       this.yAxisMesh = new THREE.Mesh(yAxisGeometry, yAxisMaterial);
@@ -278,6 +330,7 @@ export class SceneComponent implements OnInit {
       this.yAxisMesh.position.y += this.height / 2
       this.scene.add(this.yAxisMesh);
 
+      // And blue for Z
       let zAxisMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF });
       let zAxisGeometry = new THREE.CylinderGeometry(this.radius, this.radius, this.height);
       this.zAxisMesh = new THREE.Mesh(zAxisGeometry, zAxisMaterial);

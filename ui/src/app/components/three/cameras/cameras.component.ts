@@ -12,9 +12,9 @@ export class CamerasComponent implements OnInit, AfterContentInit {
   @Input() width: number;
   @Input() positions;
 
-  viewAngle: number = 75;
-  near: number = 0.1;
-  far: number = 10000;
+  viewAngle: number = 45;
+  near: number = 1;
+  far: number = 1000;
   camera: THREE.PerspectiveCamera;
 
   constructor() {
@@ -27,7 +27,7 @@ export class CamerasComponent implements OnInit, AfterContentInit {
   }
 
   get aspect(): number {
-    return this.height / this.width;
+    return this.width / this.height;
   }
 
   ngOnInit() {
@@ -38,6 +38,7 @@ export class CamerasComponent implements OnInit, AfterContentInit {
       this.positions[0],
       this.positions[1],
       this.positions[2]);
+      console.log(this.width,this.height)
     this.updateAspect(this.width / this.height);
   }
 

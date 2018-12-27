@@ -54,6 +54,8 @@ export class StlViewComponent implements OnInit, OnChanges {
     setTimeout(() => {
       this.height = this.rendererView.nativeElement.clientHeight;
       this.width = this.rendererView.nativeElement.clientWidth;
+      this.options.layer.visible = true;
+      this.rendererComponent.onLayerChange();
     });
   }
 

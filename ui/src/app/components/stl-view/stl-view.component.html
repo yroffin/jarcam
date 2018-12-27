@@ -29,13 +29,13 @@
       </mat-expansion-panel-header>
 
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.x"></mat-slider>
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.x"></mat-slider>
       </div>
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.y"></mat-slider>
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.y"></mat-slider>
       </div>
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-100" max="100" step="1" [(value)]="options.camera.position.z"></mat-slider>
+        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.z"></mat-slider>
       </div>
 
     </mat-expansion-panel>
@@ -73,9 +73,9 @@
       <three-orbit-controls [enabled]="true">
       </three-orbit-controls>
       <three-scene>
-        <three-perspective-camera [height]="height" [width]="width" [positions]="[-50, 0, 0]">
+        <three-perspective-camera [height]="height" [width]="width" [positions]="[0, -80, 80]">
         </three-perspective-camera>
-        <three-point-light [position]="[0, 100, 0]"></three-point-light>
+        <three-point-light [position]="[0, 0, 80]"></three-point-light>
       </three-scene>
     </three-renderer>
   
