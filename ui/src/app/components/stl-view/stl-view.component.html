@@ -64,10 +64,9 @@
       </div>
 
     </mat-expansion-panel>
-
   </mat-drawer>
 
-  <div #renderView class="max-width" (dblclick)="drawer.toggle()">
+  <div #renderView class="max-width" (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
 
     <three-renderer [options]="options" [height]="height" [width]="width">
       <three-orbit-controls [enabled]="true">

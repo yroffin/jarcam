@@ -30,7 +30,7 @@ export class StlViewComponent implements OnInit, OnChanges {
     },
 
     // debug
-    axesHelper: false,
+    axesHelper: true,
     wireframe: false,
     normals: false,
     ground: false,
@@ -56,6 +56,7 @@ export class StlViewComponent implements OnInit, OnChanges {
       this.width = this.rendererView.nativeElement.clientWidth;
       this.options.layer.visible = true;
       this.rendererComponent.onLayerChange();
+      this.rendererComponent.onDebugChange();
     });
   }
 
@@ -69,6 +70,10 @@ export class StlViewComponent implements OnInit, OnChanges {
   resetWidthHeight() {
     this.height = window.innerHeight;
     this.width = window.innerWidth;
+  }
+
+  public onKeydown(event) {
+    this.rendererComponent.onKeydown(event);
   }
 
   public toggle() {

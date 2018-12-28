@@ -44,6 +44,10 @@ export class RendererComponent {
       });
   }
 
+  public onKeydown(event) {
+    this.scene.onKeydown(event);
+  }
+  
   public onLayerChange() {
     this.scene.onLayerChange(this.options.layer);
     this.scene.showLayer(this.options.layer.visible);

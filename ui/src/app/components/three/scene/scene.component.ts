@@ -6,12 +6,7 @@ import * as _ from 'lodash';
 
 import { CamerasComponent } from '../cameras/cameras.component';
 import { LightsComponent } from '../lights/lights.component';
-
-class Segment {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  linked: boolean;
-}
+import { PlanarUtils } from '../../../services/three/planar-utils';
 
 @Directive({
   selector: 'three-scene'
@@ -21,21 +16,38 @@ export class SceneComponent implements OnInit {
   public scene: THREE.Scene;
 
   private mesh: THREE.Mesh;
+  private mill: THREE.Mesh;
+
   private slice: THREE.Object3D[];
+  private detection: PlanarUtils;
 
   private normal: THREE.Mesh;
   private helper: THREE.FaceNormalsHelper;
 
   constructor() {
+    // Create scene
     this.scene = new THREE.Scene();
 
-    let helper = this.GridHelper(500, 50);
+    // add grid helper
+    let helper = this.GridHelper(200, 200);
     this.scene.add(helper);
 
     // Add layer
     this.layer = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
     this.layerHelper = new THREE.PlaneHelper(this.layer, 5, 0xffffff);
     this.scene.add(this.layerHelper);
+
+    // Add mill
+    let geometry = new THREE.CylinderGeometry(4, 4, 4, 32);
+    let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    this.mill = new THREE.Mesh(geometry, material);
+    this.mill.geometry.rotateX(Math.PI / 2);
+    this.mill.position.x = 40;
+    this.mill.position.y = -10;
+    this.scene.add(this.mill);
+
+    // Detection
+    this.detection = new PlanarUtils();
 
     // slice group
     this.slice = [];
@@ -44,39 +56,39 @@ export class SceneComponent implements OnInit {
     this.scene.fog = new THREE.Fog(0xffffff, 1, 5000);
   }
 
-  GridHelper( size, divisions, color1?, color2? ) {
+  GridHelper(size, divisions, color1?, color2?) {
     size = size || 10;
     divisions = divisions || 10;
-    color1 = new THREE.Color( color1 !== undefined ? color1 : 0x444444 );
-    color2 = new THREE.Color( color2 !== undefined ? color2 : 0x888888 );
-  
+    color1 = new THREE.Color(color1 !== undefined ? color1 : 0x444444);
+    color2 = new THREE.Color(color2 !== undefined ? color2 : 0x888888);
+
     var center = divisions / 2;
     var step = size / divisions;
     var halfSize = size / 2;
-  
+
     var vertices = [], colors = [];
-  
-    for ( var i = 0, j = 0, k = - halfSize; i <= divisions; i ++, k += step ) {
-  
-      vertices.push( - halfSize, k, 0, halfSize, k, 0 );
-      vertices.push( k, - halfSize, 0, k, halfSize, 0 );
-  
+
+    for (var i = 0, j = 0, k = - halfSize; i <= divisions; i++ , k += step) {
+
+      vertices.push(- halfSize, k, 0, halfSize, k, 0);
+      vertices.push(k, - halfSize, 0, k, halfSize, 0);
+
       var color = i === center ? color1 : color2;
-  
-      color.toArray( colors, j ); j += 3;
-      color.toArray( colors, j ); j += 3;
-      color.toArray( colors, j ); j += 3;
-      color.toArray( colors, j ); j += 3;
-  
+
+      color.toArray(colors, j); j += 3;
+      color.toArray(colors, j); j += 3;
+      color.toArray(colors, j); j += 3;
+      color.toArray(colors, j); j += 3;
+
     }
-  
+
     var geometry = new THREE.BufferGeometry();
-    geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-    geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-  
-    var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
-  
-    return new THREE.LineSegments( geometry, material );
+    geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    var material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
+
+    return new THREE.LineSegments(geometry, material);
   }
 
   @ContentChild(CamerasComponent) cameraComp: CamerasComponent;
@@ -107,181 +119,68 @@ export class SceneComponent implements OnInit {
     }
   }
 
-  setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
-    // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
-    class MeshToonMaterial extends THREE.MeshPhongMaterial {
-      public isMeshToonMaterial(): boolean {
-        return true;
-      }
-    }
-
-    let geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
-    geometry.computeVertexNormals();
-
-    let material = new MeshToonMaterial({
-      lights: true,
-      transparent: true,
-      opacity: 0.5,
-    });
-
-    /*
-    geometry.applyMatrix(this.matrix)
-    geometry.applyMatrix(function () {
-      geometry.computeBoundingBox()
-      let minX = geometry.boundingBox.min.x
-      let minY = geometry.boundingBox.min.y
-      let minZ = geometry.boundingBox.min.z
-      let m = new THREE.Matrix4()
-      m = m.premultiply(new THREE.Matrix4().makeTranslation(-minX, -minY, -minZ))
-      return m
-    }())
-    */
-
-    this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.name = 'piece';
-    this.mesh.receiveShadow = true;
-    this.mesh.castShadow = true;
-
+  public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
+    this.mesh = PlanarUtils.factoryPiece(originalGeometry);
     this.scene.add(this.mesh);
+  }
+
+  public onKeydown(event) {
+    switch (event.key) {
+      case 'q':
+        this.translateX(-1, 1);
+        break;
+      case 'd':
+        this.translateX(1, 1);
+        break;
+      case 's':
+        this.translateY(-1, 1);
+        break;
+      case 'z':
+        this.translateY(1, 1);
+        break;
+      default:
+    }
+  }
+
+  public translateX(sens: number, value: number) {
+    let iteration = value / 0.01;
+    for (; iteration > 0 && this.detection.collisisionDetection(this.scene, this.mill, 0.01) == false; iteration--) {
+      this.mill.translateX(0.01 * sens)
+    }
+    this.mill.translateX(0.01 * -sens)
+  }
+
+  public translateY(sens: number, value: number) {
+    let iteration = value / 0.01;
+    for (; iteration > 0 && this.detection.collisisionDetection(this.scene, this.mill, 0.01) == false; iteration--) {
+      this.mill.translateY(0.01 * sens)
+    }
+    this.mill.translateY(0.01 * -sens)
   }
 
   public onLayerChange(layer: any) {
     this.planeIntersect(layer);
+    this.detection.collisisionDetection(this.scene, this.mill, 0.01);
   }
 
   public planeIntersect(layer: any) {
-    let mesh = (<THREE.Geometry>this.mesh.geometry);
+    // Fix plane level
     this.layer.constant = layer.top / 1000;
-
-    // find all matching faces
-    let keep: THREE.Face3[] = _.filter((<THREE.Geometry>this.mesh.geometry).faces, (face: THREE.Face3) => {
-      let l1 = new THREE.Line3(mesh.vertices[face.a], mesh.vertices[face.b]);
-      let l2 = new THREE.Line3(mesh.vertices[face.b], mesh.vertices[face.c]);
-      let l3 = new THREE.Line3(mesh.vertices[face.c], mesh.vertices[face.a]);
-      return this.layer.intersectsLine(l1) || this.layer.intersectsLine(l2) || this.layer.intersectsLine(l3);
-    });
-
-    // find all intersections as segments
-    let segments: Segment[] = [];
-    _.each(keep, (face) => {
-      let l1 = new THREE.Line3(mesh.vertices[face.a], mesh.vertices[face.b]);
-      let l2 = new THREE.Line3(mesh.vertices[face.b], mesh.vertices[face.c]);
-      let l3 = new THREE.Line3(mesh.vertices[face.c], mesh.vertices[face.a]);
-      let arr: THREE.Vector3[] = [];
-      let output;
-      output = new THREE.Vector3();
-      let i1 = this.layer.intersectLine(l1, output);
-      if (i1) arr.push(output);
-      output = new THREE.Vector3();
-      let i2 = this.layer.intersectLine(l2, output);
-      if (i2) arr.push(output);
-      output = new THREE.Vector3();
-      let i3 = this.layer.intersectLine(l3, output);
-      if (i3) arr.push(output);
-
-      // push it
-      segments.push({
-        start: arr[0],
-        end: arr[1],
-        linked: false
-      });
-    });
+    this.mill.translateZ(this.layer.constant - this.mill.position.z);
 
     // remove previous slicing object
     _.each(this.slice, (child) => {
       this.scene.remove(child);
     });
-    this.slice = [];
 
-    // Find all chain
-    let chain: Segment[];
-    chain = this.findNextChain(segments);
-    while (chain && chain.length > 0) {
+    // compute new slice
+    let raycast = this.detection.intersect(this.layer, this.mesh);
+    this.slice = this.detection.meshes;
 
-      let geometry = new THREE.Geometry();
-      _.each(chain, (line: Segment) => {
-        geometry.vertices.push(line.start);
-        geometry.vertices.push(line.end);
-      });
-
-      let line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
-        color: 0x3949AB,
-        linewidth: 10,
-      }))
-
-      this.slice.push(line);
-      this.scene.add(line);
-
-      // Build a shape
-      let shape = new THREE.Shape();
-      let it = 0;
-      _.each(chain, (line: Segment) => {
-        if (it === 0) {
-          shape.moveTo(line.start.x, line.start.y);
-        } else {
-          shape.lineTo(line.start.x, line.start.y);
-        }
-        shape.lineTo(line.end.x, line.end.y);
-        it++;
-      });
-      let extrudeSettings = { amount: 0.2, bevelEnabled: false, bevelSegments: 20, steps: 40, bevelSize: 10, bevelThickness: 1 };
-
-      let shapeGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-
-      let mesh = new THREE.Mesh(shapeGeometry, new THREE.MeshPhongMaterial());
-      this.scene.add(mesh);
-
-      // Find next chain
-      chain = this.findNextChain(segments);
-    }
-  }
-
-  findNextChain(segments: Segment[]): Segment[] {
-    let chain: Segment[] = [];
-    let current = _.find(segments, (segment) => {
-      return segment.linked === false;
-    })
-    if (current) {
-      current.linked = true;
-      while (current) {
-        chain.push(current);
-        current = this.findNext(current, segments);
-      }
-    }
-    return chain;
-  }
-
-  findNext(current: Segment, segments: Segment[]): Segment {
-    let nextByStart = _.find(segments, (it: Segment) => {
-      if (it.linked === true) return false;
-      return this.compare(current.end, it.start);
+    // add new slicing object
+    _.each(this.slice, (child) => {
+      this.scene.add(child);
     });
-    if (nextByStart) {
-      nextByStart.linked = true;
-      return {
-        start: nextByStart.start,
-        end: nextByStart.end,
-        linked: true
-      };
-    }
-    let nextByEnd = _.find(segments, (it: Segment) => {
-      if (it.linked === true) return false;
-      return this.compare(current.end, it.end);
-    });
-    if (nextByEnd) {
-      nextByEnd.linked = true;
-      return {
-        start: nextByEnd.end,
-        end: nextByEnd.start,
-        linked: true
-      };
-    }
-  }
-
-  compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
-    return Math.round(left.x * 10000 + Number.EPSILON) / 10000 === Math.round(right.x * 10000 + Number.EPSILON) / 10000
-      && Math.round(left.y * 10000 + Number.EPSILON) / 10000 === Math.round(right.y * 10000 + Number.EPSILON) / 10000
-      && Math.round(left.z * 10000 + Number.EPSILON) / 10000 === Math.round(right.z * 10000 + Number.EPSILON) / 10000;
   }
 
   wireframe(enable: boolean) {
