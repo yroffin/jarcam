@@ -33,7 +33,7 @@ export class MillingService {
       let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
       this._mill = new THREE.Mesh(geometry, material);
       this._mill.geometry.rotateX(Math.PI / 2);
-      this._mill.position.x = 14;
+      this._mill.position.x = 20;
       this._mill.position.y = -10;
     }
     return this._mill;

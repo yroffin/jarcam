@@ -13,30 +13,55 @@ let stlLoaderService;
 
 describe('Collide', () => {
 
+    let factoryPiece = (originalGeometry: THREE.BufferGeometry) => {
+        // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
+        class MeshToonMaterial extends THREE.MeshPhongMaterial {
+            public isMeshToonMaterial(): boolean {
+                return true;
+            }
+        }
+
+        let geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
+        geometry.computeVertexNormals();
+
+        let material = new MeshToonMaterial({
+            lights: true,
+            transparent: true,
+            opacity: 0.5,
+        });
+
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.name = 'piece';
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+
+        return mesh;
+    }
+
     beforeEach((done) => {
         scene = new THREE.Scene();
         layer = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
         detection = new PlanarUtils();
-    
+
         // Add mill
         let geometry = new THREE.CylinderGeometry(4, 4, 4, 32);
         let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
         mill = new THREE.Mesh(geometry, material);
         mill.position.set(40, -10, 4)
         scene.add(mill);
-    
-    
+
+
         // fix slice on z to 4 mm
         layer.constant = 4;
         mill.translateZ(layer.constant);
-    
+
         // Load STL and allocate piece to build
         stlLoaderService = new StlLoaderService();
         stlLoaderService.loadStl(
             scene,
             '/assets/cube.stl',
             (geometry: THREE.BufferGeometry) => {
-                mesh = PlanarUtils.factoryPiece(geometry);
+                mesh = factoryPiece(geometry);
                 console.log('mesh loaded', mesh);
                 scene.add(mesh);
                 scene.updateMatrixWorld(false);
@@ -117,6 +142,19 @@ describe('Collide', () => {
         mill.translateX(10);
         console.info(mill.position);
         expect(collide()).toBe(false);
+    });
+
+});
+
+describe('Distance', () => {
+
+    it('Should split vertex with a minimal distance', () => {
+        let vertices = PlanarUtils.split(
+            new THREE.Vector3(0,0,0),
+            new THREE.Vector3(10,0,0),
+            1
+        );
+        console.log(vertices);
     });
 
 });

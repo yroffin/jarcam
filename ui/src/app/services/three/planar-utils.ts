@@ -88,13 +88,13 @@ export class PlanarUtils {
             let output;
             output = new THREE.Vector3();
             let i1 = layer.intersectLine(l1, output);
-            if (i1) arr.push(output);
+            if (i1) arr.push(output.clone());
             output = new THREE.Vector3();
             let i2 = layer.intersectLine(l2, output);
-            if (i2) arr.push(output);
+            if (i2) arr.push(output.clone());
             output = new THREE.Vector3();
             let i3 = layer.intersectLine(l3, output);
-            if (i3) arr.push(output);
+            if (i3) arr.push(output.clone());
 
             // push it
             segments.push({
@@ -110,28 +110,47 @@ export class PlanarUtils {
         chain = this.findNextChain(segments);
         while (chain && chain.length > 0) {
 
+            // Build contour
             let geometry = new THREE.Geometry();
             _.each(chain, (line: Segment) => {
                 geometry.vertices.push(line.start);
                 geometry.vertices.push(line.end);
-                geometry.vertices.push(line.start);
-                let target = line.start.clone();
-                target.x += line.normal.x;
-                target.y += line.normal.y;
-                target.z += line.normal.z;
-                geometry.vertices.push(target);
-                raycasters.push(<Normal>{
-                    origin: line.start.clone(),
-                    direction: line.normal.clone().normalize()
-                });
             });
 
             let line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+                name: 'contour',
                 color: 0x3949AB,
                 linewidth: 10,
             }))
 
             meshes.push(line);
+
+            // Build raycaster
+            let rayGeometry = new THREE.Geometry();
+            _.each(chain, (line: Segment) => {
+                let direction = line.normal.clone().normalize();
+
+                // Normal has to be store in raycasters with an origin
+                // And a destination
+
+                _.each(PlanarUtils.split(line.start, line.end, 0.1), (vertice) => {
+                    rayGeometry.vertices.push(vertice);
+                    rayGeometry.vertices.push(new THREE.Vector3(vertice.x + direction.x, vertice.y + direction.y, vertice.z + direction.z));
+                    raycasters.push(<Normal>{
+                        origin: vertice,
+                        direction: direction
+                    });
+                });
+            });
+
+            // Build raycaster geometry
+            let rayLines = new THREE.LineSegments(rayGeometry, new THREE.LineBasicMaterial({
+                name: 'raycasters',
+                color: 0x3849BB,
+                linewidth: 10,
+            }))
+
+            meshes.push(rayLines);
 
             // Find next chain
             chain = this.findNextChain(segments);
@@ -141,6 +160,35 @@ export class PlanarUtils {
             meshes: meshes,
             raycasters: raycasters
         }
+    }
+
+    public static split(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
+        let geometry = new THREE.Geometry();
+        _.each(PlanarUtils.splitWithDuplicates(a, b, distance), (vertices) => {
+            geometry.vertices.push(vertices);
+        });
+        geometry.mergeVertices();
+        return geometry.vertices;
+    }
+
+    private static splitWithDuplicates(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
+        let result: THREE.Vector3[] = [];
+        let geometry = new THREE.Geometry();
+        geometry.vertices.push(a);
+        geometry.vertices.push(b);
+        geometry.computeBoundingSphere();
+        if ((geometry.boundingSphere.radius * 2) > distance) {
+            _.each(PlanarUtils.split(a, geometry.boundingSphere.center, distance), (vertice) => {
+                result.push(vertice);
+            });
+            _.each(PlanarUtils.split(geometry.boundingSphere.center, b, distance), (vertice) => {
+                result.push(vertice);
+            });
+            result.push(a);
+            result.push(b);
+            return result;
+        }
+        return result;
     }
 
     private static findNextChain(segments: Segment[]): Segment[] {
