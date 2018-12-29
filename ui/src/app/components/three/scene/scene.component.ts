@@ -42,7 +42,7 @@ export class SceneComponent implements OnInit {
     let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
     this.mill = new THREE.Mesh(geometry, material);
     this.mill.geometry.rotateX(Math.PI / 2);
-    this.mill.position.x = 40;
+    this.mill.position.x = 14;
     this.mill.position.y = -10;
     this.scene.add(this.mill);
 

@@ -11,42 +11,43 @@ let detection: PlanarUtils;
 
 let stlLoaderService;
 
-beforeEach((done) => {
-    scene = new THREE.Scene();
-    layer = new THREE.Plane();
-    detection = new PlanarUtils();
-
-    // Add mill
-    let geometry = new THREE.CylinderGeometry(4, 4, 4, 32);
-    let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    mill = new THREE.Mesh(geometry, material);
-    mill.position.set(40, -10, 4)
-    scene.add(mill);
-    scene.updateMatrixWorld(false);
-
-
-    // fix slice on z to 4 mm
-    layer.constant = 4;
-    mill.translateZ(layer.constant);
-
-    // Load STL
-    stlLoaderService = new StlLoaderService();
-    stlLoaderService.loadStl(
-        scene,
-        '/assets/cube.stl',
-        (geometry: THREE.BufferGeometry) => {
-            mesh = PlanarUtils.factoryPiece(geometry);
-            console.log('mesh loaded', mesh);
-            scene.add(mesh);
-            done();
-        },
-        () => {
-        },
-        () => {
-        });
-});
-
 describe('Collide', () => {
+
+    beforeEach((done) => {
+        scene = new THREE.Scene();
+        layer = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+        detection = new PlanarUtils();
+    
+        // Add mill
+        let geometry = new THREE.CylinderGeometry(4, 4, 4, 32);
+        let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        mill = new THREE.Mesh(geometry, material);
+        mill.position.set(40, -10, 4)
+        scene.add(mill);
+    
+    
+        // fix slice on z to 4 mm
+        layer.constant = 4;
+        mill.translateZ(layer.constant);
+        scene.updateMatrixWorld(false);
+    
+        // Load STL
+        stlLoaderService = new StlLoaderService();
+        stlLoaderService.loadStl(
+            scene,
+            '/assets/cube.stl',
+            (geometry: THREE.BufferGeometry) => {
+                mesh = PlanarUtils.factoryPiece(geometry);
+                console.log('mesh loaded', mesh);
+                scene.add(mesh);
+                scene.updateMatrixWorld(false);
+                done();
+            },
+            () => {
+            },
+            () => {
+            });
+    });
 
     let collide = () => {
         let result = detection.collisisionDetection(scene, mill, 0.01);
@@ -105,15 +106,18 @@ describe('Collide', () => {
         console.info('scene', scene);
 
         // compute new slice
-        let raycast = detection.intersect(layer, mesh);
+        detection.intersect(layer, mesh);
 
         console.info(mill.position);
         expect(collide()).toBe(false);
 
-        mill.translateX(-27);
-        scene.updateMatrixWorld(false);
+        mill.translateX(-30);
         console.info(mill.position);
         expect(collide()).toBe(true);
+
+        mill.translateX(10);
+        console.info(mill.position);
+        expect(collide()).toBe(false);
     });
 
 });
