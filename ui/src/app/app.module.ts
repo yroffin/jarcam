@@ -29,6 +29,7 @@ import { SceneComponent } from './components/three/scene/scene.component';
 import { StlLoaderService } from './services/three/stl-loader.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { MillingService } from 'src/app/services/three/milling.service';
 
 @NgModule({
   declarations: [
@@ -59,6 +60,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
   ],
   providers: [
     StlLoaderService,
+    MillingService,
     {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}}
   ],
   entryComponents: [

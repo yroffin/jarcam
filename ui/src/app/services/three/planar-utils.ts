@@ -65,31 +65,6 @@ export class PlanarUtils {
         return collision.length > 0;
     }
 
-    public static factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh {
-        // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
-        class MeshToonMaterial extends THREE.MeshPhongMaterial {
-            public isMeshToonMaterial(): boolean {
-                return true;
-            }
-        }
-
-        let geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
-        geometry.computeVertexNormals();
-
-        let material = new MeshToonMaterial({
-            lights: true,
-            transparent: true,
-            opacity: 0.5,
-        });
-
-        let mesh = new THREE.Mesh(geometry, material);
-        mesh.name = 'piece';
-        mesh.receiveShadow = true;
-        mesh.castShadow = true;
-
-        return mesh;
-    }
-
     private static planeIntersect(layer: THREE.Plane, from: THREE.Mesh): RayCast {
         let fromGeometry = (<THREE.Geometry>from.geometry);
         let meshes: THREE.Object3D[] = [];

@@ -29,9 +29,8 @@ describe('Collide', () => {
         // fix slice on z to 4 mm
         layer.constant = 4;
         mill.translateZ(layer.constant);
-        scene.updateMatrixWorld(false);
     
-        // Load STL
+        // Load STL and allocate piece to build
         stlLoaderService = new StlLoaderService();
         stlLoaderService.loadStl(
             scene,
