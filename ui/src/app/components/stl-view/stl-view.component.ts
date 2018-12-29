@@ -22,6 +22,8 @@ export class StlViewComponent implements OnInit, OnChanges {
   @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
 
+  public val3 = 0;
+
   private options = {
     // layers
     layer: {
@@ -97,8 +99,8 @@ export class StlViewComponent implements OnInit, OnChanges {
     this.rendererComponent.onCameraChange();
   }
 
-  onDebugChange(event) {
-    switch (event.source.name) {
+  onDebugChange(event, name: string) {
+    switch (name) {
       case 'axisHelper':
         this.options.axesHelper = event.checked;
         break;

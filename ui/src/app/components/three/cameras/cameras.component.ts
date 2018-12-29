@@ -38,7 +38,6 @@ export class CamerasComponent implements OnInit, AfterContentInit {
       this.positions[0],
       this.positions[1],
       this.positions[2]);
-      console.log(this.width,this.height)
     this.updateAspect(this.width / this.height);
   }
 

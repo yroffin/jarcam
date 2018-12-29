@@ -12,8 +12,10 @@
       </mat-expansion-panel-header>
 
       <div class="max-width">
-        <mat-checkbox (change)="onLayerVisibilityChange($event)" [checked]="options.layer.visible">Visible</mat-checkbox>
-        <mat-slider (change)="onLayerChange($event)" thumbLabel min="0" max="10000" step="1" [(value)]="options.layer.top"></mat-slider>
+        <p-inputSwitch (onChange)="onLayerVisibilityChange($event)" [(ngModel)]="options.layer.visible"></p-inputSwitch>
+        <h4>Layer: {{options.layer.top / 1000}}</h4>
+        <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="options.layer.top" [min]="0" [max]="10000" [step]="1" [style]="{'width':'14em'}"
+          [animate]="true"></p-slider>
       </div>
 
     </mat-expansion-panel>
@@ -29,13 +31,19 @@
       </mat-expansion-panel-header>
 
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.x"></mat-slider>
+        <h4>x: {{options.camera.position.x}}</h4>
+        <p-slider (onChange)="onCameraChange($event)" [(ngModel)]="options.camera.position.x" [min]="-400" [max]="400" [step]="1"
+          [animate]="true"></p-slider>
       </div>
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.y"></mat-slider>
+        <h4>y: {{options.camera.position.y}}</h4>
+        <p-slider (onChange)="onCameraChange($event)" [(ngModel)]="options.camera.position.y" [min]="-400" [max]="400" [step]="1"
+          [animate]="true"></p-slider>
       </div>
       <div class="max-width">
-        <mat-slider (change)="onCameraChange($event)" thumbLabel min="-400" max="400" step="1" [(value)]="options.camera.position.z"></mat-slider>
+        <h4>z: {{options.camera.position.z}}</h4>
+        <p-slider (onChange)="onCameraChange($event)" [(ngModel)]="options.camera.position.z" [min]="-400" [max]="400" [step]="1"
+          [animate]="true"></p-slider>
       </div>
 
     </mat-expansion-panel>
@@ -51,16 +59,16 @@
       </mat-expansion-panel-header>
 
       <div class="max-width">
-        <mat-checkbox (change)="onDebugChange($event)" name="axisHelper" [checked]="options.axesHelper">Axis helper</mat-checkbox>
+        <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="options.axesHelper"></p-inputSwitch>Axis helper
       </div>
       <div class="max-width">
-        <mat-checkbox (change)="onDebugChange($event)" name="wireframe" [checked]="options.wireframe">Wireframe</mat-checkbox>
+        <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="options.wireframe"></p-inputSwitch>Wireframe
       </div>
       <div class="max-width">
-        <mat-checkbox (change)="onDebugChange($event)" name="normals" [checked]="options.normals">Normals</mat-checkbox>
+        <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="options.normals"></p-inputSwitch>Normals
       </div>
       <div class="max-width">
-        <mat-checkbox (change)="onDebugChange($event)" name="ground" [checked]="options.ground">Ground</mat-checkbox>
+        <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="options.ground">xxx</p-inputSwitch>Ground
       </div>
 
     </mat-expansion-panel>
@@ -77,7 +85,7 @@
         <three-point-light [position]="[0, 0, 80]"></three-point-light>
       </three-scene>
     </three-renderer>
-  
+
   </div>
 
 </mat-drawer-container>
