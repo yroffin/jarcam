@@ -23,6 +23,7 @@ export class CamerasComponent implements OnInit, AfterContentInit {
       this.aspect,
       this.near,
       this.far);
+    this.camera.up.set( 0, 0, 1 );
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
   }
 

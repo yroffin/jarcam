@@ -2,8 +2,8 @@ import { Component, OnInit, Directive } from '@angular/core';
 import { Input } from '@angular/core';
 
 import * as THREE from 'three';
-import * as OrbitControlsFunction from 'three-orbit-controls'; 
-const OrbitControls = OrbitControlsFunction(THREE); // OrbitControls is now your constructor 
+import * as OrbitControls from 'three-orbitcontrols'; 
+//const OrbitControls = OrbitControlsFunction(THREE); // OrbitControls is now your constructor 
 
 @Directive({
   selector: 'three-orbit-controls'
@@ -12,7 +12,7 @@ export class ControlsComponent implements OnInit {
 
   @Input() enabled: boolean = true;
 
-  controls: THREE.OrbitControls;
+  controls: OrbitControls;
 
   ngOnInit() {
   }

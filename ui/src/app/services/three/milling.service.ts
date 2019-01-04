@@ -12,6 +12,8 @@ export class MillingService {
   private _mill: THREE.Mesh;
   private _detection: PlanarUtils;
   private _layer: THREE.Plane;
+  private _radius: number = 4;
+  private _tolerance: number = 0.01;
 
   constructor() {
     // Detection
@@ -29,7 +31,7 @@ export class MillingService {
   public get mill() {
     if (!this._mill) {
       // Add mill
-      let geometry = new THREE.CylinderGeometry(4, 4, 4, 32);
+      let geometry = new THREE.CylinderGeometry(this._radius, this._radius, 4, 32);
       let material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
       this._mill = new THREE.Mesh(geometry, material);
       this._mill.geometry.rotateX(Math.PI / 2);
@@ -41,29 +43,29 @@ export class MillingService {
 
   public translateX(scene: THREE.Scene, sens: number, value: number) {
     let iteration = value / 0.01;
-    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, 0.01) == false; iteration--) {
-      this.mill.translateX(0.01 * sens)
+    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, this._tolerance) == false; iteration--) {
+      this.mill.translateX(this._tolerance/2 * sens)
     }
-    this.mill.translateX(0.01 * -sens)
+    this.mill.translateX(this._tolerance/2 * -sens)
   }
 
   public translateY(scene: THREE.Scene, sens: number, value: number) {
     let iteration = value / 0.01;
-    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, 0.01) == false; iteration--) {
-      this.mill.translateY(0.01 * sens)
+    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, this._tolerance) == false; iteration--) {
+      this.mill.translateY(this._tolerance/2 * sens)
     }
-    this.mill.translateY(0.01 * -sens)
+    this.mill.translateY(this._tolerance/2 * -sens)
   }
 
-  public moveToZ(scene: THREE.Scene, from: THREE.Mesh, value: number): THREE.Object3D[] {
+  public moveToZ(scene: THREE.Scene, from: THREE.Mesh, value: number): PlanarUtils {
     // Fix plane level
     this._layer.constant = value;
     this._mill.translateZ(this._layer.constant - this._mill.position.z);
 
-    this._detection.intersect(this._layer, from);
-    this._detection.collisisionDetection(scene, this._mill, 0.01);
+    this._detection.intersect(this._radius, this._layer, from);
+    this._detection.collisisionDetection(scene, this._mill, this._tolerance);
 
-    return this._detection.meshes;
+    return this._detection;
   }
 
 }

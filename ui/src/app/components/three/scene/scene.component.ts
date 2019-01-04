@@ -148,24 +148,24 @@ export class SceneComponent implements OnInit {
 
   public onKeydown(event) {
     switch (event.key) {
-      case 'q':
-        this.millingService.translateX(this.scene, -1, 1);
-        break;
-      case 'd':
-        this.millingService.translateX(this.scene, 1, 1);
+      case 'z':
+        this.millingService.translateX(this.scene, -5, 5);
         break;
       case 's':
-        this.millingService.translateY(this.scene, -1, 1);
+        this.millingService.translateX(this.scene, 5, 5);
         break;
-      case 'z':
-        this.millingService.translateY(this.scene, 1, 1);
+      case 'q':
+        this.millingService.translateY(this.scene, -5, 5);
+        break;
+      case 'd':
+        this.millingService.translateY(this.scene, 5, 5);
         break;
       default:
     }
   }
 
   public onLayerChange(layer: any) {
-    let slice = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
+    let planar = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
 
     // remove previous slicing object
     _.each(this.slice, (child) => {
@@ -173,10 +173,16 @@ export class SceneComponent implements OnInit {
     });
 
     // compute new slice
-    this.slice = slice;
+    this.slice = [];
 
     // add new slicing object
-    _.each(this.slice, (child) => {
+    _.each(planar.meshes, (child) => {
+      this.slice.push(child);
+      this.scene.add(child);
+    });
+
+    _.each(planar.bounds, (child) => {
+      this.slice.push(child);
       this.scene.add(child);
     });
   }

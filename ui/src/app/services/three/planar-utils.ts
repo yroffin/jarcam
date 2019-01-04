@@ -15,6 +15,7 @@ export class Normal {
 
 class RayCast {
     meshes: THREE.Object3D[];
+    bounds: THREE.Object3D[];
     raycasters: Normal[];
 }
 
@@ -25,12 +26,16 @@ export class PlanarUtils {
     public PlanarUtils() {
     }
 
-    public intersect(layer: THREE.Plane, from: THREE.Mesh) {
-        this._store = PlanarUtils.planeIntersect(layer, from);
+    public intersect(radius: number, layer: THREE.Plane, from: THREE.Mesh) {
+        this._store = PlanarUtils.planeIntersect(radius, layer, from);
     }
 
     get meshes(): THREE.Object3D[] {
         return this._store.meshes;
+    }
+
+    get bounds(): THREE.Object3D[] {
+        return this._store.bounds;
     }
 
     get raycasters(): Normal[] {
@@ -58,16 +63,23 @@ export class PlanarUtils {
             let intersects = raycaster.intersectObject(target, false);
             let touch = _.filter(intersects, (intersect) => {
                 // Check tolerance
-                return intersect.distance <= tolerance;
+                return intersect.distance < tolerance;
             });
             return touch.length > 0;
         });
         return collision.length > 0;
     }
 
-    private static planeIntersect(layer: THREE.Plane, from: THREE.Mesh): RayCast {
+    /**
+     * planar intersect compute
+     * @param radius 
+     * @param layer 
+     * @param from 
+     */
+    private static planeIntersect(radius: number, layer: THREE.Plane, from: THREE.Mesh): RayCast {
         let fromGeometry = (<THREE.Geometry>from.geometry);
         let meshes: THREE.Object3D[] = [];
+        let bounds: THREE.Object3D[] = [];
         let raycasters: Normal[] = [];
 
         // find all matching faces
@@ -106,6 +118,25 @@ export class PlanarUtils {
         });
 
         // Find all chain
+        this.findAllChains(segments, meshes, raycasters);
+
+        // find all bounds
+        this.findAllBounds(radius, bounds, raycasters)
+
+        return {
+            meshes: meshes,
+            raycasters: raycasters,
+            bounds: bounds
+        }
+    }
+
+    /**
+     * compute all chains
+     * @param segments 
+     * @param meshes 
+     * @param raycasters 
+     */
+    private static findAllChains(segments: Segment[], meshes: THREE.Object3D[], raycasters: Normal[]): void {
         let chain: Segment[];
         chain = this.findNextChain(segments);
         while (chain && chain.length > 0) {
@@ -155,11 +186,130 @@ export class PlanarUtils {
             // Find next chain
             chain = this.findNextChain(segments);
         }
+    }
 
-        return {
-            meshes: meshes,
-            raycasters: raycasters
-        }
+    private static findAllBounds(radius: number, meshes: THREE.Object3D[], raycasters: Normal[]): void {
+        let chain: Segment[];
+        chain = this.findNextBoundingSegment(radius, raycasters);
+
+        // Build contour
+        let geometry = new THREE.Geometry();
+        _.each(chain, (line: Segment) => {
+            geometry.vertices.push(line.start);
+            geometry.vertices.push(line.end);
+        });
+
+        let line = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+            name: 'bound',
+            color: 0x4049AB,
+            linewidth: 10,
+        }))
+
+        meshes.push(line);
+
+        // Build raycaster
+        let rayGeometry = new THREE.Geometry();
+        _.each(chain, (line: Segment) => {
+            let direction = line.normal.clone().normalize();
+
+            // Normal has to be store in raycasters with an origin
+            // And a destination
+
+            _.each(PlanarUtils.split(line.start, line.end, 0.1), (vertice) => {
+                rayGeometry.vertices.push(vertice);
+                rayGeometry.vertices.push(new THREE.Vector3(vertice.x + direction.x, vertice.y + direction.y, vertice.z + direction.z));
+                raycasters.push(<Normal>{
+                    origin: vertice,
+                    direction: direction
+                });
+            });
+        });
+
+        // Build raycaster geometry
+        let rayLines = new THREE.LineSegments(rayGeometry, new THREE.LineBasicMaterial({
+            name: 'raycasters',
+            color: 0x3849BB,
+            linewidth: 10,
+        }))
+
+        meshes.push(rayLines);
+    }
+
+    /**
+     * compute all bounds
+     * @param radius 
+     * @param bounds 
+     * @param raycasters 
+     */
+    public static findNextBoundingSegment(radius: number, raycasters: Normal[]): Segment[] {
+        let segments: Segment[] = [];
+
+        let top: Normal = raycasters[0];
+        let bottom: Normal = raycasters[0];
+        let left: Normal = raycasters[0];
+        let right: Normal = raycasters[0];
+        _.each(raycasters, (raycaster: Normal) => {
+            if (raycaster.origin.x < top.origin.x) {
+                top = raycaster;
+            }
+            if (raycaster.origin.x > bottom.origin.x) {
+                bottom = raycaster;
+            }
+            if (raycaster.origin.y > right.origin.y) {
+                right = raycaster;
+            }
+            if (raycaster.origin.y < left.origin.y) {
+                left = raycaster;
+            }
+        });
+
+        let topVertice = top.origin.clone();
+        let bottomVertice = bottom.origin.clone();
+        let leftVertice = left.origin.clone();
+        let rightVertice = right.origin.clone();
+
+        topVertice.x -= radius * 2.05;
+        bottomVertice.x += radius * 2.05;
+        leftVertice.y -= radius * 2.05;
+        rightVertice.y += radius * 2.05;
+
+        let topLeft: THREE.Vector3 = topVertice;
+        let topRight: THREE.Vector3 = topVertice.clone();
+        let bottomRight: THREE.Vector3 = bottomVertice;
+        let bottomLeft: THREE.Vector3 = bottomVertice.clone();
+
+        let boundingGeometry = new THREE.Geometry();
+        topLeft.y = leftVertice.y;
+        topRight.y = rightVertice.y;
+        bottomRight.y = rightVertice.y;
+        bottomLeft.y = leftVertice.y;
+
+        segments.push({
+            start: topLeft.clone(),
+            end: topRight.clone(),
+            linked: false,
+            normal: new THREE.Vector3(1, 0, 0)
+        });
+        segments.push({
+            start: topRight.clone(),
+            end: bottomRight.clone(),
+            linked: false,
+            normal: new THREE.Vector3(0, -1, 0)
+        });
+        segments.push({
+            start: bottomRight.clone(),
+            end: bottomLeft.clone(),
+            linked: false,
+            normal: new THREE.Vector3(-1, 0, 0)
+        });
+        segments.push({
+            start: bottomLeft.clone(),
+            end: topLeft.clone(),
+            linked: false,
+            normal: new THREE.Vector3(0, 1, 0)
+        });
+
+        return segments;
     }
 
     public static split(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
