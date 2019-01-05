@@ -165,12 +165,17 @@ export class SceneComponent implements OnInit {
     // compute new slice
     this.slice = [];
 
-    // add new slicing object
+    // add new slicing object and infos
     _.each(planar.areas, (area) => {
       _.each(area.meshes, (child) => {
         this.slice.push(child);
         this.scene.add(child);
       });
+    });
+
+    _.each(planar.infos, (info) => {
+        this.slice.push(info);
+        this.scene.add(info);
     });
   }
 

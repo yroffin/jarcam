@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as _ from 'lodash';
+import { Normal, Area } from 'src/app/services/three/area.class';
 
 class Segment {
     start: THREE.Vector3;
@@ -8,20 +9,10 @@ class Segment {
     linked: boolean;
 }
 
-export class Normal {
-    origin: THREE.Vector3;
-    direction: THREE.Vector3;
-}
-
-export class Area {
-    public meshes: THREE.Object3D[];
-    public raycasters: Normal[];
-    public isBound: boolean;
-}
-
 export class PlanarUtils {
 
-    public areas: Area[];
+    public areas: Array<Area>;
+    public infos: Array<THREE.Group>;
 
     public bounds: THREE.Object3D[];
     public topLeft: THREE.Vector3;
@@ -73,6 +64,7 @@ export class PlanarUtils {
         // Reset
         this.bounds = [];
         this.areas = [];
+        this.infos = [];
 
         // find all matching faces
         const keep: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
@@ -120,6 +112,11 @@ export class PlanarUtils {
 
         // find all bounds
         this.findAllBounds(radius, this.areas);
+
+        // Compute info
+        _.each(this.areas, (area: Area) => {
+            this.infos.push(area.computeInfo());
+        });
     }
 
     /**
@@ -127,13 +124,10 @@ export class PlanarUtils {
      */
     private findAllChains(segments: Segment[], areas: Array<Area>): void {
         let chain: Array<Segment>;
+        let offset = 1;
         chain = this.findNextChain(segments);
         while (chain && chain.length > 0) {
-            const localArea: Area = {
-                isBound: false,
-                meshes: [],
-                raycasters: []
-            };
+            const localArea: Area = new Area(false, 'shape#' + offset++);
 
             // Build contour
             const geometry = new THREE.Geometry();
@@ -177,6 +171,8 @@ export class PlanarUtils {
 
             localArea.meshes.push(rayLines);
 
+            localArea.computeInfo();
+
             areas.push(localArea);
 
             // Find next chain
@@ -188,11 +184,7 @@ export class PlanarUtils {
         let chain: Segment[];
         chain = this.findNextBoundingSegment(radius, areas);
 
-        const localArea: Area = {
-            isBound: true,
-            meshes: [],
-            raycasters: []
-        };
+        const localArea: Area = new Area(true, 'bounds');
 
         // Build contour
         const geometry = new THREE.Geometry();
