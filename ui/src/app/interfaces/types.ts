@@ -1,4 +1,4 @@
 interface Array<T> {
     length: number;
-    push(T);
+    push(...optionalParams: T[]);
 }

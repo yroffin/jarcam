@@ -13,11 +13,17 @@ export class Normal {
     direction: THREE.Vector3;
 }
 
+export class Area {
+    public meshes: THREE.Object3D[];
+    public raycasters: Normal[];
+    public isBound: boolean;
+}
+
 export class PlanarUtils {
 
-    public meshes: THREE.Object3D[];
+    public areas: Area[];
+
     public bounds: THREE.Object3D[];
-    public raycasters: Normal[];
     public topLeft: THREE.Vector3;
     public topRight: THREE.Vector3;
     public bottomRight: THREE.Vector3;
@@ -32,27 +38,30 @@ export class PlanarUtils {
 
     public collisisionDetection(scene: THREE.Scene, target: THREE.Mesh, tolerance: number): boolean {
         scene.updateMatrixWorld(false);
-        return this.collisisionDetectionRaw(this.raycasters, target, tolerance);
+        return this.collisisionDetectionRaw(this.areas, target, tolerance);
     }
 
     /**
      * find all raycaster touching target with a tolerance distance
      */
-    public collisisionDetectionRaw(raycasters: Normal[], target: THREE.Mesh, tolerance: number): boolean {
-        // Compute
-        const raycaster = new THREE.Raycaster();
-        const collision = _.filter(raycasters, (ray) => {
-            // Fix origin and destinations
-            raycaster.set(ray.origin, ray.direction);
-            // Find intersection
-            const intersects = raycaster.intersectObject(target, false);
-            const touch = _.filter(intersects, (intersect) => {
-                // Check tolerance
-                return intersect.distance < tolerance;
+    public collisisionDetectionRaw(areas: Area[], target: THREE.Mesh, tolerance: number): boolean {
+        const touched = _.filter(areas, (area) => {
+            // Compute
+            const raycaster = new THREE.Raycaster();
+            const collision = _.filter(area.raycasters, (ray) => {
+                // Fix origin and destinations
+                raycaster.set(ray.origin, ray.direction);
+                // Find intersection
+                const intersects = raycaster.intersectObject(target, false);
+                const touch = _.filter(intersects, (intersect) => {
+                    // Check tolerance
+                    return intersect.distance < tolerance;
+                });
+                return touch.length > 0;
             });
-            return touch.length > 0;
+            return collision.length > 0;
         });
-        return collision.length > 0;
+        return touched.length > 0;
     }
 
     /**
@@ -62,9 +71,8 @@ export class PlanarUtils {
         const fromGeometry = (<THREE.Geometry>from.geometry);
 
         // Reset
-        this.meshes = [];
         this.bounds = [];
-        this.raycasters = [];
+        this.areas = [];
 
         // find all matching faces
         const keep: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
@@ -108,19 +116,24 @@ export class PlanarUtils {
         });
 
         // Find all chain
-        this.findAllChains(segments, this.meshes, this.raycasters);
+        this.findAllChains(segments, this.areas);
 
         // find all bounds
-        this.findAllBounds(radius, this.bounds, this.raycasters);
+        this.findAllBounds(radius, this.areas);
     }
 
     /**
      * compute all chains
      */
-    private findAllChains(segments: Segment[], meshes: Array<THREE.Object3D>, raycasters: Normal[]): void {
+    private findAllChains(segments: Segment[], areas: Array<Area>): void {
         let chain: Array<Segment>;
         chain = this.findNextChain(segments);
         while (chain && chain.length > 0) {
+            const localArea: Area = {
+                isBound: false,
+                meshes: [],
+                raycasters: []
+            };
 
             // Build contour
             const geometry = new THREE.Geometry();
@@ -135,7 +148,7 @@ export class PlanarUtils {
                 linewidth: 10,
             }));
 
-            meshes.push(lineSegment);
+            localArea.meshes.push(lineSegment);
 
             // Build raycaster
             const rayGeometry = new THREE.Geometry();
@@ -148,7 +161,7 @@ export class PlanarUtils {
                 _.each(this.split(element.start, element.end, 0.1), (vertice) => {
                     rayGeometry.vertices.push(vertice);
                     rayGeometry.vertices.push(new THREE.Vector3(vertice.x + direction.x, vertice.y + direction.y, vertice.z + direction.z));
-                    raycasters.push(<Normal>{
+                    localArea.raycasters.push(<Normal>{
                         origin: vertice,
                         direction: direction
                     });
@@ -162,16 +175,24 @@ export class PlanarUtils {
                 linewidth: 10,
             }));
 
-            meshes.push(rayLines);
+            localArea.meshes.push(rayLines);
+
+            areas.push(localArea);
 
             // Find next chain
             chain = this.findNextChain(segments);
         }
     }
 
-    private findAllBounds(radius: number, meshes: THREE.Object3D[], raycasters: Normal[]): void {
+    private findAllBounds(radius: number, areas: Array<Area>): void {
         let chain: Segment[];
-        chain = this.findNextBoundingSegment(radius, raycasters);
+        chain = this.findNextBoundingSegment(radius, areas);
+
+        const localArea: Area = {
+            isBound: true,
+            meshes: [],
+            raycasters: []
+        };
 
         // Build contour
         const geometry = new THREE.Geometry();
@@ -186,7 +207,7 @@ export class PlanarUtils {
             linewidth: 10,
         }));
 
-        meshes.push(lineSegment);
+        localArea.meshes.push(lineSegment);
 
         // Build raycaster
         const rayGeometry = new THREE.Geometry();
@@ -199,7 +220,7 @@ export class PlanarUtils {
             _.each(this.split(line.start, line.end, 0.1), (vertice) => {
                 rayGeometry.vertices.push(vertice);
                 rayGeometry.vertices.push(new THREE.Vector3(vertice.x + direction.x, vertice.y + direction.y, vertice.z + direction.z));
-                raycasters.push(<Normal>{
+                localArea.raycasters.push(<Normal>{
                     origin: vertice,
                     direction: direction
                 });
@@ -213,54 +234,60 @@ export class PlanarUtils {
             linewidth: 10,
         }));
 
-        meshes.push(rayLines);
+        localArea.meshes.push(rayLines);
+
+        // Add this local area
+        areas.push(localArea);
     }
 
     /**
      * compute all bounds
      */
-    public findNextBoundingSegment(radius: number, raycasters: Normal[]): Segment[] {
+    public findNextBoundingSegment(radius: number, areas: Array<Area>): Segment[] {
         const segments: Segment[] = [];
 
-        let top: Normal = raycasters[0];
-        let bottom: Normal = raycasters[0];
-        let left: Normal = raycasters[0];
-        let right: Normal = raycasters[0];
-        _.each(raycasters, (raycaster: Normal) => {
-            if (raycaster.origin.x < top.origin.x) {
-                top = raycaster;
-            }
-            if (raycaster.origin.x > bottom.origin.x) {
-                bottom = raycaster;
-            }
-            if (raycaster.origin.y > right.origin.y) {
-                right = raycaster;
-            }
-            if (raycaster.origin.y < left.origin.y) {
-                left = raycaster;
-            }
+        let top: Normal = areas[0].raycasters[0];
+        let bottom: Normal = areas[0].raycasters[0];
+        let left: Normal = areas[0].raycasters[0];
+        let right: Normal = areas[0].raycasters[0];
+
+        _.each(areas, (area) => {
+            _.each(area.raycasters, (raycaster: Normal) => {
+                if (raycaster.origin.x < top.origin.x) {
+                    top = raycaster;
+                }
+                if (raycaster.origin.x > bottom.origin.x) {
+                    bottom = raycaster;
+                }
+                if (raycaster.origin.y > right.origin.y) {
+                    right = raycaster;
+                }
+                if (raycaster.origin.y < left.origin.y) {
+                    left = raycaster;
+                }
+            });
+
+            const topVertice = top.origin.clone();
+            const bottomVertice = bottom.origin.clone();
+            const leftVertice = left.origin.clone();
+            const rightVertice = right.origin.clone();
+
+            topVertice.x -= radius * 2.05;
+            bottomVertice.x += radius * 2.05;
+            leftVertice.y -= radius * 2.05;
+            rightVertice.y += radius * 2.05;
+
+            this.topLeft = topVertice;
+            this.topRight = topVertice.clone();
+            this.bottomRight = bottomVertice;
+            this.bottomLeft = bottomVertice.clone();
+
+            const boundingGeometry = new THREE.Geometry();
+            this.topLeft.y = leftVertice.y;
+            this.topRight.y = rightVertice.y;
+            this.bottomRight.y = rightVertice.y;
+            this.bottomLeft.y = leftVertice.y;
         });
-
-        const topVertice = top.origin.clone();
-        const bottomVertice = bottom.origin.clone();
-        const leftVertice = left.origin.clone();
-        const rightVertice = right.origin.clone();
-
-        topVertice.x -= radius * 2.05;
-        bottomVertice.x += radius * 2.05;
-        leftVertice.y -= radius * 2.05;
-        rightVertice.y += radius * 2.05;
-
-        this.topLeft = topVertice;
-        this.topRight = topVertice.clone();
-        this.bottomRight = bottomVertice;
-        this.bottomLeft = bottomVertice.clone();
-
-        const boundingGeometry = new THREE.Geometry();
-        this.topLeft.y = leftVertice.y;
-        this.topRight.y = rightVertice.y;
-        this.bottomRight.y = rightVertice.y;
-        this.bottomLeft.y = leftVertice.y;
 
         segments.push({
             start: this.topLeft.clone(),

@@ -25,13 +25,14 @@ export class SceneComponent implements OnInit {
   private helper: THREE.FaceNormalsHelper;
   private _axis: Axis;
 
+  private ground: THREE.Mesh;
 
   constructor(private millingService: MillingService) {
     // Create scene
     this.scene = new THREE.Scene();
 
     // add grid helper
-    let helper = this.GridHelper(200, 200);
+    const helper = this.GridHelper(200, 200);
     this.scene.add(helper);
 
     // Add layer helper
@@ -58,18 +59,18 @@ export class SceneComponent implements OnInit {
     color1 = new THREE.Color(color1 !== undefined ? color1 : 0x444444);
     color2 = new THREE.Color(color2 !== undefined ? color2 : 0x888888);
 
-    var center = divisions / 2;
-    var step = size / divisions;
-    var halfSize = size / 2;
+    const center = divisions / 2;
+    const step = size / divisions;
+    const halfSize = size / 2;
 
-    var vertices = [], colors = [];
+    const vertices = [], colors = [];
 
-    for (var i = 0, j = 0, k = - halfSize; i <= divisions; i++ , k += step) {
+    for (let i = 0, j = 0, k = - halfSize; i <= divisions; i++ , k += step) {
 
       vertices.push(- halfSize, k, 0, halfSize, k, 0);
       vertices.push(k, - halfSize, 0, k, halfSize, 0);
 
-      var color = i === center ? color1 : color2;
+      const color = i === center ? color1 : color2;
 
       color.toArray(colors, j); j += 3;
       color.toArray(colors, j); j += 3;
@@ -78,11 +79,11 @@ export class SceneComponent implements OnInit {
 
     }
 
-    var geometry = new THREE.BufferGeometry();
+    const geometry = new THREE.BufferGeometry();
     geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-    var material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
+    const material = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
 
     return new THREE.LineSegments(geometry, material);
   }
@@ -102,17 +103,6 @@ export class SceneComponent implements OnInit {
     this.scene.add(this.camera);
     this.scene.add(this.lightComps.light);
     this.scene.add(this.lightComps.helper);
-
-    const meshes = [
-    ];
-
-    for (let mesh of meshes) {
-      if (mesh.object) {
-        this.scene.add(mesh.object);
-      } else if (mesh.attachScene) {
-        mesh.attachScene(this.scene);
-      }
-    }
   }
 
   private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh {
@@ -123,16 +113,16 @@ export class SceneComponent implements OnInit {
       }
     }
 
-    let geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
+    const geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
     geometry.computeVertexNormals();
 
-    let material = new MeshToonMaterial({
+    const material = new MeshToonMaterial({
       lights: true,
       transparent: true,
       opacity: 0.5,
     });
 
-    let mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, material);
     mesh.name = 'piece';
     mesh.receiveShadow = true;
     mesh.castShadow = true;
@@ -165,7 +155,7 @@ export class SceneComponent implements OnInit {
   }
 
   public onLayerChange(layer: any) {
-    let planar = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
+    const planar = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
 
     // remove previous slicing object
     _.each(this.slice, (child) => {
@@ -176,14 +166,11 @@ export class SceneComponent implements OnInit {
     this.slice = [];
 
     // add new slicing object
-    _.each(planar.meshes, (child) => {
-      this.slice.push(child);
-      this.scene.add(child);
-    });
-
-    _.each(planar.bounds, (child) => {
-      this.slice.push(child);
-      this.scene.add(child);
+    _.each(planar.areas, (area) => {
+      _.each(area.meshes, (child) => {
+        this.slice.push(child);
+        this.scene.add(child);
+      });
     });
   }
 
@@ -193,7 +180,7 @@ export class SceneComponent implements OnInit {
 
   normals(enable: boolean) {
     if (!this.helper) {
-      let material = new THREE.MeshNormalMaterial();
+      const material = new THREE.MeshNormalMaterial();
       this.normal = new THREE.Mesh(this.mesh.geometry, material);
       this.helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
       this.scene.add(this.helper);
@@ -201,8 +188,6 @@ export class SceneComponent implements OnInit {
     this.helper.visible = enable;
     this.normal.visible = enable;
   }
-
-  private ground: THREE.Mesh;
 
   public showGround(enable: boolean) {
     if (!this.ground) {
