@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnChanges, AfterViewInit } from '@angular/core';
 import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
 import * as THREE from 'three';
 import { SceneComponent } from '../scene/scene.component';
@@ -10,7 +10,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 @Directive({
   selector: 'three-renderer'
 })
-export class RendererComponent {
+export class RendererComponent implements OnChanges, AfterViewInit {
 
   @Input() height: number;
   @Input() width: number;
@@ -25,8 +25,6 @@ export class RendererComponent {
     private elementRef: ElementRef,
     private stlLoaderService: StlLoaderService) {
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true
     });
     this.renderer.shadowMap.enabled = true;
   }
@@ -36,7 +34,7 @@ export class RendererComponent {
       this.sceneComp.scene,
       url,
       (geometry: THREE.BufferGeometry) => {
-        this.scene.setGeometryPiece(geometry)
+        this.scene.setGeometryPiece(geometry);
       },
       () => {
       },
@@ -47,7 +45,7 @@ export class RendererComponent {
   public onKeydown(event) {
     this.scene.onKeydown(event);
   }
-  
+
   public onLayerChange() {
     this.scene.onLayerChange(this.options.layer);
     this.scene.showLayer(this.options.layer.visible);
@@ -96,23 +94,28 @@ export class RendererComponent {
       this.orbitComponent.setupControls(this.camera, this.renderer);
     }
 
-    this.render(false);
-  }
-
-  render(checked: boolean) {
     if (this.orbitComponent) {
       this.orbitComponent.updateControls(this.scene.scene, this.camera);
     }
 
-    if (checked) {
-      this.options.camera.position.x = this.camera.position.x;
-      this.options.camera.position.y = this.camera.position.y;
-      this.options.camera.position.z = this.camera.position.z;
+    const callback = (args) => {
+      requestAnimationFrame(callback);
+      this.render();
+    };
+
+    requestAnimationFrame(callback);
+  }
+
+  render() {
+    if (this.orbitComponent) {
+      this.orbitComponent.updateControls(this.scene.scene, this.camera);
     }
 
-    this.renderer.render(this.scene.scene, this.camera);
+    this.options.camera.position.x = this.camera.position.x;
+    this.options.camera.position.y = this.camera.position.y;
+    this.options.camera.position.z = this.camera.position.z;
 
-    requestAnimationFrame(() => this.render(true));
+    this.renderer.render(this.scene.scene, this.camera);
   }
 
 }

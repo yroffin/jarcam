@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { StoreModule } from '@ngrx/store';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -17,6 +18,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { SliderModule } from 'primeng/slider';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -49,6 +51,7 @@ import { StlLoaderService } from './services/three/stl-loader.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MillingService } from 'src/app/services/three/milling.service';
+import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
 
 @NgModule({
   declarations: [
@@ -59,10 +62,13 @@ import { MillingService } from 'src/app/services/three/milling.service';
     ControlsComponent,
     LightsComponent,
     RendererComponent,
-    SceneComponent
+    SceneComponent,
+    ToolpathViewComponent
   ],
   imports: [
     BrowserModule,
+    StoreModule.forRoot({
+    }),
     AppRoutingModule,
     BrowserAnimationsModule,
     FormsModule,
@@ -100,7 +106,8 @@ import { MillingService } from 'src/app/services/three/milling.service';
     MatSidenavModule,
     MatExpansionModule,
     MatCheckboxModule,
-    MatCardModule
+    MatCardModule,
+    MatTabsModule
   ],
   providers: [
     StlLoaderService,

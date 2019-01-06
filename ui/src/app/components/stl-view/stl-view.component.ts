@@ -8,6 +8,10 @@ import { ElementRef } from '@angular/core';
 import { ContentChild } from '@angular/core';
 import { HostBinding } from '@angular/core';
 
+import Voronoi from 'voronoi';
+import paper from 'paper';
+import * as _ from 'lodash';
+
 @Component({
   selector: 'app-stl-view',
   templateUrl: './stl-view.component.html',
@@ -22,7 +26,7 @@ export class StlViewComponent implements OnInit, OnChanges {
   @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
 
-  public val3 = 0;
+  public selected = 0;
 
   private options = {
     // layers
@@ -40,9 +44,12 @@ export class StlViewComponent implements OnInit, OnChanges {
     camera: {
       position: { x: 0, y: 0, z: 0 },
     },
-  }
+  };
 
-  constructor(private elementRef: ElementRef) { }
+  constructor(
+    private elementRef: ElementRef
+  ) {
+  }
 
   ngOnInit() {
   }
@@ -67,6 +74,10 @@ export class StlViewComponent implements OnInit, OnChanges {
     }
   }
 
+  onSelectedChange(event) {
+    this.selected = event;
+  }
+
   @HostListener('window:resize')
   @HostListener('window:vrdisplaypresentchange')
   resetWidthHeight() {
@@ -83,7 +94,9 @@ export class StlViewComponent implements OnInit, OnChanges {
   }
 
   format(): string {
-    return Math.round(this.options.camera.position.x) + ',' + Math.round(this.options.camera.position.y) + ',' + Math.round(this.options.camera.position.z);
+    return Math.round(this.options.camera.position.x) + ','
+    + Math.round(this.options.camera.position.y) + ','
+    + Math.round(this.options.camera.position.z);
   }
 
   onLayerVisibilityChange(event) {

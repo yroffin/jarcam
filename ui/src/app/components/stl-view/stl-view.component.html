@@ -74,18 +74,29 @@
     </mat-expansion-panel>
   </mat-drawer>
 
-  <div #renderView class="max-width" (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
+  <mat-tab-group (selectedIndexChange)="onSelectedChange($event)">
+    <mat-tab label="Scene">
 
-    <three-renderer [options]="options" [height]="height" [width]="width">
-      <three-orbit-controls [enabled]="true">
-      </three-orbit-controls>
-      <three-scene>
-        <three-perspective-camera [height]="height" [width]="width" [positions]="[80, 80, 80]">
-        </three-perspective-camera>
-        <three-point-light [position]="[0, 0, 80]"></three-point-light>
-      </three-scene>
-    </three-renderer>
+      <div #renderView class="max-width" (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
 
-  </div>
+        <three-renderer [options]="options" [height]="height" [width]="width">
+          <three-orbit-controls [enabled]="true">
+          </three-orbit-controls>
+          <three-scene>
+            <three-perspective-camera [height]="height" [width]="width" [positions]="[80, 80, 80]">
+            </three-perspective-camera>
+            <three-point-light [position]="[0, 0, 80]"></three-point-light>
+          </three-scene>
+        </three-renderer>
+
+      </div>
+
+    </mat-tab>
+
+    <mat-tab label="Path">
+      <app-toolpath-view></app-toolpath-view>
+    </mat-tab>
+
+  </mat-tab-group>
 
 </mat-drawer-container>
