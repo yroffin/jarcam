@@ -41,11 +41,8 @@ import { AccordionModule } from 'primeng/accordion';
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
-import { CamerasComponent } from './components/three/cameras/cameras.component';
-import { ControlsComponent } from './components/three/controls/controls.component';
-import { LightsComponent } from './components/three/lights/lights.component';
 import { RendererComponent } from './components/three/renderer/renderer.component';
-import { SceneComponent } from './components/three/scene/scene.component';
+import { SceneDirective } from './components/three/scene/scene.component';
 
 import { StlLoaderService } from './services/three/stl-loader.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
@@ -58,11 +55,8 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
     AppComponent,
     StlViewComponent,
     HomePageComponent,
-    CamerasComponent,
-    ControlsComponent,
-    LightsComponent,
     RendererComponent,
-    SceneComponent,
+    SceneDirective,
     ToolpathViewComponent
   ],
   imports: [

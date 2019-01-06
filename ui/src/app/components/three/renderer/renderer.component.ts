@@ -1,58 +1,59 @@
 import { Component, OnChanges, AfterViewInit } from '@angular/core';
 import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
+
 import * as THREE from 'three';
-import { SceneComponent } from '../scene/scene.component';
-import { ControlsComponent } from '../controls/controls.component';
+import * as OrbitControls from 'three-orbitcontrols';
+
+import { SceneDirective } from '../scene/scene.component';
 import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
-@Directive({
-  selector: 'three-renderer'
+@Component({
+  selector: 'app-renderer',
+  templateUrl: './renderer.component.html',
+  styleUrls: ['./renderer.component.css']
 })
-export class RendererComponent implements OnChanges, AfterViewInit {
+export class RendererComponent implements AfterViewInit {
 
-  @Input() height: number;
-  @Input() width: number;
   @Input() options: any;
 
-  @ContentChild(SceneComponent) sceneComp: SceneComponent;
-  @ContentChild(ControlsComponent) orbitComponent: ControlsComponent;
+  @Input() orbit = true;
+  @Input() cameraPosition;
+  @Input() lightColor = 0xffffff;
+  @Input() lightPosition;
+
+  @ViewChild('threeView') threeCanvas: ElementRef;
+  @ViewChild(SceneDirective) sceneComp: SceneDirective;
 
   private renderer: THREE.WebGLRenderer;
+  private controls: OrbitControls;
+
+  // Camera
+  viewAngle = 45;
+  near = 1;
+  far = 1000;
+  private camera: THREE.PerspectiveCamera;
+
+  // Lights
+  private light: THREE.PointLight;
+  private helper: THREE.PointLightHelper;
 
   constructor(
-    private elementRef: ElementRef,
     private stlLoaderService: StlLoaderService) {
-    this.renderer = new THREE.WebGLRenderer({
-    });
-    this.renderer.shadowMap.enabled = true;
-  }
-
-  load(url: string) {
-    this.stlLoaderService.loadStl(
-      this.sceneComp.scene,
-      url,
-      (geometry: THREE.BufferGeometry) => {
-        this.scene.setGeometryPiece(geometry);
-      },
-      () => {
-      },
-      () => {
-      });
   }
 
   public onKeydown(event) {
-    this.scene.onKeydown(event);
+    this.sceneComp.onKeydown(event);
   }
 
   public onLayerChange() {
-    this.scene.onLayerChange(this.options.layer);
-    this.scene.showLayer(this.options.layer.visible);
+    this.sceneComp.onLayerChange(this.options.layer);
+    this.sceneComp.showLayer(this.options.layer.visible);
   }
 
   public onCameraChange() {
-    this.scene.camera.position.set(
+    this.camera.position.set(
       this.options.camera.position.x,
       this.options.camera.position.y,
       this.options.camera.position.z);
@@ -60,43 +61,52 @@ export class RendererComponent implements OnChanges, AfterViewInit {
 
   public onDebugChange() {
     // activate normals
-    this.scene.normals(this.options.normals);
+    this.sceneComp.normals(this.options.normals);
     // activate wireframe
-    this.scene.wireframe(this.options.wireframe);
+    this.sceneComp.wireframe(this.options.wireframe);
     // activate axis
-    this.scene.axis(this.options.axesHelper);
+    this.sceneComp.axis(this.options.axesHelper);
     // activate ground
-    this.scene.showGround(this.options.ground);
+    this.sceneComp.showGround(this.options.ground);
   }
 
   get scene() {
-    return this.sceneComp;
-  }
-
-  get camera() {
-    return this.sceneComp.camera;
-  }
-
-  ngOnChanges(changes) {
-    const widthChng = changes.width && changes.width.currentValue;
-    const heightChng = changes.height && changes.height.currentValue;
-    if (widthChng || heightChng) {
-      this.renderer.setSize(this.width, this.height);
-    }
+    return this.sceneComp.scene;
   }
 
   ngAfterViewInit() {
-    this.elementRef.nativeElement.appendChild(this.renderer.domElement);
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.threeCanvas.nativeElement
+    });
+
     this.renderer.setPixelRatio(Math.floor(window.devicePixelRatio));
-    this.renderer.setSize(this.width, this.height);
 
-    if (this.orbitComponent) {
-      this.orbitComponent.setupControls(this.camera, this.renderer);
-    }
+    // Camera
+    this.camera = new THREE.PerspectiveCamera(
+      this.viewAngle,
+      800 / 600,
+      this.near,
+      this.far);
+    this.setPosition(this.camera, this.cameraPosition);
+    this.camera.up.set(0, 0, 1);
+    this.camera.lookAt(this.scene.position);
 
-    if (this.orbitComponent) {
-      this.orbitComponent.updateControls(this.scene.scene, this.camera);
-    }
+    // Orbit control
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enabled = this.orbit;
+
+    // Lights
+    this.light = new THREE.PointLight(this.lightColor, 1, 1000);
+    this.setPosition(this.light, this.lightPosition);
+    this.helper = new THREE.PointLightHelper(this.light, 10, 0xff0000);
+
+    // Scene
+    this.camera.lookAt(this.scene.position);
+    this.scene.add(this.camera);
+    this.scene.add(this.light);
+    this.scene.add(this.helper);
+
+    this.updateControls(this.scene, this.camera);
 
     const callback = (args) => {
       requestAnimationFrame(callback);
@@ -106,16 +116,54 @@ export class RendererComponent implements OnChanges, AfterViewInit {
     requestAnimationFrame(callback);
   }
 
+  public setSize(width: number, height: number) {
+    this.renderer.setSize(width, height);
+    this.updateAspect(width / height);
+  }
+
   render() {
-    if (this.orbitComponent) {
-      this.orbitComponent.updateControls(this.scene.scene, this.camera);
-    }
+    this.updateControls(this.scene, this.camera);
 
     this.options.camera.position.x = this.camera.position.x;
     this.options.camera.position.y = this.camera.position.y;
     this.options.camera.position.z = this.camera.position.z;
 
-    this.renderer.render(this.scene.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
   }
+
+  updateAspect(ratio) {
+    if (this.camera) {
+      this.camera.aspect = ratio;
+      this.camera.updateProjectionMatrix();
+    }
+  }
+
+  load(url: string, done: any) {
+    this.stlLoaderService.loadStl(
+      this.sceneComp.scene,
+      url,
+      (geometry: THREE.BufferGeometry) => {
+        this.sceneComp.setGeometryPiece(geometry);
+        done();
+      },
+      () => {
+      },
+      () => {
+      });
+  }
+
+  setPosition(target: THREE.Object3D, position: Array<number>) {
+    target.position.set(
+      position[0],
+      position[1],
+      position[2]);
+  }
+
+  updateControls(scene, camera) {
+    if (this.controls) {
+      this.controls.update();
+    }
+  }
+
 
 }

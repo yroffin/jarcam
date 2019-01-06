@@ -79,15 +79,7 @@
 
       <div #renderView class="max-width" (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
 
-        <three-renderer [options]="options" [height]="height" [width]="width">
-          <three-orbit-controls [enabled]="true">
-          </three-orbit-controls>
-          <three-scene>
-            <three-perspective-camera [height]="height" [width]="width" [positions]="[80, 80, 80]">
-            </three-perspective-camera>
-            <three-point-light [position]="[0, 0, 80]"></three-point-light>
-          </three-scene>
-        </three-renderer>
+        <app-renderer [options]="options" [cameraPosition]="[80, 80, 80]" [lightPosition]="[0, 0, 80]"></app-renderer>
 
       </div>
 
