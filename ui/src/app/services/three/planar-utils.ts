@@ -115,6 +115,7 @@ export class PlanarUtils {
 
         // Compute info
         _.each(this.areas, (area: Area) => {
+            area.compute2dShape();
             this.infos.push(area.computeInfo());
         });
     }

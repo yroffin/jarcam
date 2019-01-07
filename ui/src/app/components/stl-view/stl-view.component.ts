@@ -9,8 +9,8 @@ import { ContentChild } from '@angular/core';
 import { HostBinding } from '@angular/core';
 
 import Voronoi from 'voronoi';
-import paper from 'paper';
 import * as _ from 'lodash';
+import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath-view.component';
 
 @Component({
   selector: 'app-stl-view',
@@ -19,12 +19,10 @@ import * as _ from 'lodash';
 })
 export class StlViewComponent implements AfterViewInit {
 
-  @Input() ngModel: any;
-  @Input() height: number;
-  @Input() width: number;
-
   @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
+  @ViewChild('pathView') pathView: ElementRef;
+  @ViewChild(ToolpathViewComponent) toolpathViewComponent: ToolpathViewComponent;
 
   public selected = 0;
 
@@ -54,8 +52,8 @@ export class StlViewComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.rendererComponent.load('/assets/cube.stl', () => {
       this.options.layer.visible = true;
-      this.rendererComponent.onLayerChange();
-      this.rendererComponent.onDebugChange();
+      this.onLayerChange();
+      this.onDebugChange();
     });
     this.resetWidthHeight();
   }
@@ -67,10 +65,9 @@ export class StlViewComponent implements AfterViewInit {
   @HostListener('window:resize')
   @HostListener('window:vrdisplaypresentchange')
   resetWidthHeight() {
-    this.width = this.rendererView.nativeElement.clientWidth;
-    this.height = this.rendererView.nativeElement.clientHeight;
-    this.rendererComponent.setSize(this.width, this.height);
-    console.log('resize', this.width, this.height);
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    this.rendererComponent.setSize(width, height);
   }
 
   public onKeydown(event) {
@@ -85,18 +82,19 @@ export class StlViewComponent implements AfterViewInit {
 
   onLayerVisibilityChange(event) {
     this.options.layer.visible = event.checked;
-    this.rendererComponent.onLayerChange();
+    this.onLayerChange();
   }
 
-  onLayerChange(event) {
+  onLayerChange(event?) {
     this.rendererComponent.onLayerChange();
+    this.toolpathViewComponent.onLayerChange();
   }
 
   onCameraChange(event) {
     this.rendererComponent.onCameraChange();
   }
 
-  onDebugChange(event, name: string) {
+  onDebugChange(event?, name?: string) {
     switch (name) {
       case 'axisHelper':
         this.options.axesHelper = event.checked;

@@ -2,3 +2,8 @@
 @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* Scale canvas with resize attribute to full size */
+canvas[resize] {
+    width  : 100%;
+    height : 100%;
+}

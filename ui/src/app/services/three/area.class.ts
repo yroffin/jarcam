@@ -8,6 +8,8 @@ export class Normal {
 
 export class Area {
     public meshes: THREE.Object3D[];
+    public vertices2d: THREE.Vector3[];
+
     public raycasters: Normal[];
     public isBound: boolean;
     private name: string;
@@ -22,6 +24,13 @@ export class Area {
         this.name = name;
         this.meshes = [];
         this.raycasters = [];
+    }
+
+    public compute2dShape() {
+        this.vertices2d = [];
+        _.each(this.raycasters, (raycaster) => {
+            this.vertices2d.push(raycaster.origin.clone());
+        });
     }
 
     private computeBoundingBox(top: THREE.Vector3, right: THREE.Vector3, bottom: THREE.Vector3, left: THREE.Vector3) {

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import * as _ from 'lodash';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
+import { Area } from 'src/app/services/three/area.class';
 
 @Injectable({
   providedIn: 'root'
@@ -68,6 +69,10 @@ export class MillingService {
     this.mill.translateY(this._detection.bottomLeft.y - this._mill.position.y + this._radius + this._tolerance);
 
     return this._detection;
+  }
+
+  public getAreas(): Array<Area> {
+    return this._detection.areas;
   }
 
 }

@@ -77,16 +77,18 @@
   <mat-tab-group (selectedIndexChange)="onSelectedChange($event)">
     <mat-tab label="Scene">
 
-      <div #renderView class="max-width" (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
-
+      <div #renderView (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
         <app-renderer [options]="options" [cameraPosition]="[80, 80, 80]" [lightPosition]="[0, 0, 80]"></app-renderer>
-
       </div>
 
     </mat-tab>
 
     <mat-tab label="Path">
-      <app-toolpath-view></app-toolpath-view>
+
+      <div #pathView (dblclick)="drawer.toggle()">
+        <app-toolpath-view></app-toolpath-view>
+      </div>
+
     </mat-tab>
 
   </mat-tab-group>

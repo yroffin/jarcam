@@ -16,6 +16,9 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 })
 export class RendererComponent implements AfterViewInit {
 
+  private width = window.innerWidth;
+  private height = window.innerHeight;
+
   @Input() options: any;
 
   @Input() orbit = true;
@@ -48,6 +51,7 @@ export class RendererComponent implements AfterViewInit {
   }
 
   public onLayerChange() {
+    console.log('onLayerChange', this.options.layer);
     this.sceneComp.onLayerChange(this.options.layer);
     this.sceneComp.showLayer(this.options.layer.visible);
   }

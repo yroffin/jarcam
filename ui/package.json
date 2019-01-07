@@ -35,6 +35,7 @@
     "primeicons": "~1.0.0",
     "@ngrx/store": "~7.0.0",
     "paper": "~0.12.0",
+    "@types/paper": "~0.11.4",
     "voronoi": "~1.0.0"
   },
   "devDependencies": {

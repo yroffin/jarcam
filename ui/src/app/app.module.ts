@@ -19,6 +19,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { SliderModule } from 'primeng/slider';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -101,7 +102,8 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
     MatExpansionModule,
     MatCheckboxModule,
     MatCardModule,
-    MatTabsModule
+    MatTabsModule,
+    MatDividerModule
   ],
   providers: [
     StlLoaderService,

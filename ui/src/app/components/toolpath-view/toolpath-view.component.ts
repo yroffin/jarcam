@@ -1,6 +1,6 @@
 import { Component, ViewChild, OnInit, AfterViewInit } from '@angular/core';
-import Voronoi from 'voronoi';
-import paper from 'paper';
+import { PaperScope, Project, Path, Shape, Point, Size, Group, Color } from 'paper';
+
 import * as _ from 'lodash';
 
 import { ElementRef } from '@angular/core';
@@ -15,47 +15,95 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
 
+  private width = window.innerWidth;
+  private height = window.innerHeight;
+
+  scope: PaperScope;
+  project: Project;
+
   constructor(private millingService: MillingService) {
   }
 
   ngOnInit() {
-    const canvas = this.paperCanvas.nativeElement;
-    paper.setup(canvas);
   }
 
   ngAfterViewInit() {
+    this.scope = new PaperScope();
+    this.project = new Project(this.paperCanvas.nativeElement);
+    this.project.view.scale(5, -5);
+    this.project.view.onResize = (event) => {
+      // Whenever the view is resized, move the path to its center:
+      this.project.activeLayer.position = this.project.view.center;
+      this.project.view.draw();
+    };
+  }
+
+  public onLayerChange() {
     this.render();
   }
 
+  gridHelper(size: number, step: number) {
+    let x, y;
+
+    let segments = [];
+    for (y = -size; y < size; y += step) {
+      segments.push([-size, y], [size, y], [0, y], [0, y + step]);
+    }
+
+    const gridX = new Path({
+      segments: segments,
+      selected: false
+    });
+
+    gridX.strokeColor = 'blue';
+    gridX.strokeWidth = 0.01;
+
+    segments = [];
+    for (x = -size; x < size; x += step) {
+      segments.push([x, -size], [x, size], [x, 0], [x + step, 0]);
+    }
+
+    const gridY = new Path({
+      segments: segments,
+      selected: false
+    });
+
+    gridY.strokeColor = 'blue';
+    gridY.strokeWidth = 0.01;
+
+    const axeX = new Path({
+      segments: [[-size, 0], [size, 0], [size - 5, 5], [size - 5, -5], [size, 0]]
+    });
+    axeX.strokeColor = 'red';
+    const axeY = new Path({
+      segments: [[0, -size], [0, size], [5, size - 5], [-5, size - 5], [0, size]]
+    });
+    axeY.strokeColor = 'green';
+  }
+
   render() {
-    const canvas = this.paperCanvas.nativeElement;
+    console.log('draw');
+    this.project.clear();
 
-    const voronoi = new Voronoi();
-    const bbox = { xl: 0, xr: canvas.width, yt: 0, yb: canvas.height }; // xl is x-left, xr is x-right, yt is y-top, and yb is y-bottom
-    const sites = [{ x: 200, y: -200 }, { x: 50, y: 250 }, { x: 400, y: 100 } /* , ... */];
+    this.gridHelper(140, 1);
 
-    // a 'vertex' is an object exhibiting 'x' and 'y' properties. The
-    // Voronoi object will add a unique 'voronoiId' property to all
-    // sites. The 'voronoiId' can be used as a key to lookup the associated cell
-    // in diagram.cells.
+    const groups = new Group();
 
-    const diagram = voronoi.compute(sites, bbox);
-    console.log('Time', diagram.execTime);
-
-    _.each(sites, (site) => {
-      const point = new paper.Point(site.x, site.y);
-      const shape = new paper.Shape.Circle(point, 2);
-      shape.strokeColor = 'green';
+    _.each(this.millingService.getAreas(), (area) => {
+      const segments = [];
+      _.each(area.vertices2d, (vertice) => {
+        segments.push([vertice.x, vertice.y]);
+      });
+      const areaPath = new Path({
+        segments: segments,
+        selected: false
+      });
+      areaPath.strokeColor = 'gray';
+      areaPath.strokeWidth = 0.2;
+      areaPath.simplify(0.00001);
+      groups.addChild(areaPath);
     });
-    _.each(diagram.vertices, (vertice) => {
-      const point = new paper.Point(vertice.x, vertice.y);
-      const shape = new paper.Shape.Circle(point, 2);
-      shape.strokeColor = 'black';
-    });
-    _.each(diagram.edges, (edge) => {
-      const point = new paper.Point(edge.x, edge.y);
-      const shape = new paper.Shape.Circle(point, 2);
-      shape.strokeColor = 'red';
-    });
+
+    this.project.activeLayer.position = this.project.view.center;
   }
 }
