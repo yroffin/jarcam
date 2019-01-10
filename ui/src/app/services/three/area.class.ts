@@ -72,8 +72,6 @@ export class Area {
 
         const group = new THREE.Group();
 
-        const loader = new THREE.FontLoader();
-
         const matLite = new THREE.MeshBasicMaterial({
             color: 0x006699,
             transparent: true,
@@ -87,46 +85,6 @@ export class Area {
             scale: 1,
             dashSize: 3,
             gapSize: 1,
-        });
-
-        loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_bold.typeface.json', (font) => {
-            const message
-                = this.name
-                + '\nisBound:' + this.isBound
-                + '\nisOpen:' + this.isOpen()
-                + '\narea:' + this.area()
-                + '\nareaNormal:' + this.areaNormal();
-            const shapes = font.generateShapes(message, 2, 1);
-            const geometry = new THREE.ShapeBufferGeometry(shapes);
-            geometry.computeBoundingBox();
-            const xMid = - 0.5 * (geometry.boundingBox.max.x - geometry.boundingBox.min.x);
-            geometry.rotateY(Math.PI / 180 * 90);
-            geometry.rotateX(Math.PI / 180 * 90);
-            // make shape ( N.B. edge view not visible )
-            const text = new THREE.Mesh(geometry, matLite);
-            if (this.isOpen()) {
-                text.translateX(this.topRight.x);
-            } else {
-                text.translateX(this.topRight.x + xMid);
-            }
-            text.translateY(this.topRight.y + 10);
-            text.translateZ(this.topRight.z + 40);
-
-            const lineGeometry = new THREE.Geometry();
-
-            const up = text.position.clone();
-            up.y -= 2;
-            const down = up.clone();
-            down.z -= 15;
-            lineGeometry.vertices.push(
-                up, down,
-                down, this.topRight.clone()
-            );
-
-            const line = new THREE.LineSegments(lineGeometry, dashed);
-
-            group.add(text);
-            group.add(line);
         });
 
         return group;
