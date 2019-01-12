@@ -42,6 +42,10 @@ export class StlViewComponent implements AfterViewInit {
     camera: {
       position: { x: 0, y: 0, z: 0 },
     },
+
+    toolpath: {
+      zoom: { value: 6 },
+    },
   };
 
   constructor(
@@ -92,6 +96,10 @@ export class StlViewComponent implements AfterViewInit {
 
   onCameraChange(event) {
     this.rendererComponent.onCameraChange();
+  }
+
+  onToolChange(event) {
+    this.toolpathViewComponent.onToolChange();
   }
 
   onDebugChange(event?, name?: string) {

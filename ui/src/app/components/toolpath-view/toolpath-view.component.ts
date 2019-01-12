@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit, AfterViewInit } from '@angular/core';
+import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix } from 'paper';
 
 import * as _ from 'lodash';
@@ -15,8 +15,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
 
+  @Input() options: any;
+
   private width = window.innerWidth;
-  private height = window.innerHeight * 10;
+  private height = window.innerHeight;
 
   scope: PaperScope;
   project: Project;
@@ -33,7 +35,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.scope = new PaperScope();
     this.project = new Project(this.paperCanvas.nativeElement);
-    this.project.view.scale(25, -25);
+    this.project.view.scale(this.options.toolpath.zoom.value, -this.options.toolpath.zoom.value);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
       this.project.activeLayer.position = this.project.view.center;
@@ -43,6 +45,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   public onLayerChange() {
     this.render();
+  }
+
+  public onToolChange() {
+    const target = this.options.toolpath.zoom.value / this.project.view.scaling.x;
+    this.project.view.scale(target, target);
   }
 
   gridHelper(size: number, step: number) {
@@ -150,12 +157,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
 
     const normals = this.calcNormals(path, distance, smoothAngle);
+    const hittest = new Path.Circle(new Point(0, 0), distance - precision);
 
     let indice = 0;
     _.each(normals, (normal: Path) => {
+      const position = normal.segments[1].point;
       indice++;
-      const hittest = new Path.Circle(normal.segments[1].point, distance - precision);
-      contour.name = path.name + '.circle#' + indice;
+      hittest.position.x = position.x;
+      hittest.position.y = position.y;
+      hittest.name = path.name + '.circle#' + indice;
 
       if (!hittest.intersects(path)) {
         contour.add(normal.segments[1].point);
@@ -165,11 +175,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       if (circle) {
         hittest.strokeColor = 'blue';
         hittest.strokeWidth = 0.005;
+        hittest.clone();
       } else {
         normal.remove();
-        hittest.remove();
       }
     });
+
+    if (circle) {
+      hittest.remove();
+    }
 
     if (simplify) {
       contour.simplify(0.001);
@@ -184,6 +198,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     let previous = path.getNormalAt(0);
     const clockwise = path.clockwise;
 
+    const start = new Date().getTime();
     _.each(path.segments, (segment) => {
       const offset = path.getOffsetOf(segment.point);
       const normal = path.getNormalAt(offset);
@@ -210,6 +225,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       normals.push(vector);
       previous = normal.clone();
     });
+    console.log('Elapse contour normals', new Date().getTime() - start);
 
     return normals;
   }

@@ -51,6 +51,23 @@
     <mat-expansion-panel>
       <mat-expansion-panel-header>
         <mat-panel-title>
+          Toolpath
+        </mat-panel-title>
+        <mat-panel-description>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="max-width">
+        <h4>zoom: {{options.toolpath.zoom.value}}</h4>
+        <p-slider (onChange)="onToolChange($event)" [(ngModel)]="options.toolpath.zoom.value" [min]="1" [max]="30" [step]="1"
+          [animate]="true"></p-slider>
+      </div>
+
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
           Debug
         </mat-panel-title>
         <mat-panel-description>
@@ -86,7 +103,7 @@
     <mat-tab label="Path">
 
       <div #pathView (dblclick)="drawer.toggle()">
-        <app-toolpath-view></app-toolpath-view>
+        <app-toolpath-view [options]="options"></app-toolpath-view>
       </div>
 
     </mat-tab>
