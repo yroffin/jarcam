@@ -16,7 +16,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   @ViewChild('paperView') paperCanvas: ElementRef;
 
   private width = window.innerWidth;
-  private height = window.innerHeight;
+  private height = window.innerHeight * 10;
 
   scope: PaperScope;
   project: Project;
@@ -33,7 +33,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.scope = new PaperScope();
     this.project = new Project(this.paperCanvas.nativeElement);
-    this.project.view.scale(7, -7);
+    this.project.view.scale(25, -25);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
       this.project.activeLayer.position = this.project.view.center;
@@ -110,18 +110,17 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         const areaPath = new Path({
           segments: segments,
           selected: false,
-          closed: true
+          closed: true,
+          name: area.name,
+          strokeColor: 'red',
+          strokeWidth: 0.1
         });
-        areaPath.name = area.name;
-        areaPath.strokeColor = 'gray';
-        areaPath.strokeWidth = 0.2;
-        areaPath.simplify(0.00001);
         if (area.isBound) {
           this.bound.addChild(areaPath);
         } else {
-          areaPath.simplify(0.00001);
           areaPath.onMouseEnter = function (event) {
             this.selected = true;
+            console.log('name', this.name);
           };
           areaPath.onMouseLeave = function (event) {
             this.selected = false;
@@ -135,80 +134,90 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   firstPass() {
     let derived;
     _.each(this.openArea.children, (path: Path) => {
-      derived = this.contour(path, 4, 2);
+      derived = this.contour(path, 4, 10, 0.05, false, true);
     });
   }
 
-  contour(path: Path, distance: number, step: number): Path {
-    return this.rawContour(path, distance, step);
-  }
+  contour(path: Path, distance: number, smoothAngle: number, precision: number, circle: boolean, simplify: boolean): Group {
+    const contourGroup = new Group();
 
-  rawContourOld(path: Path, distance: number, step: number): Path {
     const contour = new Path();
     contour.strokeColor = 'brown';
     contour.strokeWidth = 0.2;
     contour.closed = true;
     contour.selected = true;
+    contour.name = path.name + '.contour';
 
-    const copy = new Path.Circle(path.bounds.center, 20);
-    for (let offset = 0; offset < path.length; offset++) {
-      let nearest = copy.getNearestPoint(path.getPointAt(offset));
-      contour.add(nearest);
-    }
-    copy.remove();
 
-    return contour;
-  }
+    const normals = this.calcNormals(path, distance, smoothAngle);
 
-  rawContour(path: Path, distance: number, step: number): Path {
-    const contour = new Path();
-    contour.strokeColor = 'brown';
-    contour.strokeWidth = 0.2;
-    contour.closed = true;
-    contour.selected = true;
+    let indice = 0;
+    _.each(normals, (normal: Path) => {
+      indice++;
+      const hittest = new Path.Circle(normal.segments[1].point, distance - precision);
+      contour.name = path.name + '.circle#' + indice;
 
-    const bounds = path.bounds;
-    const vector = path.bounds.topCenter.subtract(path.bounds.center);
-    vector.length += 20;
-
-    const shape = new Path.Circle(vector, distance);
-    shape.strokeColor = 'red';
-    shape.selected = false;
-
-    const chemin = new Path.Circle(path.bounds.center, vector.length);
-    chemin.strokeColor = 'red';
-    chemin.selected = false;
-
-    for (let circle = -180; circle <= 180; circle += step, vector.angle += step) {
-      const copy = shape.clone();
-      // Fix position far away of this path
-      const pos = path.bounds.center.add(vector);
-      copy.position.x = pos.x;
-      copy.position.y = pos.y;
-      // Compute direction
-      const direction = copy.position.subtract(path.bounds.center);
-      direction.length = 0.1;
-      for (; path.getIntersections(copy).length === 0;) {
-        copy.position.x -= direction.x;
-        copy.position.y -= direction.y;
+      if (!hittest.intersects(path)) {
+        contour.add(normal.segments[1].point);
+        normal.remove();
       }
-      // Retract object
-      copy.position.x += direction.x;
-      copy.position.y += direction.y;
-      contour.add(copy.bounds.center);
-      copy.remove();
+
+      if (circle) {
+        hittest.strokeColor = 'blue';
+        hittest.strokeWidth = 0.005;
+      } else {
+        normal.remove();
+        hittest.remove();
+      }
+    });
+
+    if (simplify) {
+      contour.simplify(0.001);
     }
-    shape.remove();
-    chemin.remove();
-    return contour;
+
+    return contourGroup;
   }
 
-  next(path: Path, distance: number, begin: number, end: number, angle: number): Point {
-    const from = path.getPointAt(begin);
-    const to = path.getPointAt(end);
-    const vector = to.subtract(from);
-    vector.angle += angle;
-    vector.length = distance;
-    return from.add(vector);
+  calcNormals(path: Path, distance: number, smoothAngle: number): Path[] {
+    const normals: Path[] = [];
+
+    let previous = path.getNormalAt(0);
+    const clockwise = path.clockwise;
+
+    _.each(path.segments, (segment) => {
+      const offset = path.getOffsetOf(segment.point);
+      const normal = path.getNormalAt(offset);
+      normal.length = distance;
+      let target;
+      if (clockwise) {
+        target = segment.point.add(normal);
+      } else {
+        target = segment.point.subtract(normal);
+      }
+
+      // Change direction is too high
+      // Smooth path
+      const directed = previous.getDirectedAngle(normal);
+      if (Math.abs(directed) > 45) {
+        for (let a = Math.abs(directed); a > 0; a -= smoothAngle) {
+          const backCircle = normal.clone();
+          backCircle.angle -= 180 - a;
+          normals.push(this.addNormal(segment.point, segment.point.add(backCircle)));
+        }
+      }
+
+      const vector = this.addNormal(segment.point, target);
+      normals.push(vector);
+      previous = normal.clone();
+    });
+
+    return normals;
+  }
+
+  addNormal(from: Point, to: Point): Path {
+    const path = new Path.Line(from, to);
+    path.strokeColor = 'blue';
+    path.strokeWidth = 0.1;
+    return path;
   }
 }
