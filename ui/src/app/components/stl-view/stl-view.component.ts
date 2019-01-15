@@ -11,6 +11,7 @@ import { HostBinding } from '@angular/core';
 import Voronoi from 'voronoi';
 import * as _ from 'lodash';
 import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath-view.component';
+import { MatTabGroup } from '@angular/material';
 
 @Component({
   selector: 'app-stl-view',
@@ -19,6 +20,7 @@ import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath
 })
 export class StlViewComponent implements AfterViewInit {
 
+  @ViewChild('tabGroup') tabGroup: MatTabGroup;
   @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
   @ViewChild('pathView') pathView: ElementRef;
@@ -58,6 +60,7 @@ export class StlViewComponent implements AfterViewInit {
       this.options.layer.visible = true;
       this.onLayerChange();
       this.onDebugChange();
+      this.tabGroup.selectedIndex = 1;
     });
     this.resetWidthHeight();
   }

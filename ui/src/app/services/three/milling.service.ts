@@ -75,4 +75,12 @@ export class MillingService {
     return this._detection.areas;
   }
 
+  public getStart(): any {
+    return {
+      x: this._mill.position.x,
+      y: this._mill.position.y,
+      radius: this._radius
+    };
+  }
+
 }

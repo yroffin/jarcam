@@ -91,7 +91,7 @@
     </mat-expansion-panel>
   </mat-drawer>
 
-  <mat-tab-group (selectedIndexChange)="onSelectedChange($event)">
+  <mat-tab-group #tabGroup (selectedIndexChange)="onSelectedChange($event)">
     <mat-tab label="Scene">
 
       <div #renderView (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
