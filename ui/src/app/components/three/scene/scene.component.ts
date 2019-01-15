@@ -100,11 +100,6 @@ export class SceneDirective implements OnInit {
         this.scene.add(child);
       });
     });
-
-    _.each(planar.infos, (info) => {
-        this.slice.push(info);
-        this.scene.add(info);
-    });
   }
 
   wireframe(enable: boolean) {

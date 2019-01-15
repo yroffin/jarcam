@@ -46,7 +46,7 @@ export class StlViewComponent implements AfterViewInit {
     },
 
     toolpath: {
-      zoom: { value: 6 },
+      zoom: { value: 5 },
     },
   };
 

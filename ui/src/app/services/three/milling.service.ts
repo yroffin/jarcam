@@ -50,9 +50,6 @@ export class MillingService {
 
     this._detection.intersect(this._radius, this._layer, from);
 
-    this.mill.translateX(this._detection.bottomLeft.x - this._mill.position.x - this._radius - this._tolerance);
-    this.mill.translateY(this._detection.bottomLeft.y - this._mill.position.y + this._radius + this._tolerance);
-
     return this._detection;
   }
 

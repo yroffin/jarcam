@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 
 import { ElementRef } from '@angular/core';
 import { MillingService } from '../../services/three/milling.service';
+import { Area, AreaPoint } from 'src/app/services/three/area.class';
 
 class Journey {
   position: Point;
@@ -31,7 +32,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   openArea: Group;
   openPath: Path[];
   closedArea: Group;
-  boundContour: Path;
+
   bound: Path;
   tool: Path;
 
@@ -106,6 +107,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     this.gridHelper(140, 1);
 
+    // center view
+    this.project.view.center = new Point(0, 0);
+
     this.init();
 
     // open area
@@ -114,15 +118,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     // closed area and bound
     const bounds = this.secondPass();
 
-    // Compute bound contour
-    this.boundContour = this.contour(false, this.bound, 4, 10, 0.05, false, true).contour;
-
-    // center view
-    this.project.view.center = new Point(0, 0);
+    // Compute bound
+    const boundContour = this.bounds();
 
     // Compute path
-    const journeyAround = this.around(4, this.boundContour.bounds);
-    const journeyAll = this.computePath(0, 4, this.boundContour.bounds, []);
+    const journeyAround = this.around(4, boundContour.bounds);
+    const journeyAll = this.computePath(0, 4, boundContour.bounds, []);
 
     if (fill) {
       _.each(journeyAround, (journey) => {
@@ -153,11 +154,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.tool = new Path.Circle(new Point(start.x, start.y), 4);
     this.tool.strokeColor = 'purple';
 
-    _.each(this.millingService.getAreas(), (area) => {
+    _.each(this.millingService.getAreas(), (area: Area) => {
       const segments = [];
-      _.each(area.vertices2d, (vertice) => {
-        segments.push([vertice.x, vertice.y]);
+      _.each(area.points(), (vertice: AreaPoint) => {
+        segments.push([vertice.origin.x, vertice.origin.y]);
       });
+
       if (area.isOpen()) {
         const areaPath = new Path({
           segments: segments,
@@ -203,7 +205,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   firstPass(): Path[] {
     const group = [];
     _.each(this.openArea.children, (path: Path) => {
-      const contour = this.contour(true, path, 4, 10, 0.05, false, true);
+      const contour = this.contour(true, path, 4, 10, 0.05, false, false);
       group.push(contour.contour);
     });
     return group;
@@ -212,10 +214,40 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   secondPass(): any {
     const group = [];
     _.each(this.closedArea.children, (path: Path) => {
-      const contour = this.contour(false, path, 4, 10, 0.05, false, true);
+      const contour = this.contour(false, path, 4, 10, 0.05, false, false);
       group.push(contour);
     });
     return group;
+  }
+
+  bounds(): Path {
+    // Compute bound
+    let top = 0, bottom = 0, left = 0, right = 0;
+    _.each(this.openPath, (path: Path) => {
+      console.log('path', path.name);
+      if (path.bounds.top < top) {
+        top = path.bounds.top;
+      }
+      if (path.bounds.bottom > bottom) {
+        bottom = path.bounds.bottom;
+      }
+      if (path.bounds.left < left) {
+        left = path.bounds.left;
+      }
+      if (path.bounds.right > right) {
+        right = path.bounds.right;
+      }
+    });
+
+    return new Path.Rectangle({
+      from: new Point(left, top),
+      to: new Point(right, bottom),
+      strokeColor: 'red',
+      strokeWidth: 0.05,
+      selected: true,
+      insert: true
+    });
+
   }
 
   computePath(offset: number, len: number, area: Rectangle, journeys: Journey[]): Journey[] {
