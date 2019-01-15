@@ -27,34 +27,6 @@ export class PlanarUtils {
         this.planeIntersect(radius, layer, from);
     }
 
-    public collisisionDetection(scene: THREE.Scene, target: THREE.Mesh, tolerance: number): boolean {
-        scene.updateMatrixWorld(false);
-        return this.collisisionDetectionRaw(this.areas, target, tolerance);
-    }
-
-    /**
-     * find all raycaster touching target with a tolerance distance
-     */
-    public collisisionDetectionRaw(areas: Area[], target: THREE.Mesh, tolerance: number): boolean {
-        const touched = _.filter(areas, (area) => {
-            // Compute
-            const raycaster = new THREE.Raycaster();
-            const collision = _.filter(area.raycasters, (ray) => {
-                // Fix origin and destinations
-                raycaster.set(ray.origin, ray.direction);
-                // Find intersection
-                const intersects = raycaster.intersectObject(target, false);
-                const touch = _.filter(intersects, (intersect) => {
-                    // Check tolerance
-                    return intersect.distance < tolerance;
-                });
-                return touch.length > 0;
-            });
-            return collision.length > 0;
-        });
-        return touched.length > 0;
-    }
-
     /**
      * planar intersect compute
      */

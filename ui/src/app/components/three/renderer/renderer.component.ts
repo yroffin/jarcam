@@ -46,12 +46,7 @@ export class RendererComponent implements AfterViewInit {
     private stlLoaderService: StlLoaderService) {
   }
 
-  public onKeydown(event) {
-    this.sceneComp.onKeydown(event);
-  }
-
   public onLayerChange() {
-    console.log('onLayerChange', this.options.layer);
     this.sceneComp.onLayerChange(this.options.layer);
     this.sceneComp.showLayer(this.options.layer.visible);
   }

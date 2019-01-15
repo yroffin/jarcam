@@ -5,6 +5,7 @@ import * as _ from 'lodash';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
 import { Area } from 'src/app/services/three/area.class';
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -40,22 +41,6 @@ export class MillingService {
       this._mill.position.y = -10;
     }
     return this._mill;
-  }
-
-  public translateX(scene: THREE.Scene, sens: number, value: number) {
-    let iteration = value / 0.01;
-    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, this._tolerance) === false; iteration--) {
-      this.mill.translateX(this._tolerance / 2 * sens);
-    }
-    this.mill.translateX(this._tolerance / 2 * -sens);
-  }
-
-  public translateY(scene: THREE.Scene, sens: number, value: number) {
-    let iteration = value / 0.01;
-    for (; iteration > 0 && this._detection.collisisionDetection(scene, this.mill, this._tolerance) === false; iteration--) {
-      this.mill.translateY(this._tolerance / 2 * sens);
-    }
-    this.mill.translateY(this._tolerance / 2 * -sens);
   }
 
   public moveToZ(scene: THREE.Scene, from: THREE.Mesh, value: number): PlanarUtils {

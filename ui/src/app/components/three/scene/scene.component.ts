@@ -82,24 +82,6 @@ export class SceneDirective implements OnInit {
     this.scene.add(this.mesh);
   }
 
-  public onKeydown(event) {
-    switch (event.key) {
-      case 'z':
-        this.millingService.translateX(this.scene, -5, 5);
-        break;
-      case 's':
-        this.millingService.translateX(this.scene, 5, 5);
-        break;
-      case 'q':
-        this.millingService.translateY(this.scene, -5, 5);
-        break;
-      case 'd':
-        this.millingService.translateY(this.scene, 5, 5);
-        break;
-      default:
-    }
-  }
-
   public onLayerChange(layer: any) {
     const planar = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
 

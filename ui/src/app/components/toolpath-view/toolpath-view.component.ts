@@ -47,7 +47,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.project.view.scale(this.options.toolpath.zoom.value, -this.options.toolpath.zoom.value);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
-      this.project.activeLayer.position = this.project.view.center;
+      this.project.view.center = new Point(0, 0);
       this.project.view.draw();
     };
   }

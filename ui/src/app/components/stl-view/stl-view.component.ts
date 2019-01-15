@@ -72,13 +72,9 @@ export class StlViewComponent implements AfterViewInit {
   @HostListener('window:resize')
   @HostListener('window:vrdisplaypresentchange')
   resetWidthHeight() {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     this.rendererComponent.setSize(width, height);
-  }
-
-  public onKeydown(event) {
-    this.rendererComponent.onKeydown(event);
   }
 
   format(): string {

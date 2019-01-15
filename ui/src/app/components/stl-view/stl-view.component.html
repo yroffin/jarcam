@@ -94,7 +94,7 @@
   <mat-tab-group #tabGroup (selectedIndexChange)="onSelectedChange($event)">
     <mat-tab label="Scene">
 
-      <div #renderView (dblclick)="drawer.toggle()" (window:keydown)="onKeydown($event)">
+      <div #renderView (dblclick)="drawer.toggle()" >
         <app-renderer [options]="options" [cameraPosition]="[80, 80, 80]" [lightPosition]="[0, 0, 80]"></app-renderer>
       </div>
 
