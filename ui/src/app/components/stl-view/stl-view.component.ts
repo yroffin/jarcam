@@ -2,13 +2,8 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { ViewChild } from '@angular/core';
 import { RendererComponent } from '../three/renderer/renderer.component';
 import { HostListener, Input } from '@angular/core';
-import { NgModule } from '@angular/core';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ElementRef } from '@angular/core';
-import { ContentChild } from '@angular/core';
-import { HostBinding } from '@angular/core';
 
-import Voronoi from 'voronoi';
 import * as _ from 'lodash';
 import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath-view.component';
 import { MatTabGroup } from '@angular/material';

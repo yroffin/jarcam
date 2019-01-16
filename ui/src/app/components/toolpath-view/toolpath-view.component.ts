@@ -6,6 +6,9 @@ import * as _ from 'lodash';
 import { ElementRef } from '@angular/core';
 import { MillingService } from '../../services/three/milling.service';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
+import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
+
+declare var Prism: any;
 
 class Journey {
   position: Point;
@@ -20,6 +23,7 @@ class Journey {
 export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
+  @ViewChild('gcodeArea') gcodeArea: ElementRef;
 
   @Input() options: any;
 
@@ -35,6 +39,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   bound: Path;
   tool: Path;
+  public gcode: string;
 
   constructor(private millingService: MillingService) {
   }
@@ -55,6 +60,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   public onLayerChange() {
     this.render(false);
+    Prism.highlightElement(this.gcodeArea.nativeElement);
   }
 
   public onToolChange() {
@@ -119,7 +125,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     const bounds = this.secondPass();
 
     // Compute bound
-    const boundContour = this.bounds();
+    const inner = this.bounds(0);
+    const boundContour = new Path.Rectangle({
+      from: new Point(inner.left, inner.top),
+      to: new Point(inner.right, inner.bottom),
+      strokeColor: 'red',
+      strokeWidth: 0.05,
+      selected: true,
+      insert: true
+    });;
 
     // Compute path
     const journeyAround = this.around(4, boundContour.bounds);
@@ -143,7 +157,22 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       });
     }
 
+    this.gcode = this.buildGcode(journeyAround);
+
     console.log('Elapse contour time', new Date().getTime() - start);
+  }
+
+  buildGcode(journey: Journey[]): string {
+    const inner = this.bounds(4);
+
+    let gcode = '; Translate ' + inner.left + ' ' + inner.top + '\n';
+    _.each(journey, (journey) => {
+      for (let indice = 0; indice < journey.path.length; indice += 0.2) {
+        const point = journey.path.getPointAt(indice);
+        gcode += 'G01 X' + Math.round(point.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(point.x * 100 + Number.EPSILON) / 100 + '\n';
+      }
+    });
+    return gcode;
   }
 
   init() {
@@ -220,11 +249,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     return group;
   }
 
-  bounds(): Path {
+  bounds(distance: number): any {
     // Compute bound
     let top = 0, bottom = 0, left = 0, right = 0;
     _.each(this.openPath, (path: Path) => {
-      console.log('path', path.name);
       if (path.bounds.top < top) {
         top = path.bounds.top;
       }
@@ -239,15 +267,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       }
     });
 
-    return new Path.Rectangle({
-      from: new Point(left, top),
-      to: new Point(right, bottom),
-      strokeColor: 'red',
-      strokeWidth: 0.05,
-      selected: true,
-      insert: true
-    });
-
+    return {
+      top: top - distance,
+      left: left - distance,
+      bottom: bottom + distance,
+      right: right + distance
+    }
   }
 
   computePath(offset: number, len: number, area: Rectangle, journeys: Journey[]): Journey[] {
