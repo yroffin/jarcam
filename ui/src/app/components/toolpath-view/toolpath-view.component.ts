@@ -158,20 +158,49 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     }
 
     this.gcode = this.buildGcode(journeyAround);
+    this.copyToClipboard(this.gcode);
 
     console.log('Elapse contour time', new Date().getTime() - start);
   }
 
-  buildGcode(journey: Journey[]): string {
-    const inner = this.bounds(4);
+  copyToClipboard(str) {
+    const el = document.createElement('textarea');
+    el.value = str;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    console.log('copied');
+  }
 
-    let gcode = '; Translate ' + inner.left + ' ' + inner.top + '\n';
-    _.each(journey, (journey) => {
-      for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-        const point = journey.path.getPointAt(indice);
-        gcode += 'G01 X' + Math.round(point.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(point.x * 100 + Number.EPSILON) / 100 + '\n';
+  buildGcode(journeys: Journey[]): string {
+    const inner = this.bounds(0);
+
+    let gcode = '(Translate ' + inner.left + ' ' + inner.top + ')\n';
+    gcode += 'G90 (Absolute Positioning)\n';
+    gcode += 'M03 S18000 (Spindle CW on)\n';
+    gcode += 'G0 Z8   (move to 8mm on the Z axis)\n';
+    gcode += 'G0 F900 (set the feedrate to 900mm/minute)\n';
+
+    let it = 0;
+    _.each(journeys, (journey: Journey) => {
+      gcode += '(Shape ' + journey.path.name + ')\n';
+      const start = journey.position.clone();
+      start.x -= inner.left;
+      start.y -= inner.top;
+      gcode += '(Start ' + start + ')\n';
+      gcode += 'G1 X' + Math.round(start.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(start.y * 100 + Number.EPSILON) / 100 + '\n';
+      // path begin can be away from start
+      let offset = journey.path.getOffsetOf(journey.position);
+      for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
+        const point = journey.path.getPointAt(indice % journey.path.length);
+        point.x -= inner.left;
+        point.y -= inner.top;
+        gcode += 'G1 X' + Math.round(point.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(point.y * 100 + Number.EPSILON) / 100 + '\n';
       }
+      it++;
     });
+
     return gcode;
   }
 
@@ -295,14 +324,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     // Search all element in path with a tiny area
     const detectors: Journey[] = _.flatMap(this.openPath, (contour: Path) => {
       const center = contour.bounds.center;
-      return {
+      return <Journey>{
         path: new Path.Rectangle({
           from: new Point(center.x - 0.25, contour.bounds.top + 3),
           to: new Point(center.x + 0.25, area.left),
           strokeColor: 'yellow',
           strokeWidth: 0.2,
-          selected: true,
-          insert: false
+          selected: false,
+          insert: false,
+          name: contour.name
         }),
         position: new Point(center.x - 0.25, area.y)
       };
@@ -316,7 +346,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       };
     });
 
-    _.each(detectors, (detector) => {
+    _.each(detectors, (detector: Journey) => {
       // Find all crossing element
       const crossings = _.filter(elements, (element) => {
         const intersections = detector.path.getIntersections(element.path);
@@ -327,7 +357,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       });
       // Cross it
       _.each(crossings, (crossing) => {
-        const unite = detector.path.unite(crossing.path);
+        const unite = detector.path.unite(crossing.path, {
+          insert: true
+        });
         crossing.touch = true;
         detector.path.copyContent(unite);
         unite.remove();

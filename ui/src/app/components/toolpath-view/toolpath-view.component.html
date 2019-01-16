@@ -1,16 +1,9 @@
+<button type="button" (click)="copyToClipboard(gcode)" pButton icon="pi pi-info-circle" label="Show"></button>
+
+<canvas #paperView [width]="width" [height]="height" resize></canvas>
+
 <pre>
 <code #gcodeArea class="language-gcode">
 {{gcode}}
 </code>
 </pre>
-
-<button type="button" (click)="display = true" pButton icon="pi pi-info-circle" label="Show"></button>
-<canvas #paperView [width]="width" [height]="height" resize></canvas>
-
-<p-dialog header="Title" [(visible)]="display">
-<pre>
-<code class="language-css">
-{{gcode}}
-</code>
-</pre>
-</p-dialog>
