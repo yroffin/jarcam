@@ -55,7 +55,7 @@ export class StlViewComponent implements AfterViewInit {
       this.options.layer.visible = true;
       this.onLayerChange();
       this.onDebugChange();
-      this.tabGroup.selectedIndex = 1;
+      this.tabGroup.selectedIndex = 0;
     });
     this.resetWidthHeight();
   }

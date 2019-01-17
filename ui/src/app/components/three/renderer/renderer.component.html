@@ -1,2 +1,12 @@
-<canvas #threeView [width]="width" [height]="height" resize></canvas>
+<div class="editor-3d-container">
+    <div class="hud">
+        <div class="view-cube">
+            <canvas #cubeView [width]="80" [height]="80"></canvas>
+        </div>
+    </div>
+    <canvas class="canvas" #threeView [width]="width" [height]="height" resize></canvas>
+</div>
+<div class="info">
+{{info}}
+</div>
 <app-scene></app-scene>

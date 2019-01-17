@@ -1,0 +1,42 @@
+.editor-3d-container {
+    background: black;
+}
+
+.editor-3d-container .hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.editor-3d-container .hud .view-cube {
+    left: -12px;
+    top: -12px;
+    display: block;
+    position: absolute;
+    outline: none;
+    opacity: 1 !important;
+    margin: 0;
+    transition: opacity 0.2s ease;
+}
+
+canvas {
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+.info {
+    position: absolute;
+    color: black;
+    left: 200px;
+	top: 12px;
+	width: 100%;
+	text-align: left;
+	z-index: 100;
+    display:block;
+    font-size: 9px;
+}
