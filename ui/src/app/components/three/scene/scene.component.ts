@@ -99,6 +99,8 @@ export class SceneDirective implements OnInit {
         this.slice.push(child);
         this.scene.add(child);
       });
+      this.slice.push(area.normals);
+      this.scene.add(area.normals);
     });
   }
 

@@ -27,7 +27,7 @@ export class StlViewComponent implements AfterViewInit {
     // layers
     layer: {
       visible: false,
-      top: 4000,
+      top: 6836,
     },
 
     // debug
@@ -55,7 +55,7 @@ export class StlViewComponent implements AfterViewInit {
       this.options.layer.visible = true;
       this.onLayerChange();
       this.onDebugChange();
-      this.tabGroup.selectedIndex = 0;
+      this.tabGroup.selectedIndex = 1;
     });
     this.resetWidthHeight();
   }

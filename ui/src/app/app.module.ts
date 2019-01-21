@@ -41,6 +41,8 @@ import { MessageModule } from 'primeng/message';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { CodeHighlighterModule } from 'primeng/codehighlighter';
+import { InputTextModule } from 'primeng/inputtext';
+
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
@@ -92,6 +94,7 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
     AccordionModule,
     DialogModule,
     CodeHighlighterModule,
+    InputTextModule,
     /*
      * material
      */

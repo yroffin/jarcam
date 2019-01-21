@@ -10,10 +10,9 @@ export class AreaPoint {
 export class Area {
     public name: string;
     public meshes: THREE.Object3D[];
+    public normals: THREE.Object3D;
 
     private internalPoints: AreaPoint[];
-
-    public isBound = false;
 
     public constructor(name: string) {
         this.name = name;
@@ -22,6 +21,11 @@ export class Area {
     }
 
     public add(px: number, py: number, nx: number, ny: number) {
+        if (this.internalPoints.length > 0) {
+            if (this.internalPoints[0].origin.x === px && this.internalPoints[0].origin.y === py) {
+                return;
+            }
+        }
         this.internalPoints.push({
             origin: new Point(px, py),
             normal: new Point(nx, ny)

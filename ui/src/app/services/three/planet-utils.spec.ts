@@ -62,7 +62,6 @@ describe('Collide', () => {
             '/assets/cube.stl',
             (geometry: THREE.BufferGeometry) => {
                 mesh = factoryPiece(geometry);
-                console.log('mesh loaded', mesh);
                 scene.add(mesh);
                 scene.updateMatrixWorld(false);
                 done();
@@ -154,7 +153,6 @@ describe('Distance', () => {
             new THREE.Vector3(10,0,0),
             1
         );
-        console.log(vertices);
     });
 
 });

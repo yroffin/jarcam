@@ -1,5 +1,5 @@
 import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
-import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle } from 'paper';
+import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle, Segment } from 'paper';
 
 import * as _ from 'lodash';
 
@@ -50,6 +50,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.scope = new PaperScope();
     this.project = new Project(this.paperCanvas.nativeElement);
+
+    this.project.currentStyle = {
+      fontFamily: 'roboto'
+    };
+
     this.project.view.scale(this.options.toolpath.zoom.value, -this.options.toolpath.zoom.value);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
@@ -59,8 +64,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   }
 
   public onLayerChange() {
-    this.render(false);
-    Prism.highlightElement(this.gcodeArea.nativeElement);
+    setTimeout(() => {
+      this.render(false);
+    }, 1);
   }
 
   public onToolChange() {
@@ -81,8 +87,8 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       selected: false
     });
 
-    gridX.strokeColor = 'blue';
-    gridX.strokeWidth = 0.01;
+    gridX.strokeColor = 'grey';
+    gridX.strokeWidth = 0.05;
 
     segments = [];
     for (x = -size; x < size; x += step) {
@@ -94,17 +100,20 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       selected: false
     });
 
-    gridY.strokeColor = 'blue';
-    gridY.strokeWidth = 0.01;
+    gridY.strokeColor = 'grey';
+    gridY.strokeWidth = 0.05;
 
     const axeX = new Path({
       segments: [[-size, 0], [size, 0], [size - 5, 5], [size - 5, -5], [size, 0]]
     });
     axeX.strokeColor = 'red';
+    axeX.strokeWidth = 0.2;
+
     const axeY = new Path({
       segments: [[0, -size], [0, size], [5, size - 5], [-5, size - 5], [0, size]]
     });
     axeY.strokeColor = 'green';
+    axeY.strokeWidth = 0.2;
   }
 
   render(fill: boolean) {
@@ -133,7 +142,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       strokeWidth: 0.05,
       selected: true,
       insert: true
-    });;
+    });
 
     // Compute path
     const journeyAround = this.around(4, boundContour.bounds);
@@ -159,8 +168,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     this.gcode = this.buildGcode(journeyAround);
     this.copyToClipboard(this.gcode);
-
-    console.log('Elapse contour time', new Date().getTime() - start);
+    Prism.highlightElement(this.gcodeArea.nativeElement);
   }
 
   copyToClipboard(str) {
@@ -170,7 +178,6 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    console.log('copied');
   }
 
   buildGcode(journeys: Journey[]): string {
@@ -225,37 +232,27 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
           closed: true,
           name: area.name,
           strokeColor: 'red',
-          strokeWidth: 0.1
+          strokeWidth: 0.2,
+          visible: true
         });
         areaPath.onMouseEnter = function (event) {
           this.selected = true;
-          console.log('name', this.name);
         };
         areaPath.onMouseLeave = function (event) {
           this.selected = false;
         };
         this.openArea.addChild(areaPath);
       } else {
-        if (area.isBound) {
-          this.bound = new Path({
-            segments: segments,
-            selected: false,
-            closed: true,
-            name: area.name,
-            strokeColor: 'purple',
-            strokeWidth: 0.2
-          });
-        } else {
-          const areaPath = new Path({
-            segments: segments,
-            selected: false,
-            closed: true,
-            name: area.name,
-            strokeColor: 'yellow',
-            strokeWidth: 0.2
-          });
-          this.closedArea.addChild(areaPath);
-        }
+        const areaPath = new Path({
+          segments: segments,
+          selected: false,
+          closed: true,
+          name: area.name,
+          strokeColor: 'red',
+          strokeWidth: 0.2,
+          visible: true
+        });
+        this.closedArea.addChild(areaPath);
       }
     });
   }
@@ -263,7 +260,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   firstPass(): Path[] {
     const group = [];
     _.each(this.openArea.children, (path: Path) => {
-      const contour = this.contour(true, path, 4, 10, 0.05, false, false);
+      const contour = this.contour(true, path, 4, 10, 0.2, false, false, false);
       group.push(contour.contour);
     });
     return group;
@@ -272,7 +269,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   secondPass(): any {
     const group = [];
     _.each(this.closedArea.children, (path: Path) => {
-      const contour = this.contour(false, path, 4, 10, 0.05, false, false);
+      const contour = this.contour(false, path, 4, 10, 0.2, false, false, false);
       group.push(contour);
     });
     return group;
@@ -400,16 +397,36 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     }
   }
 
-  contour(open: boolean, path: Path, distance: number, smoothAngle: number, precision: number, circle: boolean, simplify: boolean): any {
+  /**
+   * 
+   * @param open 
+   * @param path 
+   * @param distance 
+   * @param smoothAngle 
+   * @param precision 
+   * @param circle 
+   * @param simplify apply simplify on path
+   * @param insert insert normals in project
+   */
+  contour(
+    open: boolean,
+    path: Path,
+    distance: number,
+    smoothAngle: number,
+    precision: number,
+    circle: boolean,
+    simplify: boolean,
+    insert: boolean): any {
     const contour = new Path();
-    contour.strokeColor = 'brown';
+    contour.strokeColor = 'yellow';
     contour.strokeWidth = 0.2;
     contour.closed = true;
     contour.selected = false;
     contour.name = path.name + '.contour';
+    contour.visible = true;
 
 
-    const normals = this.calcNormals(open, path, distance, smoothAngle);
+    const normals = this.calcNormals(open, path, distance, smoothAngle, insert);
     const hittest = new Path.Circle(new Point(0, 0), distance - precision);
 
     let indice = 0;
@@ -419,6 +436,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       hittest.position.x = position.x;
       hittest.position.y = position.y;
       hittest.name = path.name + '.circle#' + indice;
+      hittest.strokeColor = 'blue';
 
       if (!hittest.intersects(path)) {
         contour.add(normal.segments[1].point);
@@ -426,80 +444,101 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       }
 
       if (circle) {
-        hittest.strokeColor = 'blue';
-        hittest.strokeWidth = 0.005;
+        hittest.strokeColor = 'purple';
+        hittest.strokeWidth = 0.05;
         hittest.clone();
+        normal.strokeColor = 'purple';
       } else {
         normal.remove();
       }
     });
 
-    if (circle) {
-      hittest.remove();
-    }
+    hittest.remove();
 
     if (simplify) {
       contour.simplify(0.001);
     }
+
+    this.display(contour.bounds.topLeft, contour.name);
 
     return {
       contour: contour
     };
   }
 
-  calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number): Path[] {
-    const start = new Date().getTime();
+  calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, show: boolean): Path[] {
     const normals: Path[] = [];
 
-    let previous = path.getNormalAt(0);
-    let clockwise;
-    if (open) {
-      clockwise = path.clockwise;
-    } else {
-      clockwise = !path.clockwise;
-    }
+    let indice = 0;
+    for (; indice < path.segments.length; indice++) {
+      const segment = path.segments[indice % path.segments.length];
 
-    _.each(path.segments, (segment) => {
-      const offset = path.getOffsetOf(segment.point);
-      const normal = path.getNormalAt(offset);
-      normal.length = distance;
-      let target;
-      if (clockwise) {
-        target = segment.point.add(normal);
-      } else {
-        target = segment.point.subtract(normal);
-      }
+      const lvector: Point = path.segments[(indice + path.segments.length - 1) % path.segments.length].point.subtract(segment.point);
+      const rvector: Point = path.segments[(indice + path.segments.length + 1) % path.segments.length].point.subtract(segment.point);
+      const angle = (lvector.angle - rvector.angle + 360) % 360;
+      const mangle = Math.abs(angle) / 2;
 
-      // Change direction is too high
-      // Smooth path
-      const directed = previous.getDirectedAngle(normal);
+      lvector.length = distance;
+      rvector.length = distance;
+      const median: Point = rvector.rotate(mangle);
 
       if (open) {
-        if (Math.abs(directed) > 45) {
-          for (let a = Math.abs(directed); a > 0; a -= smoothAngle) {
-            const backCircle = normal.clone();
-            backCircle.angle -= 180 - a;
-            normals.push(this.addNormal(segment.point, segment.point.add(backCircle)));
+        // Change direction is too high
+        // Smooth path
+        if (mangle > 90) {
+          let lmedian: Point = lvector.rotate(-90);
+          normals.push(this.addNormal(segment.point, segment.point.add(lmedian), show));
+          for (; (lmedian.angle - median.angle + 360) % 360 > smoothAngle;) {
+            lmedian = lmedian.rotate(-smoothAngle);
+            normals.push(this.addNormal(segment.point, segment.point.add(lmedian), show));
           }
         }
       }
 
-      const vector = this.addNormal(segment.point, target);
-      normals.push(vector);
-      previous = normal.clone();
-    });
-    console.log('Elapse contour normals', path.name, new Date().getTime() - start);
+      // Add median
+      if (open) {
+        const vector = this.addNormal(segment.point, segment.point.add(median), show);
+        normals.push(vector);
+      } else {
+        const vector = this.addNormal(segment.point, segment.point.subtract(median), show);
+        normals.push(vector);
+      }
+
+      if (open) {
+        // Change direction is too high
+        // Smooth path, after median
+        if (mangle > 90) {
+          let rmedian: Point = median.rotate(-smoothAngle);
+          normals.push(this.addNormal(segment.point, segment.point.add(rmedian), show));
+          for (; (rmedian.angle - rvector.angle + 360) % 360 > (90 + smoothAngle);) {
+            rmedian = rmedian.rotate(-smoothAngle);
+            normals.push(this.addNormal(segment.point, segment.point.add(rmedian), show));
+          }
+        }
+      }
+    }
 
     return normals;
   }
 
-  addNormal(from: Point, to: Point): Path {
+  display(center: Point, message: string): void {
+    // Angle Label
+    const text = new PointText({
+      point: center,
+      content: message,
+      fillColor: 'yellow',
+      fontSize: 1.5,
+    });
+    text.scale(1, -1);
+  }
+
+  addNormal(from: Point, to: Point, insert: boolean): Path {
     const path = new Path.Line({
       from: from,
       to: to,
-      strokeColor: 'blue',
-      strokeWidth: 0.1,
-      insert: false
+      strokeColor: 'yellow',
+      strokeWidth: 0.2,
+      insert: insert
     });
     return path;
   }

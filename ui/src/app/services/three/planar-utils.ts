@@ -98,22 +98,58 @@ export class PlanarUtils {
                 geometry.vertices.push(element.end);
             });
 
-            const lineSegment = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
+            localArea.meshes.push(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
                 name: 'contour',
+                color: 0x3949AB,
+                linewidth: 10,
+            })));
+
+            // Build normals
+            const normals = new THREE.Geometry();
+            _.each(chain, (element: Segment) => {
+                // First normal
+                normals.vertices.push(element.start);
+                let end = element.start.clone();
+                end.x += element.normal.x;
+                end.y += element.normal.y;
+                end.z += element.normal.z;
+                normals.vertices.push(end);
+                // Segment between 2 normals
+                normals.vertices.push(element.start);
+                normals.vertices.push(element.end);
+                // Normal on end vertice
+                normals.vertices.push(element.end);
+                end = element.end.clone();
+                end.x += element.normal.x;
+                end.y += element.normal.y;
+                end.z += element.normal.z;
+                normals.vertices.push(end);
+            });
+
+            localArea.normals = new THREE.LineSegments(normals, new THREE.LineBasicMaterial({
+                name: 'normals',
                 color: 0x3949AB,
                 linewidth: 10,
             }));
 
+            // Build contour for 2D render
             let indice = 0;
             _.each(chain, (element: Segment) => {
                 if (indice === 0) {
-                    localArea.add(element.start.x, element.start.y, element.normal.x, element.normal.y);
+                    localArea.add(
+                        element.start.x,
+                        element.start.y,
+                        element.normal.x,
+                        element.normal.y);
                 }
-                localArea.add(element.end.x, element.end.y, element.normal.x, element.normal.y);
+                localArea.add(
+                    element.end.x,
+                    element.end.y,
+                    element.normal.x,
+                    element.normal.y);
+
                 indice++;
             });
-
-            localArea.meshes.push(lineSegment);
 
             areas.push(localArea);
 
