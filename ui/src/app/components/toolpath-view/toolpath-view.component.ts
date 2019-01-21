@@ -34,8 +34,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   project: Project;
 
   openArea: Group;
-  openPath: Path[];
   closedArea: Group;
+
+  openPath: Path[];
+  closePath: Path[];
 
   bound: Path;
   tool: Path;
@@ -131,7 +133,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.openPath = this.firstPass();
 
     // closed area and bound
-    const bounds = this.secondPass();
+    this.closePath= this.secondPass();
 
     // Compute bound
     const inner = this.bounds(0);
@@ -148,22 +150,30 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     const journeyAround = this.around(4, boundContour.bounds);
     const journeyAll = this.computePath(0, 4, boundContour.bounds, []);
 
-    if (fill) {
+    if (true) {
       _.each(journeyAround, (journey) => {
-        for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-          const circle = new Path.Circle(journey.path.getPointAt(indice), 4);
-          circle.strokeColor = 'red';
-          circle.strokeWidth = 0.05;
-        }
-      });
+        const circle = new Path.Circle({
+          center: journey.position,
+          radius: 1,
+          strokeColor: 'red',
+          strokeWidth: 0.05,
+          fillColor: 'black'
+        });
 
-      _.each(journeyAll, (journey) => {
         for (let indice = 0; indice < journey.path.length; indice += 0.2) {
           const circle = new Path.Circle(journey.path.getPointAt(indice), 4);
           circle.strokeColor = 'red';
           circle.strokeWidth = 0.05;
         }
       });
+      /*
+            _.each(journeyAll, (journey) => {
+              for (let indice = 0; indice < journey.path.length; indice += 0.2) {
+                const circle = new Path.Circle(journey.path.getPointAt(indice), 4);
+                circle.strokeColor = 'red';
+                circle.strokeWidth = 0.05;
+              }
+            });*/
     }
 
     this.gcode = this.buildGcode(journeyAround);
@@ -196,7 +206,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       start.x -= inner.left;
       start.y -= inner.top;
       gcode += '(Start ' + start + ')\n';
-      gcode += 'G1 X' + Math.round(start.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(start.y * 100 + Number.EPSILON) / 100 + '\n';
+      gcode += 'G0 Z8   (move to 8mm on the Z axis)\n';
+      gcode += 'G0 X' + Math.round(start.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(start.y * 100 + Number.EPSILON) / 100 + '\n';
+      gcode += 'G1 Z6   (move to 8mm on the Z axis)\n';
       // path begin can be away from start
       let offset = journey.path.getOffsetOf(journey.position);
       for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
@@ -270,7 +282,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     const group = [];
     _.each(this.closedArea.children, (path: Path) => {
       const contour = this.contour(false, path, 4, 10, 0.2, false, false, false);
-      group.push(contour);
+      group.push(contour.contour);
     });
     return group;
   }
@@ -298,7 +310,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       left: left - distance,
       bottom: bottom + distance,
       right: right + distance
-    }
+    };
   }
 
   computePath(offset: number, len: number, area: Rectangle, journeys: Journey[]): Journey[] {
@@ -319,49 +331,24 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
    */
   around(len: number, area: Rectangle): Journey[] {
     // Search all element in path with a tiny area
-    const detectors: Journey[] = _.flatMap(this.openPath, (contour: Path) => {
+    const detectors: Journey[] = [];
+
+    _.each(this.openPath, (contour: Path) => {
       const center = contour.bounds.center;
-      return <Journey>{
-        path: new Path.Rectangle({
-          from: new Point(center.x - 0.25, contour.bounds.top + 3),
-          to: new Point(center.x + 0.25, area.left),
-          strokeColor: 'yellow',
-          strokeWidth: 0.2,
-          selected: false,
-          insert: false,
-          name: contour.name
-        }),
-        position: new Point(center.x - 0.25, area.y)
-      };
-    });
-
-    // scan elements to contour
-    const elements = _.flatMap(this.openPath, (contour) => {
-      return {
+      detectors.push(<Journey>{
         path: contour,
-        touch: false
-      };
+        position: contour.getPointAt(0)
+      });
     });
 
-    _.each(detectors, (detector: Journey) => {
-      // Find all crossing element
-      const crossings = _.filter(elements, (element) => {
-        const intersections = detector.path.getIntersections(element.path);
-        if (intersections.length > 0) {
-          return true;
-        }
-        return false;
-      });
-      // Cross it
-      _.each(crossings, (crossing) => {
-        const unite = detector.path.unite(crossing.path, {
-          insert: true
-        });
-        crossing.touch = true;
-        detector.path.copyContent(unite);
-        unite.remove();
+    _.each(this.closePath, (contour: Path) => {
+      const center = contour.bounds.center;
+      detectors.push(<Journey>{
+        path: contour,
+        position: contour.getPointAt(0)
       });
     });
+
     return detectors;
   }
 
@@ -398,13 +385,13 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * 
-   * @param open 
-   * @param path 
-   * @param distance 
-   * @param smoothAngle 
-   * @param precision 
-   * @param circle 
+   * build contour around this path
+   * @param open is area open
+   * @param path the path area
+   * @param distance the distance
+   * @param smoothAngle smoothing angle
+   * @param precision precision to remove any median hitting the contour
+   * @param circle draw circle (debug)
    * @param simplify apply simplify on path
    * @param insert insert normals in project
    */
@@ -459,13 +446,32 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       contour.simplify(0.001);
     }
 
-    this.display(contour.bounds.topLeft, contour.name);
+    this.display(contour.bounds.bottomRight, contour.name);
 
     return {
       contour: contour
     };
   }
 
+  display(center: Point, message: string): void {
+    // Angle Label
+    const text = new PointText({
+      point: center,
+      content: message,
+      fillColor: 'yellow',
+      fontSize: 1.5,
+    });
+    text.scale(1, -1);
+  }
+
+  /**
+   * compute all median
+   * @param open is this area is open
+   * @param path the path area
+   * @param distance the distance for contour
+   * @param smoothAngle angle for smoothing straight contour
+   * @param show display (debug) any graphic helper
+   */
   calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, show: boolean): Path[] {
     const normals: Path[] = [];
 
@@ -521,17 +527,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     return normals;
   }
 
-  display(center: Point, message: string): void {
-    // Angle Label
-    const text = new PointText({
-      point: center,
-      content: message,
-      fillColor: 'yellow',
-      fontSize: 1.5,
-    });
-    text.scale(1, -1);
-  }
-
+  /**
+   * add a new median
+   * @param from point from
+   * @param to point to
+   * @param insert insert in graphic ?
+   */
   addNormal(from: Point, to: Point, insert: boolean): Path {
     const path = new Path.Line({
       from: from,
