@@ -28,6 +28,9 @@ export class SceneDirective implements OnInit {
 
   private ground: THREE.Mesh;
 
+  private layer: LayerBean;
+  private debug: DebugBean;
+
   layers: Observable<LayerBean>;
   debugs: Observable<DebugBean>;
 
@@ -63,9 +66,10 @@ export class SceneDirective implements OnInit {
   ngOnInit() {
     this.layers.subscribe(
       (layer: LayerBean) => {
+        this.layer = layer;
         if (this.mesh) {
-          this.onLayerChange(layer);
-          this.showLayer(layer.visible);
+          this.onLayerChange(this.layer);
+          this.showLayer(this.layer.visible);
         }
       },
       (err) => console.error(err),
@@ -74,11 +78,13 @@ export class SceneDirective implements OnInit {
     );
     this.debugs.subscribe(
       (debug: DebugBean) => {
-        console.log(debug);
-        this.normals(debug.normals);
-        this.axis(debug.axesHelper);
-        this.wireframe(debug.wireframe);
-        this.showGround(debug.ground);
+        this.debug = debug;
+        if (this.mesh) {
+          this.normals(this.debug.normals);
+          this.wireframe(this.debug.wireframe);
+        }
+        this.showGround(this.debug.ground);
+        this.axis(this.debug.axesHelper);
       },
       (err) => console.error(err),
       () => {
@@ -115,6 +121,8 @@ export class SceneDirective implements OnInit {
   public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
     this.mesh = this.factoryPiece(originalGeometry);
     this.scene.add(this.mesh);
+    this.onLayerChange(this.layer);
+    this.showLayer(this.layer.visible);
   }
 
   public onLayerChange(layer: any) {

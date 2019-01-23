@@ -7,6 +7,8 @@
     <canvas class="canvas" #threeView [width]="width" [height]="height" resize></canvas>
 </div>
 <div class="info">
-{{info}}
+    <p *ngFor="let info of infos">
+        {{info}}
+    </p>
 </div>
 <app-scene></app-scene>

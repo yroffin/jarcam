@@ -25,9 +25,8 @@ export interface DebugBean {
 // State Type
 export interface ParametersState {
   layer: LayerBean;
-  debug: any;
+  debug: DebugBean;
   camera: any;
-  toolpath: any;
 }
 
 // Les types des differentes actions
@@ -51,7 +50,7 @@ export type AllActions = ChangeLayer | ChangeDebug;
 export const initialState: ParametersState = {
   // layers
   layer: {
-    visible: false,
+    visible: true,
     top: 6836,
   },
 
@@ -66,11 +65,6 @@ export const initialState: ParametersState = {
   // Camera
   camera: {
     position: { x: 0, y: 0, z: 0 },
-  },
-
-  // Toolpath
-  toolpath: {
-    zoom: { value: 5 },
   },
 };
 
@@ -111,8 +105,7 @@ export class ParametersService {
         return {
           layer: action.payload,
           debug: state.debug,
-          camera: state.camera,
-          toolpath: state.toolpath
+          camera: state.camera
         };
       }
 
@@ -125,10 +118,8 @@ export class ParametersService {
             normals: action.payload.normals === undefined ? state.debug.normals : action.payload.normals,
             ground: action.payload.ground === undefined ? state.debug.ground : action.payload.ground,
           },
-          camera: state.camera,
-          toolpath: state.toolpath
+          camera: state.camera
         };
-        console.log(nstate);
         return nstate;
       }
 

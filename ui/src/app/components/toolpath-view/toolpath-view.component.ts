@@ -60,7 +60,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       fontFamily: 'roboto'
     };
 
-    this.project.view.scale(this.appComponent.options.toolpath.zoom.value, -this.appComponent.options.toolpath.zoom.value);
+    this.project.view.scale(this.zoom, -this.zoom);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
       this.project.view.center = new Point(0, 0);

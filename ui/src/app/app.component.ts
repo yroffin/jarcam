@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG } from 'src/app/stores/parameters.service';
+import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -16,30 +17,25 @@ export class AppComponent implements OnInit {
   items: MenuItem[];
   display = false;
 
+  layers: Observable<LayerBean>;
+  debugs: Observable<DebugBean>;
+
   constructor(private parametersService: ParametersService) {
     this.options = {
       // layers
       layer: {
         visible: false,
-        top: 6836,
+        top: 0,
       },
 
       // debug
-      axesHelper: true,
+      axesHelper: false,
       wireframe: false,
       normals: false,
-      ground: false,
-
-      // Camera
-      camera: {
-        position: { x: 0, y: 0, z: 0 },
-      },
-
-      // Toolpath
-      toolpath: {
-        zoom: { value: 5 },
-      },
+      ground: false
     };
+    this.layers = this.parametersService.layers();
+    this.debugs = this.parametersService.debugs();
   }
 
   ngOnInit() {
@@ -63,6 +59,22 @@ export class AppComponent implements OnInit {
         ]
       }
     ];
+    this.layers.subscribe(
+      (layer: LayerBean) => {
+        this.options.layer = layer;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.debugs.subscribe(
+      (debug: DebugBean) => {
+        this.options.debug = debug;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   public onLayerChange() {

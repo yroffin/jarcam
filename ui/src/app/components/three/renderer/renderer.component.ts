@@ -45,7 +45,7 @@ export class RendererComponent implements AfterViewInit {
   // Lights
   private light: THREE.PointLight;
   private helper: THREE.PointLightHelper;
-  private info = '';
+  private infos = [];
 
   constructor(
     private stlLoaderService: StlLoaderService) {
@@ -71,7 +71,7 @@ export class RendererComponent implements AfterViewInit {
 
     // Control
     this.cubeControl();
-  
+
     // Camera
     this.camera = new THREE.PerspectiveCamera(
       this.viewAngle,
@@ -113,7 +113,7 @@ export class RendererComponent implements AfterViewInit {
     this.sceneCube = new THREE.Scene();
     this.sceneCube.background = new THREE.Color(0xf0f0f0);
     const geometry = new THREE.BoxGeometry(100, 100, 100);
-    const material = new THREE.MeshPhongMaterial( { color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+    const material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true });
     this.cube = new THREE.Mesh(geometry, material);
     this.sceneCube.add(this.cube);
     let light = new THREE.PointLight(0xffffff, 1, 0);
@@ -146,10 +146,10 @@ export class RendererComponent implements AfterViewInit {
     this.renderer.render(this.scene, this.camera);
     this.renderCube.render(this.sceneCube, this.cameraCube);
 
-    this.info = `
-    camera.position : ${this.camera.position.x}, ${this.camera.position.y}, ${this.camera.position.z}\n
-    camera.rotation : ${this.camera.rotation.x}, ${this.camera.rotation.y}, ${this.camera.rotation.z}\n
-  `;
+    this.infos = [];
+    this.infos.push(`camera.position.x : ${this.camera.position.x}`);
+    this.infos.push(`camera.position.y : ${this.camera.position.y}`);
+    this.infos.push(`camera.position.z : ${this.camera.position.z}`);
   }
 
   updateAspect(ratio) {
