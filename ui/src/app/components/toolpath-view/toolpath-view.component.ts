@@ -7,6 +7,7 @@ import { ElementRef } from '@angular/core';
 import { MillingService } from '../../services/three/milling.service';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
+import { AppComponent } from 'src/app/app.component';
 
 declare var Prism: any;
 
@@ -25,10 +26,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   @ViewChild('paperView') paperCanvas: ElementRef;
   @ViewChild('gcodeArea') gcodeArea: ElementRef;
 
-  @Input() options: any;
-
   private width = window.innerWidth;
   private height = window.innerHeight;
+  private zoom = 5;
 
   scope: PaperScope;
   project: Project;
@@ -43,7 +43,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   tool: Path;
   public gcode: string;
 
-  constructor(private millingService: MillingService) {
+  constructor(
+    private appComponent: AppComponent,
+    private millingService: MillingService
+  ) {
   }
 
   ngOnInit() {
@@ -57,22 +60,25 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       fontFamily: 'roboto'
     };
 
-    this.project.view.scale(this.options.toolpath.zoom.value, -this.options.toolpath.zoom.value);
+    this.project.view.scale(this.appComponent.options.toolpath.zoom.value, -this.appComponent.options.toolpath.zoom.value);
     this.project.view.onResize = (event) => {
       // Whenever the view is resized, move the path to its center:
       this.project.view.center = new Point(0, 0);
       this.project.view.draw();
     };
+
+    this.render(false);
   }
 
   public onLayerChange() {
+    return;
     setTimeout(() => {
       this.render(false);
     }, 1);
   }
 
   public onToolChange() {
-    const target = this.options.toolpath.zoom.value / this.project.view.scaling.x;
+    const target = this.zoom / this.project.view.scaling.x;
     this.project.view.scale(target, target);
   }
 

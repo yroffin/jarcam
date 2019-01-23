@@ -42,7 +42,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { CodeHighlighterModule } from 'primeng/codehighlighter';
 import { InputTextModule } from 'primeng/inputtext';
-
+import { MenubarModule } from 'primeng/menubar';
+import { SidebarModule } from 'primeng/sidebar';
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
@@ -54,6 +55,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
+import { ParametersService } from 'src/app/stores/parameters.service';
 
 @NgModule({
   declarations: [
@@ -67,6 +69,7 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
   imports: [
     BrowserModule,
     StoreModule.forRoot({
+      parameters: ParametersService.reducer
     }),
     AppRoutingModule,
     BrowserAnimationsModule,
@@ -95,6 +98,8 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
     DialogModule,
     CodeHighlighterModule,
     InputTextModule,
+    MenubarModule,
+    SidebarModule,
     /*
      * material
      */
@@ -115,7 +120,8 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
   providers: [
     StlLoaderService,
     MillingService,
-    {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}}
+    ParametersService,
+    { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }
   ],
   entryComponents: [
   ],

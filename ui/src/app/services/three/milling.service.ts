@@ -58,11 +58,19 @@ export class MillingService {
   }
 
   public getStart(): any {
-    return {
-      x: this._mill.position.x,
-      y: this._mill.position.y,
-      radius: this._radius
-    };
+    if (this.mill) {
+      return {
+        x: this._mill.position.x,
+        y: this._mill.position.y,
+        radius: this._radius
+      };
+    } else {
+      return {
+        x: 0,
+        y: 0,
+        radius: 10
+      };
+    }
   }
 
 }

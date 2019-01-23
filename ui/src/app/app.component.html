@@ -1,11 +1,63 @@
-<mat-toolbar color="primary">
-  <mat-toolbar-row>
-    <mat-icon class="example-icon" routerLink="/">home</mat-icon>
-    <span class="example-spacer"></span>
-    <mat-icon class="example-icon" routerLink="/stl-view">map</mat-icon>
-    <mat-icon class="example-icon" routerLink="/toolpath-view">swap_calls</mat-icon>
-  </mat-toolbar-row>
-</mat-toolbar>
+<p-menubar [model]="items"></p-menubar>
 <router-outlet></router-outlet>
-<mat-toolbar>
-</mat-toolbar>
+<p-sidebar [(visible)]="display" >
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Layer
+      </mat-panel-title>
+      <mat-panel-description>
+        {{options.layer.top / 1000 + 'mm'}}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="max-width">
+      <p-inputSwitch (onChange)="onLayerVisibilityChange($event)" [(ngModel)]="options.layer.visible"></p-inputSwitch>
+      <h4>Layer: {{options.layer.top / 1000}}</h4>
+      <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="options.layer.top" [min]="0" [max]="10000" [step]="1" [style]="{'width':'14em'}"
+        [animate]="true"></p-slider>
+    </div>
+
+  </mat-expansion-panel>
+
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Toolpath
+      </mat-panel-title>
+      <mat-panel-description>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="max-width">
+      <h4>zoom: {{options.toolpath.zoom.value}}</h4>
+      <p-slider (onChange)="onToolChange($event)" [(ngModel)]="options.toolpath.zoom.value" [min]="1" [max]="30" [step]="1" [animate]="true"></p-slider>
+    </div>
+
+  </mat-expansion-panel>
+
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Debug
+      </mat-panel-title>
+      <mat-panel-description>
+        debug options
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="max-width">
+      <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="options.axesHelper"></p-inputSwitch>Axis helper
+    </div>
+    <div class="max-width">
+      <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="options.wireframe"></p-inputSwitch>Wireframe
+    </div>
+    <div class="max-width">
+      <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="options.normals"></p-inputSwitch>Normals
+    </div>
+    <div class="max-width">
+      <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="options.ground">xxx</p-inputSwitch>Ground
+    </div>
+
+  </mat-expansion-panel>
+</p-sidebar>

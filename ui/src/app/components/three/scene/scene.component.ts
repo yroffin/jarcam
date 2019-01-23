@@ -8,6 +8,8 @@ import { PlanarUtils } from '../../../services/three/planar-utils';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { Axis } from '../../../services/three/axis.class';
 import { Grid } from '../../../services/three/grid.class';
+import { ParametersService, ParametersState, LayerBean, DebugBean } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
 
 @Directive({
   selector: 'app-scene'
@@ -26,7 +28,13 @@ export class SceneDirective implements OnInit {
 
   private ground: THREE.Mesh;
 
-  constructor(private millingService: MillingService) {
+  layers: Observable<LayerBean>;
+  debugs: Observable<DebugBean>;
+
+  constructor(
+    private parametersService: ParametersService,
+    private millingService: MillingService
+  ) {
     // Create scene
     this.scene = new THREE.Scene();
 
@@ -46,9 +54,36 @@ export class SceneDirective implements OnInit {
 
     // Axis
     this._axis = new Axis(this.scene, false);
+
+    // Observable
+    this.layers = this.parametersService.layers();
+    this.debugs = this.parametersService.debugs();
   }
 
   ngOnInit() {
+    this.layers.subscribe(
+      (layer: LayerBean) => {
+        if (this.mesh) {
+          this.onLayerChange(layer);
+          this.showLayer(layer.visible);
+        }
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.debugs.subscribe(
+      (debug: DebugBean) => {
+        console.log(debug);
+        this.normals(debug.normals);
+        this.axis(debug.axesHelper);
+        this.wireframe(debug.wireframe);
+        this.showGround(debug.ground);
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh {
@@ -105,18 +140,22 @@ export class SceneDirective implements OnInit {
   }
 
   wireframe(enable: boolean) {
-    (<THREE.MeshNormalMaterial>this.mesh.material).wireframe = enable;
+    if (this.mesh) {
+      (<THREE.MeshNormalMaterial>this.mesh.material).wireframe = enable;
+    }
   }
 
   normals(enable: boolean) {
-    if (!this.helper) {
-      const material = new THREE.MeshNormalMaterial();
-      this.normal = new THREE.Mesh(this.mesh.geometry, material);
-      this.helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
-      this.scene.add(this.helper);
+    if (this.mesh) {
+      if (!this.helper) {
+        const material = new THREE.MeshNormalMaterial();
+        this.normal = new THREE.Mesh(this.mesh.geometry, material);
+        this.helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
+        this.scene.add(this.helper);
+      }
+      this.helper.visible = enable;
+      this.normal.visible = enable;
     }
-    this.helper.visible = enable;
-    this.normal.visible = enable;
   }
 
   public showGround(enable: boolean) {

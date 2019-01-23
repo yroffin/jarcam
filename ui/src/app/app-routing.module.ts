@@ -5,8 +5,8 @@ import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
 
 const appRoutes: Routes = [
-  { path: 'stl-view', component: StlViewComponent },
-  { path: 'toolpath-view', component: ToolpathViewComponent },
+  { path: 'scene', component: StlViewComponent },
+  { path: 'slice', component: ToolpathViewComponent },
   { path: '',
     redirectTo: '/home',
     pathMatch: 'full'

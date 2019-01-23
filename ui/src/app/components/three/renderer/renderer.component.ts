@@ -19,8 +19,6 @@ export class RendererComponent implements AfterViewInit {
   private width = window.innerWidth;
   private height = window.innerHeight;
 
-  @Input() options: any;
-
   @Input() orbit = true;
   @Input() cameraPosition;
   @Input() lightColor = 0xffffff;
@@ -51,29 +49,6 @@ export class RendererComponent implements AfterViewInit {
 
   constructor(
     private stlLoaderService: StlLoaderService) {
-  }
-
-  public onLayerChange() {
-    this.sceneComp.onLayerChange(this.options.layer);
-    this.sceneComp.showLayer(this.options.layer.visible);
-  }
-
-  public onCameraChange() {
-    this.camera.position.set(
-      this.options.camera.position.x,
-      this.options.camera.position.y,
-      this.options.camera.position.z);
-  }
-
-  public onDebugChange() {
-    // activate normals
-    this.sceneComp.normals(this.options.normals);
-    // activate wireframe
-    this.sceneComp.wireframe(this.options.wireframe);
-    // activate axis
-    this.sceneComp.axis(this.options.axesHelper);
-    // activate ground
-    this.sceneComp.showGround(this.options.ground);
   }
 
   get scene() {
@@ -167,10 +142,6 @@ export class RendererComponent implements AfterViewInit {
 
   render() {
     this.updateControls(this.scene, this.camera);
-
-    this.options.camera.position.x = this.camera.position.x;
-    this.options.camera.position.y = this.camera.position.y;
-    this.options.camera.position.z = this.camera.position.z;
 
     this.renderer.render(this.scene, this.camera);
     this.renderCube.render(this.sceneCube, this.cameraCube);
