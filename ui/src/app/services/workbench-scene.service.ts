@@ -144,6 +144,10 @@ export class WorkbenchSceneService {
   }
 
   public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
+    if (this.mesh) {
+      this.scene.remove(this.mesh);
+      this.mesh.remove();
+    }
     this.mesh = this.factoryPiece(originalGeometry);
     this.scene.add(this.mesh);
     this.onLayerChange(this.layer);
