@@ -1,4 +1,5 @@
 <p-menubar [model]="items"></p-menubar>
+<input [ngStyle]="{'display': 'none'}" #fileInput type="file" id="txtfiletoread"/>
 <router-outlet></router-outlet>
 <p-sidebar [(visible)]="display" >
   <mat-expansion-panel>
@@ -31,16 +32,16 @@
     </mat-expansion-panel-header>
 
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="options.axesHelper"></p-inputSwitch>Axis helper
+      <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="options.debug.axesHelper"></p-inputSwitch>Axis helper
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="options.wireframe"></p-inputSwitch>Wireframe
+      <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="options.debug.wireframe"></p-inputSwitch>Wireframe
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="options.normals"></p-inputSwitch>Normals
+      <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="options.debug.normals"></p-inputSwitch>Normals
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="options.ground">xxx</p-inputSwitch>Ground
+      <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="options.debug.ground">xxx</p-inputSwitch>Ground
     </div>
 
   </mat-expansion-panel>

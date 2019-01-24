@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
+import { WorkbenchService } from 'src/app/services/workbench.service';
 
 @Component({
   selector: 'app-root',
@@ -9,6 +10,8 @@ import { Observable } from 'rxjs';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+
+  @ViewChild('fileInput') fileInput;
 
   public options: any;
 
@@ -20,7 +23,9 @@ export class AppComponent implements OnInit {
   layers: Observable<LayerBean>;
   debugs: Observable<DebugBean>;
 
-  constructor(private parametersService: ParametersService) {
+  constructor(
+    private parametersService: ParametersService,
+    private workbenchService: WorkbenchService) {
     this.options = {
       // layers
       layer: {
@@ -29,10 +34,12 @@ export class AppComponent implements OnInit {
       },
 
       // debug
-      axesHelper: false,
-      wireframe: false,
-      normals: false,
-      ground: false
+      debug: {
+        axesHelper: false,
+        wireframe: false,
+        normals: false,
+        ground: false
+      }
     };
     this.layers = this.parametersService.layers();
     this.debugs = this.parametersService.debugs();
@@ -47,8 +54,17 @@ export class AppComponent implements OnInit {
         }
       },
       {
+        label: 'File',
+        items: [
+          {
+            label: 'Open', icon: 'pi pi-fw pi-file', command: (event) => {
+              this.load();
+            }
+          }
+        ]
+      },
+      {
         label: 'View',
-        icon: 'pi pi-fw pi-eye',
         items: [
           {
             label: 'Scene', icon: 'pi pi-fw pi-clone', routerLink: ['/scene']
@@ -75,6 +91,36 @@ export class AppComponent implements OnInit {
       () => {
       }
     );
+
+    this._load();
+  }
+
+  public load() {
+    this.fileInput.nativeElement.click();
+  }
+
+  private _load() {
+    // Check the support for the File API support
+    if (window.Blob) {
+      this.fileInput.nativeElement.addEventListener('change', () => {
+        console.log(this.fileInput.nativeElement.files);
+        // Set the extension for the file
+        const fileExtension = /stl.*/;
+        // Get the file object
+        const fileTobeRead = this.fileInput.nativeElement.files[0];
+        // Initialize the FileReader object to read the 2file
+        const fileReader = new FileReader();
+        fileReader.onload = () => {
+          this.workbenchService.loadBinary(fileReader.result, () => {
+          });
+        };
+        fileReader.readAsBinaryString(fileTobeRead);
+      }, false);
+    } else {
+      throw <Error>{
+        stack: 'Files are not supported'
+      };
+    }
   }
 
   public onLayerChange() {

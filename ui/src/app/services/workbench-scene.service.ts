@@ -1,20 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { Axis } from 'src/app/services/three/axis.class';
+import { LayerBean, DebugBean, ParametersService } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
+import { MillingService } from 'src/app/services/three/milling.service';
+import { Grid } from 'src/app/services/three/grid.class';
 
 import * as THREE from 'three';
 import * as _ from 'lodash';
+import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 
-import { PlanarUtils } from '../../../services/three/planar-utils';
-import { MillingService } from 'src/app/services/three/milling.service';
-import { Axis } from '../../../services/three/axis.class';
-import { Grid } from '../../../services/three/grid.class';
-import { ParametersService, ParametersState, LayerBean, DebugBean } from 'src/app/stores/parameters.service';
-import { Observable } from 'rxjs';
-
-@Directive({
-  selector: 'app-scene'
+@Injectable({
+  providedIn: 'root'
 })
-export class SceneDirective implements OnInit {
+export class WorkbenchSceneService {
 
   public scene: THREE.Scene;
 
@@ -36,8 +34,9 @@ export class SceneDirective implements OnInit {
 
   constructor(
     private parametersService: ParametersService,
-    private millingService: MillingService
-  ) {
+    private millingService: MillingService,
+    private stlLoaderService: StlLoaderService
+    ) {
     // Create scene
     this.scene = new THREE.Scene();
 
@@ -61,9 +60,8 @@ export class SceneDirective implements OnInit {
     // Observable
     this.layers = this.parametersService.layers();
     this.debugs = this.parametersService.debugs();
-  }
 
-  ngOnInit() {
+    // Subscribe
     this.layers.subscribe(
       (layer: LayerBean) => {
         this.layer = layer;
@@ -76,6 +74,8 @@ export class SceneDirective implements OnInit {
       () => {
       }
     );
+
+    // Subscribe
     this.debugs.subscribe(
       (debug: DebugBean) => {
         this.debug = debug;
@@ -90,6 +90,32 @@ export class SceneDirective implements OnInit {
       () => {
       }
     );
+  }
+
+  load(url: string, done: any) {
+    this.stlLoaderService.loadStl(
+      url,
+      (geometry: THREE.BufferGeometry) => {
+        this.setGeometryPiece(geometry);
+        done();
+      },
+      () => {
+      },
+      () => {
+      });
+  }
+
+  loadBinary(bin: any, done: any) {
+    this.stlLoaderService.loadStlFromBinary(
+      bin,
+      (geometry: THREE.BufferGeometry) => {
+        this.setGeometryPiece(geometry);
+        done();
+      },
+      () => {
+      },
+      () => {
+      });
   }
 
   private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh {
@@ -116,7 +142,6 @@ export class SceneDirective implements OnInit {
 
     return mesh;
   }
-
 
   public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
     this.mesh = this.factoryPiece(originalGeometry);

@@ -6,7 +6,7 @@ import { ElementRef } from '@angular/core';
 
 import * as _ from 'lodash';
 import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath-view.component';
-import { MatTabGroup } from '@angular/material';
+import { MatTabGroup, getMatInputUnsupportedTypeError } from '@angular/material';
 import { AppComponent } from 'src/app/app.component';
 import { Store } from '@ngrx/store';
 import { ParametersState, ParametersService } from 'src/app/stores/parameters.service';
@@ -23,6 +23,9 @@ export class StlViewComponent implements AfterViewInit {
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
 
   public selected = 0;
+
+  private progress = 0;
+  private progressObserver;
 
   constructor(
     private elementRef: ElementRef

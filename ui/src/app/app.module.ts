@@ -26,7 +26,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
 import { TabViewModule } from 'primeng/tabview';
-import { CardModule } from 'primeng/card'
+import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { DropdownModule } from 'primeng/dropdown';
@@ -48,7 +48,6 @@ import { SidebarModule } from 'primeng/sidebar';
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
 import { RendererComponent } from './components/three/renderer/renderer.component';
-import { SceneDirective } from './components/three/scene/scene.component';
 
 import { StlLoaderService } from './services/three/stl-loader.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
@@ -63,7 +62,6 @@ import { ParametersService } from 'src/app/stores/parameters.service';
     StlViewComponent,
     HomePageComponent,
     RendererComponent,
-    SceneDirective,
     ToolpathViewComponent
   ],
   imports: [

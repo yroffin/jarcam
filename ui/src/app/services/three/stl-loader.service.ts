@@ -42,26 +42,30 @@ export class StlLoaderService {
   constructor() {
   }
 
-  public loadStl(scene: THREE.Scene, url, onLoadStl: (geometry: THREE.BufferGeometry) => void, onProgress, onError) {
+  public loadStl(url, onLoadStl: (geometry: THREE.BufferGeometry) => void, onProgress, onError) {
     this.load(url, (geometry) => {
       onLoadStl(geometry);
-    })
+    });
+  }
+
+  public loadStlFromBinary(bin, onLoadStl: (geometry: THREE.BufferGeometry) => void, onProgress, onError) {
+    const geometry = this.parse(bin);
+    onLoadStl(geometry);
   }
 
   private load(absoluteFileName, onLoad, onProgress?, onError?) {
-    let that = this;
+    const that = this;
     // Loading tar file with an ajax request
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", absoluteFileName, true);
-    xhr.responseType = "arraybuffer";
-    xhr.onreadystatechange = function() {
-      if(this.readyState == this.DONE) {
-        if(xhr.status == 200) {
-          var byteArray = new Uint8Array(this.response);
-          let geometry = that.parse(this.response);
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', absoluteFileName, true);
+    xhr.responseType = 'arraybuffer';
+    xhr.onreadystatechange = function () {
+      if (this.readyState === this.DONE) {
+        if (xhr.status === 200) {
+          const geometry = that.parse(this.response);
           onLoad(geometry);
         } else {
-          throw new Error("Error HTTP " + xhr.status + " when loading file : " + absoluteFileName);
+          throw new Error('Error HTTP ' + xhr.status + ' when loading file : ' + absoluteFileName);
         }
       }
     };
