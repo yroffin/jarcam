@@ -33,8 +33,6 @@ export class StlViewComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.rendererComponent.load('/assets/cube.stl', () => {
-    });
     this.resetWidthHeight();
   }
 

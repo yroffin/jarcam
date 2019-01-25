@@ -139,7 +139,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.openPath = this.firstPass();
 
     // closed area and bound
-    this.closePath= this.secondPass();
+    this.closePath = this.secondPass();
 
     // Compute bound
     const inner = this.bounds(0);
@@ -154,7 +154,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     // Compute path
     const journeyAround = this.around(4, boundContour.bounds);
-    const journeyAll = this.computePath(0, 4, boundContour.bounds, []);
+    const journeyAll = this.computePath(0, this.millingService.radius(), boundContour.bounds, []);
 
     if (true) {
       _.each(journeyAround, (journey) => {
@@ -167,7 +167,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         });
 
         for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-          const circle = new Path.Circle(journey.path.getPointAt(indice), 4);
+          const circle = new Path.Circle(journey.path.getPointAt(indice), this.millingService.radius());
           circle.strokeColor = 'red';
           circle.strokeWidth = 0.05;
         }
@@ -175,7 +175,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       /*
             _.each(journeyAll, (journey) => {
               for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-                const circle = new Path.Circle(journey.path.getPointAt(indice), 4);
+                const circle = new Path.Circle(journey.path.getPointAt(indice), this.millingService.radius());
                 circle.strokeColor = 'red';
                 circle.strokeWidth = 0.05;
               }
@@ -183,8 +183,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     }
 
     this.gcode = this.buildGcode(journeyAround);
-    this.copyToClipboard(this.gcode);
-    Prism.highlightElement(this.gcodeArea.nativeElement);
+    setTimeout(() => {
+      this.copyToClipboard(this.gcode);
+      Prism.highlightElement(this.gcodeArea.nativeElement);
+    }, 1);
   }
 
   copyToClipboard(str) {
@@ -234,7 +236,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.closedArea = new Group();
 
     const start = this.millingService.getStart();
-    this.tool = new Path.Circle(new Point(start.x, start.y), 4);
+    this.tool = new Path.Circle(new Point(start.x, start.y), this.millingService.radius());
     this.tool.strokeColor = 'purple';
 
     _.each(this.millingService.getAreas(), (area: Area) => {
@@ -278,7 +280,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   firstPass(): Path[] {
     const group = [];
     _.each(this.openArea.children, (path: Path) => {
-      const contour = this.contour(true, path, 4, 10, 0.2, false, false, false);
+      const contour = this.contour(true, path, this.millingService.radius(), 10, 0.2, false, false, false);
       group.push(contour.contour);
     });
     return group;
@@ -287,7 +289,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   secondPass(): any {
     const group = [];
     _.each(this.closedArea.children, (path: Path) => {
-      const contour = this.contour(false, path, 4, 10, 0.2, false, false, false);
+      const contour = this.contour(false, path, this.millingService.radius(), 10, 0.2, false, false, false);
       group.push(contour.contour);
     });
     return group;

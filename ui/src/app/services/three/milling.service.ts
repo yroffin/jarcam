@@ -37,10 +37,20 @@ export class MillingService {
       const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
       this._mill = new THREE.Mesh(geometry, material);
       this._mill.geometry.rotateX(Math.PI / 2);
-      this._mill.position.x = 20;
-      this._mill.position.y = -10;
+      this._mill.position.x = 0;
+      this._mill.position.y = 0;
     }
     return this._mill;
+  }
+
+  public radius(): number {
+    return this._radius;
+  }
+
+  public setRadius(radius: number) {
+    this._radius = radius;
+    const geometry = new THREE.CylinderGeometry(this._radius, this._radius, 4, 32);
+    this._mill.geometry = geometry;
   }
 
   public moveToZ(scene: THREE.Scene, from: THREE.Mesh, value: number): PlanarUtils {
