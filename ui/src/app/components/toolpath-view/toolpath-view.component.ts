@@ -8,13 +8,12 @@ import { MillingService } from '../../services/three/milling.service';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
 import { AppComponent } from 'src/app/app.component';
+import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
+import { Journey, ShapeGroup } from 'src/app/services/paperjs/paperjs-model';
+import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
+import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 
 declare var Prism: any;
-
-class Journey {
-  position: Point;
-  path: Path;
-}
 
 @Component({
   selector: 'app-toolpath-view',
@@ -30,16 +29,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   private height = window.innerHeight;
   private zoom = 5;
 
-  scope: PaperScope;
-  project: Project;
+  private scope: PaperScope;
+  private project: Project;
 
-  openArea: Group;
-  closedArea: Group;
-
-  openPath: Path[];
-  closePath: Path[];
-
-  bound: Path;
   tool: Path;
   public gcode: string;
 
@@ -67,13 +59,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       this.project.view.draw();
     };
 
-    this.render(false);
-  }
+    // center view
+    this.project.view.center = new Point(0, 0);
 
-  public onLayerChange() {
-    return;
+    const shapes = this.render(true, true);
+
     setTimeout(() => {
-      this.render(false);
+      this.gcode = PaperJSGcode.buildGcode(shapes.opened, shapes.aroundJourney);
+      this.copyToClipboard(this.gcode);
+      Prism.highlightElement(this.gcodeArea.nativeElement);
     }, 1);
   }
 
@@ -82,67 +76,25 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.project.view.scale(target, target);
   }
 
-  gridHelper(size: number, step: number) {
-    let x, y;
-
-    let segments = [];
-    for (y = -size; y < size; y += step) {
-      segments.push([-size, y], [size, y], [0, y], [0, y + step]);
-    }
-
-    const gridX = new Path({
-      segments: segments,
-      selected: false
-    });
-
-    gridX.strokeColor = 'grey';
-    gridX.strokeWidth = 0.05;
-
-    segments = [];
-    for (x = -size; x < size; x += step) {
-      segments.push([x, -size], [x, size], [x, 0], [x + step, 0]);
-    }
-
-    const gridY = new Path({
-      segments: segments,
-      selected: false
-    });
-
-    gridY.strokeColor = 'grey';
-    gridY.strokeWidth = 0.05;
-
-    const axeX = new Path({
-      segments: [[-size, 0], [size, 0], [size - 5, 5], [size - 5, -5], [size, 0]]
-    });
-    axeX.strokeColor = 'red';
-    axeX.strokeWidth = 0.2;
-
-    const axeY = new Path({
-      segments: [[0, -size], [0, size], [5, size - 5], [-5, size - 5], [0, size]]
-    });
-    axeY.strokeColor = 'green';
-    axeY.strokeWidth = 0.2;
-  }
-
-  render(fill: boolean) {
-    const start = new Date().getTime();
+  render(fill: boolean, domInsert: boolean): ShapeGroup {
     this.project.clear();
 
-    this.gridHelper(140, 1);
+    // Add grid only in domInsert mode
+    if (domInsert) {
+      PaperJSUtils.gridHelper(140, 1);
+    }
 
-    // center view
-    this.project.view.center = new Point(0, 0);
-
-    this.init();
+    // init the areas
+    const shapes = this.buildShape(domInsert);
 
     // open area
-    this.openPath = this.firstPass();
+    shapes.openPath = this.openedShape(shapes.opened, domInsert);
 
     // closed area and bound
-    this.closePath = this.secondPass();
+    shapes.closePath = this.closedShape(shapes.closed, domInsert);
 
     // Compute bound
-    const inner = this.bounds(0);
+    const inner = PaperJSUtils.bounds(shapes.opened, 0);
     const boundContour = new Path.Rectangle({
       from: new Point(inner.left, inner.top),
       to: new Point(inner.right, inner.bottom),
@@ -153,11 +105,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     });
 
     // Compute path
-    const journeyAround = this.around(4, boundContour.bounds);
-    const journeyAll = this.computePath(0, this.millingService.radius(), boundContour.bounds, []);
+    shapes.aroundJourney = this.around(shapes, 4, boundContour.bounds);
+    const journeyAll = this.computePath(shapes, 0, this.millingService.radius(), boundContour.bounds, [], false, domInsert);
 
-    if (true) {
-      _.each(journeyAround, (journey) => {
+    if (fill) {
+      _.each(shapes.aroundJourney, (journey) => {
         const circle = new Path.Circle({
           center: journey.position,
           radius: 1,
@@ -167,26 +119,17 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         });
 
         for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-          const circle = new Path.Circle(journey.path.getPointAt(indice), this.millingService.radius());
-          circle.strokeColor = 'red';
-          circle.strokeWidth = 0.05;
+          const tool = new Path.Circle({
+            center: journey.path.getPointAt(indice),
+            radius: this.millingService.radius()
+          });
+          tool.strokeColor = 'red';
+          tool.strokeWidth = 0.05;
         }
       });
-      /*
-            _.each(journeyAll, (journey) => {
-              for (let indice = 0; indice < journey.path.length; indice += 0.2) {
-                const circle = new Path.Circle(journey.path.getPointAt(indice), this.millingService.radius());
-                circle.strokeColor = 'red';
-                circle.strokeWidth = 0.05;
-              }
-            });*/
     }
 
-    this.gcode = this.buildGcode(journeyAround);
-    setTimeout(() => {
-      this.copyToClipboard(this.gcode);
-      Prism.highlightElement(this.gcodeArea.nativeElement);
-    }, 1);
+    return shapes;
   }
 
   copyToClipboard(str) {
@@ -198,45 +141,22 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     document.body.removeChild(el);
   }
 
-  buildGcode(journeys: Journey[]): string {
-    const inner = this.bounds(0);
-
-    let gcode = '(Translate ' + inner.left + ' ' + inner.top + ')\n';
-    gcode += 'G90 (Absolute Positioning)\n';
-    gcode += 'M03 S18000 (Spindle CW on)\n';
-    gcode += 'G0 Z8   (move to 8mm on the Z axis)\n';
-    gcode += 'G0 F900 (set the feedrate to 900mm/minute)\n';
-
-    let it = 0;
-    _.each(journeys, (journey: Journey) => {
-      gcode += '(Shape ' + journey.path.name + ')\n';
-      const start = journey.position.clone();
-      start.x -= inner.left;
-      start.y -= inner.top;
-      gcode += '(Start ' + start + ')\n';
-      gcode += 'G0 Z8   (move to 8mm on the Z axis)\n';
-      gcode += 'G0 X' + Math.round(start.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(start.y * 100 + Number.EPSILON) / 100 + '\n';
-      gcode += 'G1 Z6   (move to 8mm on the Z axis)\n';
-      // path begin can be away from start
-      let offset = journey.path.getOffsetOf(journey.position);
-      for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
-        const point = journey.path.getPointAt(indice % journey.path.length);
-        point.x -= inner.left;
-        point.y -= inner.top;
-        gcode += 'G1 X' + Math.round(point.x * 100 + Number.EPSILON) / 100 + ' Y' + Math.round(point.y * 100 + Number.EPSILON) / 100 + '\n';
-      }
-      it++;
-    });
-
-    return gcode;
-  }
-
-  init() {
-    this.openArea = new Group();
-    this.closedArea = new Group();
+  /**
+   * build all shape
+   * @param domInsert should insert in dom ?
+   */
+  buildShape(domInsert: boolean): ShapeGroup {
+    const shapeGroup: ShapeGroup = {
+      opened: new Group(),
+      closed: new Group()
+    };
 
     const start = this.millingService.getStart();
-    this.tool = new Path.Circle(new Point(start.x, start.y), this.millingService.radius());
+    this.tool = new Path.Circle({
+      center: new Point(start.x, start.y),
+      radius: this.millingService.radius(),
+      insert: domInsert
+    });
     this.tool.strokeColor = 'purple';
 
     _.each(this.millingService.getAreas(), (area: Area) => {
@@ -261,7 +181,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         areaPath.onMouseLeave = function (event) {
           this.selected = false;
         };
-        this.openArea.addChild(areaPath);
+        shapeGroup.opened.addChild(areaPath);
       } else {
         const areaPath = new Path({
           segments: segments,
@@ -272,64 +192,67 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
           strokeWidth: 0.2,
           visible: true
         });
-        this.closedArea.addChild(areaPath);
+        shapeGroup.closed.addChild(areaPath);
       }
     });
+
+    return shapeGroup;
   }
 
-  firstPass(): Path[] {
-    const group = [];
-    _.each(this.openArea.children, (path: Path) => {
-      const contour = this.contour(true, path, this.millingService.radius(), 10, 0.2, false, false, false);
-      group.push(contour.contour);
-    });
-    return group;
-  }
-
-  secondPass(): any {
-    const group = [];
-    _.each(this.closedArea.children, (path: Path) => {
-      const contour = this.contour(false, path, this.millingService.radius(), 10, 0.2, false, false, false);
-      group.push(contour.contour);
+  /**
+   * build contour on opened shape
+   * @param closed group
+   * @param domInsert should insert it in dom ?
+   */
+  openedShape(opened: Group, domInsert: boolean): Group {
+    const group: Group = new Group();
+    _.each(opened.children, (path: Path) => {
+      const contour = PaperJSContour.contour(true, path, this.millingService.radius(), 10, 0.2, false, domInsert);
+      group.addChild(contour);
     });
     return group;
   }
 
-  bounds(distance: number): any {
-    // Compute bound
-    let top = 0, bottom = 0, left = 0, right = 0;
-    _.each(this.openPath, (path: Path) => {
-      if (path.bounds.top < top) {
-        top = path.bounds.top;
-      }
-      if (path.bounds.bottom > bottom) {
-        bottom = path.bounds.bottom;
-      }
-      if (path.bounds.left < left) {
-        left = path.bounds.left;
-      }
-      if (path.bounds.right > right) {
-        right = path.bounds.right;
-      }
+  /**
+   * build contour on closed shape
+   * @param closed group
+   * @param domInsert should insert it in dom ?
+   */
+  closedShape(closed: Group, domInsert: boolean): Group {
+    const group: Group = new Group();
+    _.each(closed.children, (path: Path) => {
+      const contour = PaperJSContour.contour(false, path, this.millingService.radius(), 10, 0.2, false, domInsert);
+      group.addChild(contour);
     });
-
-    return {
-      top: top - distance,
-      left: left - distance,
-      bottom: bottom + distance,
-      right: right + distance
-    };
+    return group;
   }
 
-  computePath(offset: number, len: number, area: Rectangle, journeys: Journey[]): Journey[] {
+  /**
+   * compute path
+   * @param shapeGroup the shapes
+   * @param offset offset
+   * @param len len
+   * @param area area
+   * @param journeys journeys
+   * @param showContour show path contour
+   * @param domInsert dom insert ?
+   */
+  computePath(
+    shapeGroup: ShapeGroup,
+    offset: number,
+    len: number,
+    area: Rectangle,
+    journeys: Journey[],
+    showContour: boolean,
+    domInsert: boolean): Journey[] {
     if (area.width > 0) {
       const clone = area.clone();
       clone.x += len;
       clone.height -= len;
       clone.width -= len * 2;
       // Fill this area
-      journeys.push(this.fill(area));
-      this.computePath(offset + 1, len, clone, journeys);
+      journeys.push(this.union(shapeGroup, area, showContour));
+      this.computePath(shapeGroup, offset + 1, len, clone, journeys, showContour, domInsert);
     }
     return journeys;
   }
@@ -337,11 +260,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   /**
    * find all journey around elements
    */
-  around(len: number, area: Rectangle): Journey[] {
+  around(shapeGroup: ShapeGroup, len: number, area: Rectangle): Journey[] {
     // Search all element in path with a tiny area
     const detectors: Journey[] = [];
 
-    _.each(this.openPath, (contour: Path) => {
+    _.each(shapeGroup.openPath.children, (contour: Path) => {
       const center = contour.bounds.center;
       detectors.push(<Journey>{
         path: contour,
@@ -349,7 +272,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       });
     });
 
-    _.each(this.closePath, (contour: Path) => {
+    _.each(shapeGroup.closePath.children, (contour: Path) => {
       const center = contour.bounds.center;
       detectors.push(<Journey>{
         path: contour,
@@ -360,16 +283,22 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     return detectors;
   }
 
-  fill(area: Rectangle): Journey {
+  /**
+   * unify all path
+   * @param shapeGroup the current context
+   * @param area the area
+   * @param domInsert should insert this path ?
+   */
+  union(shapeGroup: ShapeGroup, area: Rectangle, domInsert: boolean): Journey {
     const path = new Path.Rectangle({
       point: area.point,
       size: area.size,
-      insert: false
+      insert: domInsert
     });
     path.strokeColor = 'black';
     path.strokeWidth = 0.5;
 
-    _.each(this.openPath, (contour) => {
+    _.each(shapeGroup.openPath.children, (contour) => {
       this.modifyParcours(path, contour);
     });
 
@@ -379,176 +308,21 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     };
   }
 
-  modifyParcours(parcours, piece): void {
-    const intersections = piece.getIntersections(parcours);
+  /**
+   * unite parcours and piece
+   * @param parcours base path
+   * @param piece path to add
+   */
+  modifyParcours(current: Path, add: Path): void {
+    const intersections = add.getIntersections(current);
     if (intersections.length > 0) {
       for (let i = 0; i < intersections.length; i += 2) {
-        const path = parcours.unite(piece);
+        const path = current.unite(add);
         path.strokeColor = 'blue';
         path.strokeWidth = 0.2;
-        parcours.copyContent(path);
+        current.copyContent(path);
         path.remove();
       }
     }
-  }
-
-  /**
-   * build contour around this path
-   * @param open is area open
-   * @param path the path area
-   * @param distance the distance
-   * @param smoothAngle smoothing angle
-   * @param precision precision to remove any median hitting the contour
-   * @param circle draw circle (debug)
-   * @param simplify apply simplify on path
-   * @param insert insert normals in project
-   */
-  contour(
-    open: boolean,
-    path: Path,
-    distance: number,
-    smoothAngle: number,
-    precision: number,
-    circle: boolean,
-    simplify: boolean,
-    insert: boolean): any {
-    const contour = new Path();
-    contour.strokeColor = 'yellow';
-    contour.strokeWidth = 0.2;
-    contour.closed = true;
-    contour.selected = false;
-    contour.name = path.name + '.contour';
-    contour.visible = true;
-
-
-    const normals = this.calcNormals(open, path, distance, smoothAngle, insert);
-    const hittest = new Path.Circle(new Point(0, 0), distance - precision);
-
-    let indice = 0;
-    _.each(normals, (normal: Path) => {
-      const position = normal.segments[1].point;
-      indice++;
-      hittest.position.x = position.x;
-      hittest.position.y = position.y;
-      hittest.name = path.name + '.circle#' + indice;
-      hittest.strokeColor = 'blue';
-
-      if (!hittest.intersects(path)) {
-        contour.add(normal.segments[1].point);
-        normal.remove();
-      }
-
-      if (circle) {
-        hittest.strokeColor = 'purple';
-        hittest.strokeWidth = 0.05;
-        hittest.clone();
-        normal.strokeColor = 'purple';
-      } else {
-        normal.remove();
-      }
-    });
-
-    hittest.remove();
-
-    if (simplify) {
-      contour.simplify(0.001);
-    }
-
-    this.display(contour.bounds.bottomRight, contour.name);
-
-    return {
-      contour: contour
-    };
-  }
-
-  display(center: Point, message: string): void {
-    // Angle Label
-    const text = new PointText({
-      point: center,
-      content: message,
-      fillColor: 'yellow',
-      fontSize: 1.5,
-    });
-    text.scale(1, -1);
-  }
-
-  /**
-   * compute all median
-   * @param open is this area is open
-   * @param path the path area
-   * @param distance the distance for contour
-   * @param smoothAngle angle for smoothing straight contour
-   * @param show display (debug) any graphic helper
-   */
-  calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, show: boolean): Path[] {
-    const normals: Path[] = [];
-
-    let indice = 0;
-    for (; indice < path.segments.length; indice++) {
-      const segment = path.segments[indice % path.segments.length];
-
-      const lvector: Point = path.segments[(indice + path.segments.length - 1) % path.segments.length].point.subtract(segment.point);
-      const rvector: Point = path.segments[(indice + path.segments.length + 1) % path.segments.length].point.subtract(segment.point);
-      const angle = (lvector.angle - rvector.angle + 360) % 360;
-      const mangle = Math.abs(angle) / 2;
-
-      lvector.length = distance;
-      rvector.length = distance;
-      const median: Point = rvector.rotate(mangle);
-
-      if (open) {
-        // Change direction is too high
-        // Smooth path
-        if (mangle > 90) {
-          let lmedian: Point = lvector.rotate(-90);
-          normals.push(this.addNormal(segment.point, segment.point.add(lmedian), show));
-          for (; (lmedian.angle - median.angle + 360) % 360 > smoothAngle;) {
-            lmedian = lmedian.rotate(-smoothAngle);
-            normals.push(this.addNormal(segment.point, segment.point.add(lmedian), show));
-          }
-        }
-      }
-
-      // Add median
-      if (open) {
-        const vector = this.addNormal(segment.point, segment.point.add(median), show);
-        normals.push(vector);
-      } else {
-        const vector = this.addNormal(segment.point, segment.point.subtract(median), show);
-        normals.push(vector);
-      }
-
-      if (open) {
-        // Change direction is too high
-        // Smooth path, after median
-        if (mangle > 90) {
-          let rmedian: Point = median.rotate(-smoothAngle);
-          normals.push(this.addNormal(segment.point, segment.point.add(rmedian), show));
-          for (; (rmedian.angle - rvector.angle + 360) % 360 > (90 + smoothAngle);) {
-            rmedian = rmedian.rotate(-smoothAngle);
-            normals.push(this.addNormal(segment.point, segment.point.add(rmedian), show));
-          }
-        }
-      }
-    }
-
-    return normals;
-  }
-
-  /**
-   * add a new median
-   * @param from point from
-   * @param to point to
-   * @param insert insert in graphic ?
-   */
-  addNormal(from: Point, to: Point, insert: boolean): Path {
-    const path = new Path.Line({
-      from: from,
-      to: to,
-      strokeColor: 'yellow',
-      strokeWidth: 0.2,
-      insert: insert
-    });
-    return path;
   }
 }
