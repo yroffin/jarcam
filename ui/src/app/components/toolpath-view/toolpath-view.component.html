@@ -3,8 +3,6 @@
     <p-slider (onChange)="onToolChange($event)" [(ngModel)]="zoom" [min]="1" [max]="30" [step]="1" [animate]="true"></p-slider>
 </div>
 
-<button type="button" (click)="copyToClipboard(gcode)" pButton icon="pi pi-info-circle" label="Show"></button>
-
 <canvas #paperView [width]="width" [height]="height" resize></canvas>
 
 <pre>

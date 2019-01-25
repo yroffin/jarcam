@@ -1,6 +1,12 @@
 import { Point, Group } from 'paper';
 import { Path } from 'paper';
 
+export class MillPosition {
+    x: number;
+    y: number;
+    radius: number;
+}
+
 export class Journey {
     position: Point;
     path: Path;
@@ -12,4 +18,5 @@ export class ShapeGroup {
     openPath?: Group;
     closePath?: Group;
     aroundJourney?: Journey[];
+    fillJourney?: Journey[];
 }

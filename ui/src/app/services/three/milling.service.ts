@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import * as _ from 'lodash';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
 import { Area } from 'src/app/services/three/area.class';
+import { MillPosition } from 'src/app/services/paperjs/paperjs-model';
 
 
 @Injectable({
@@ -67,7 +68,7 @@ export class MillingService {
     return this._detection.areas;
   }
 
-  public getStart(): any {
+  public getStart(): MillPosition {
     if (this.mill) {
       return {
         x: this._mill.position.x,

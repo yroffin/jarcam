@@ -25,7 +25,7 @@ export class PaperJSContour {
         domInsert: boolean): Path {
 
         const contour = new Path();
-        contour.strokeColor = 'yellow';
+        contour.strokeColor = 'black';
         contour.strokeWidth = 0.2;
         contour.closed = true;
         contour.selected = false;
@@ -80,7 +80,7 @@ export class PaperJSContour {
         const text = new PointText({
             point: center,
             content: message,
-            fillColor: 'yellow',
+            fillColor: 'black',
             fontSize: 1.5,
         });
         text.scale(1, -1);
