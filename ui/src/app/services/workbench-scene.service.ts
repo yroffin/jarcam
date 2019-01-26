@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Axis } from 'src/app/services/three/axis.class';
-import { LayerBean, DebugBean, ParametersService } from 'src/app/stores/parameters.service';
+import { LayerBean, DebugBean, ParametersService, SCAN_PIECES } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { Grid } from 'src/app/services/three/grid.class';
@@ -8,6 +8,7 @@ import { Grid } from 'src/app/services/three/grid.class';
 import * as THREE from 'three';
 import * as _ from 'lodash';
 import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
+import { PlanarUtils } from 'src/app/services/three/planar-utils';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,7 @@ export class WorkbenchSceneService {
   private ground: THREE.Mesh;
 
   private layer: LayerBean;
+  private scan: any;
   private debug: DebugBean;
 
   layers: Observable<LayerBean>;
@@ -149,6 +151,17 @@ export class WorkbenchSceneService {
       this.mesh.remove();
     }
     this.mesh = this.factoryPiece(originalGeometry);
+    /*
+     * scan piece
+     */
+    this.scan = PlanarUtils.scan(this.mesh);
+    this.parametersService.dispatch({
+      type: SCAN_PIECES,
+      payload: {
+        minz: this.scan.minz * 1000,
+        maxz: this.scan.maxz * 1000
+      }
+    });
     this.scene.add(this.mesh);
     this.onLayerChange(this.layer);
     this.showLayer(this.layer.visible);

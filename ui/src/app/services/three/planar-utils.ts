@@ -19,6 +19,33 @@ export class PlanarUtils {
     public bottomRight: THREE.Vector3;
     public bottomLeft: THREE.Vector3;
 
+    /**
+     * scan pieces
+     */
+    public static scan(from: THREE.Mesh): any {
+        const fromGeometry = (<THREE.Geometry>from.geometry);
+
+        let minz = 0;
+        let maxz = 0;
+
+        // find all matching surfaces
+        const surfaces: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
+            minz = fromGeometry.vertices[face.a].z < minz ? fromGeometry.vertices[face.a].z : minz;
+            minz = fromGeometry.vertices[face.b].z < minz ? fromGeometry.vertices[face.b].z : minz;
+            minz = fromGeometry.vertices[face.c].z < minz ? fromGeometry.vertices[face.c].z : minz;
+            maxz = fromGeometry.vertices[face.a].z > maxz ? fromGeometry.vertices[face.a].z : maxz;
+            maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
+            maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
+            const normal = face.normal;
+            return normal.z >= 0.5;
+        });
+
+        return {
+            minz: minz,
+            maxz: maxz
+        };
+    }
+
     public PlanarUtils() {
     }
 

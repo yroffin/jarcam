@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean } from 'src/app/stores/parameters.service';
+import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 
@@ -22,6 +22,7 @@ export class AppComponent implements OnInit {
 
   layers: Observable<LayerBean>;
   debugs: Observable<DebugBean>;
+  scanPieces: Observable<ScanPiecesBean>;
 
   constructor(
     private parametersService: ParametersService,
@@ -43,6 +44,7 @@ export class AppComponent implements OnInit {
     };
     this.layers = this.parametersService.layers();
     this.debugs = this.parametersService.debugs();
+    this.scanPieces = this.parametersService.scanPieces();
   }
 
   ngOnInit() {
@@ -91,6 +93,14 @@ export class AppComponent implements OnInit {
       () => {
       }
     );
+    this.scanPieces.subscribe(
+      (scanPieces: ScanPiecesBean) => {
+        this.options.scanPieces = scanPieces;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
 
     this._load();
   }
@@ -103,7 +113,6 @@ export class AppComponent implements OnInit {
     // Check the support for the File API support
     if (window.Blob) {
       this.fileInput.nativeElement.addEventListener('change', () => {
-        console.log(this.fileInput.nativeElement.files);
         // Set the extension for the file
         const fileExtension = /stl.*/;
         // Get the file object

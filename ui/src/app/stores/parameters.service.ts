@@ -22,16 +22,22 @@ export interface DebugBean {
   ground: boolean;
 }
 
+export interface ScanPiecesBean {
+  minz: number;
+  maxz: number;
+}
+
 // State Type
 export interface ParametersState {
   layer: LayerBean;
   debug: DebugBean;
-  camera: any;
+  scanPieces: ScanPiecesBean;
 }
 
 // Les types des differentes actions
 export const CHANGE_LAYER = 'CHANGE_LAYER';
 export const CHANGE_DEBUG = 'CHANGE_DEBUG';
+export const SCAN_PIECES = 'SCAN_PIECES';
 
 // Les actions
 export class ChangeLayer implements Action {
@@ -44,7 +50,12 @@ export class ChangeDebug implements Action {
   payload: any;
 }
 
-export type AllActions = ChangeLayer | ChangeDebug;
+export class ScanPieces implements Action {
+  readonly type = SCAN_PIECES;
+  payload: any;
+}
+export type AllActions = ChangeLayer | ChangeDebug | ScanPieces;
+
 
 // Initial state
 export const initialState: ParametersState = {
@@ -63,8 +74,9 @@ export const initialState: ParametersState = {
   },
 
   // Camera
-  camera: {
-    position: { x: 0, y: 0, z: 0 },
+  scanPieces: {
+    minz: 0,
+    maxz: 0
   },
 };
 
@@ -79,8 +91,11 @@ export class ParametersService {
   // layerState
   getLayerState: Selector<object, LayerBean>;
 
-  // cameraState
+  // debug
   getDebugState: Selector<object, DebugBean>;
+
+  // debug
+  getScanPieces: Selector<object, ScanPiecesBean>;
 
   constructor(
     private _store: Store<ParametersState>
@@ -93,6 +108,9 @@ export class ParametersService {
 
     // debugState
     this.getDebugState = createSelector(this.getParametersState, (state: ParametersState) => state.debug);
+
+    // scanPieces
+    this.getScanPieces = createSelector(this.getParametersState, (state: ParametersState) => state.scanPieces);
   }
 
   // REDUCER
@@ -105,7 +123,7 @@ export class ParametersService {
         return {
           layer: action.payload,
           debug: state.debug,
-          camera: state.camera
+          scanPieces: state.scanPieces
         };
       }
 
@@ -118,9 +136,20 @@ export class ParametersService {
             normals: action.payload.normals === undefined ? state.debug.normals : action.payload.normals,
             ground: action.payload.ground === undefined ? state.debug.ground : action.payload.ground,
           },
-          camera: state.camera
+          scanPieces: state.scanPieces
         };
         return nstate;
+      }
+
+      case SCAN_PIECES: {
+        return {
+          layer: state.layer,
+          debug: state.debug,
+          scanPieces: {
+            minz: action.payload.minz,
+            maxz: action.payload.maxz
+          }
+        };
       }
 
       default:
@@ -143,9 +172,16 @@ export class ParametersService {
   }
 
   /**
- * dispatch
- * @param action dispatch action
- */
+     * select this store service
+     */
+  public scanPieces(): Observable<ScanPiecesBean> {
+    return this._store.select(this.getScanPieces);
+  }
+
+  /**
+   * dispatch
+   * @param action dispatch action
+   */
   public dispatch(action: AllActions) {
     this._store.dispatch(action);
   }
