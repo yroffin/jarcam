@@ -54,7 +54,7 @@ export class MillingService {
     this._mill.geometry = geometry;
   }
 
-  public moveToZ(scene: THREE.Scene, from: THREE.Mesh, value: number): PlanarUtils {
+  public moveToZ(scene: THREE.Scene, from: THREE.Group, value: number): PlanarUtils {
     // Fix plane level
     this._layer.constant = value;
     this._mill.translateZ(this._layer.constant - this._mill.position.z);

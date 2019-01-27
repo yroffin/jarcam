@@ -104,8 +104,9 @@ export class AppComponent implements OnInit {
         this.options.scanPieces = scanPieces;
         this.layerIndex = 0;
         this.layerMin = 0;
-        this.layerMax = scanPieces.allZ.length;
+        this.layerMax = scanPieces.allZ.length - 1;
         this.layerArray = scanPieces.allZ;
+        this.onLayerChange();
       },
       (err) => console.error(err),
       () => {

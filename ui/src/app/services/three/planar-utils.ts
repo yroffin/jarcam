@@ -23,29 +23,33 @@ export class PlanarUtils {
     /**
      * scan pieces
      */
-    public static scan(from: THREE.Mesh, slice: number): any {
-        const fromGeometry = (<THREE.Geometry>from.geometry);
-
+    public static scan(group: THREE.Group, slice: number): any {
         let minz = 0;
         let maxz = 0;
 
-        // find all matching surfaces
-        const surfaces: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
-            minz = fromGeometry.vertices[face.a].z < minz ? fromGeometry.vertices[face.a].z : minz;
-            minz = fromGeometry.vertices[face.b].z < minz ? fromGeometry.vertices[face.b].z : minz;
-            minz = fromGeometry.vertices[face.c].z < minz ? fromGeometry.vertices[face.c].z : minz;
-            maxz = fromGeometry.vertices[face.a].z > maxz ? fromGeometry.vertices[face.a].z : maxz;
-            maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
-            maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
-            const normal = face.normal;
-            return normal.z >= 0.01;
-        });
-
         const allZ = [minz, maxz];
-        _.each(surfaces, (face: THREE.Face3) => {
-            allZ.push(MathUtils.round(fromGeometry.vertices[face.a].z, 100));
-            allZ.push(MathUtils.round(fromGeometry.vertices[face.b].z, 100));
-            allZ.push(MathUtils.round(fromGeometry.vertices[face.c].z, 100));
+
+        _.each(group.children, (from) => {
+            const fromGeometry = (<THREE.Geometry>from.geometry);
+
+            // find all matching surfaces
+            const surfaces: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
+                minz = fromGeometry.vertices[face.a].z < minz ? fromGeometry.vertices[face.a].z : minz;
+                minz = fromGeometry.vertices[face.b].z < minz ? fromGeometry.vertices[face.b].z : minz;
+                minz = fromGeometry.vertices[face.c].z < minz ? fromGeometry.vertices[face.c].z : minz;
+                maxz = fromGeometry.vertices[face.a].z > maxz ? fromGeometry.vertices[face.a].z : maxz;
+                maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
+                maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
+                const normal = face.normal;
+                return normal.z >= 0.01;
+            });
+
+            // Scann surfaces
+            _.each(surfaces, (face: THREE.Face3) => {
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.a].z, 100));
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.b].z, 100));
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.c].z, 100));
+            });
         });
 
         const sortedAllZ = _.orderBy(_.uniq(allZ), (value) => {
@@ -75,63 +79,89 @@ export class PlanarUtils {
     public PlanarUtils() {
     }
 
-    public intersect(radius: number, layer: THREE.Plane, from: THREE.Mesh) {
+    public intersect(radius: number, layer: THREE.Plane, from: THREE.Group) {
         this.planeIntersect(radius, layer, from);
     }
 
     /**
      * planar intersect compute
      */
-    private planeIntersect(radius: number, layer: THREE.Plane, from: THREE.Mesh): void {
-        const fromGeometry = (<THREE.Geometry>from.geometry);
+    private planeIntersect(radius: number, layer: THREE.Plane, group: THREE.Group): void {
+        _.each(group.children, (from) => {
+            const fromGeometry = (<THREE.Geometry>from.geometry);
 
-        // Reset
-        this.bounds = [];
-        this.areas = [];
+            // Reset
+            this.bounds = [];
+            this.areas = [];
 
-        // find all matching faces
-        const keep: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
-            const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
-            const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
-            const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
-            return layer.intersectsLine(l1) || layer.intersectsLine(l2) || layer.intersectsLine(l3);
-        });
+            // find all matching faces
+            const keep: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
+                const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
+                const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
+                const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
+                const intersect = layer.intersectsLine(l1) || layer.intersectsLine(l2) || layer.intersectsLine(l3);
+                const touch = Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.a])) === 0
+                    || Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.b])) === 0
+                    || Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.c])) === 0;
+                return intersect || touch;
 
-        // find all intersections as segments
-        const segments: Segment[] = [];
-        _.each(keep, (face) => {
-            const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
-            const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
-            const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
-            const arr: THREE.Vector3[] = [];
-            let output;
-            output = new THREE.Vector3();
-            const i1 = layer.intersectLine(l1, output);
-            if (i1) {
-                arr.push(output.clone());
-            }
-            output = new THREE.Vector3();
-            const i2 = layer.intersectLine(l2, output);
-            if (i2) {
-                arr.push(output.clone());
-            }
-            output = new THREE.Vector3();
-            const i3 = layer.intersectLine(l3, output);
-            if (i3) {
-                arr.push(output.clone());
-            }
-
-            // push it
-            segments.push({
-                start: arr[0],
-                end: arr[1],
-                linked: false,
-                normal: face.normal
             });
-        });
 
-        // Find all chain
-        this.findAllChains(segments, this.areas);
+            // find all matching faces
+            const manifoldUp: THREE.Face3[] = _.filter(keep, (face: THREE.Face3) => {
+                face.color.setHex(0x000000);
+                return face.normal.z === 1;
+            });
+
+            // find all matching faces
+            const manifoldDown: THREE.Face3[] = _.filter(keep, (face: THREE.Face3) => {
+                return face.normal.z === -1;
+            });
+
+            if (manifoldUp.length > 0) {
+                let toto = 0;
+            }
+
+            if (manifoldDown.length > 0) {
+                let toto = 0;
+            }
+
+            // find all intersections as segments
+            const segments: Segment[] = [];
+            _.each(keep, (face) => {
+                const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
+                const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
+                const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
+                const arr: THREE.Vector3[] = [];
+                let output;
+                output = new THREE.Vector3();
+                const i1 = layer.intersectLine(l1, output);
+                if (i1) {
+                    arr.push(output.clone());
+                }
+                output = new THREE.Vector3();
+                const i2 = layer.intersectLine(l2, output);
+                if (i2) {
+                    arr.push(output.clone());
+                }
+                output = new THREE.Vector3();
+                const i3 = layer.intersectLine(l3, output);
+                if (i3) {
+                    arr.push(output.clone());
+                }
+
+                // push it
+                segments.push({
+                    start: arr[0],
+                    end: arr[1],
+                    linked: false,
+                    normal: face.normal
+                });
+            });
+
+            // Find all chain
+            this.findAllChains(segments, this.areas);
+        });
     }
 
     /**

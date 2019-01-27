@@ -9,6 +9,8 @@ import * as THREE from 'three';
 import * as _ from 'lodash';
 import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
+import { ScanMeshes } from 'src/app/services/three/scan-meshes';
+import { MeshPhongMaterial } from 'three';
 
 @Injectable({
   providedIn: 'root'
@@ -17,12 +19,12 @@ export class WorkbenchSceneService {
 
   public scene: THREE.Scene;
 
-  private mesh: THREE.Mesh;
+  private group: THREE.Group;
   private slice: THREE.Object3D[];
   private layerHelper: THREE.PlaneHelper;
 
   private normal: THREE.Mesh;
-  private helper: THREE.FaceNormalsHelper;
+  private helpers: THREE.FaceNormalsHelper[];
   private _axis: Axis;
 
   private ground: THREE.Mesh;
@@ -38,7 +40,7 @@ export class WorkbenchSceneService {
     private parametersService: ParametersService,
     private millingService: MillingService,
     private stlLoaderService: StlLoaderService
-    ) {
+  ) {
     // Create scene
     this.scene = new THREE.Scene();
 
@@ -67,7 +69,7 @@ export class WorkbenchSceneService {
     this.layers.subscribe(
       (layer: LayerBean) => {
         this.layer = layer;
-        if (this.mesh) {
+        if (this.group) {
           this.onLayerChange(this.layer);
           this.showLayer(this.layer.visible);
         }
@@ -81,7 +83,7 @@ export class WorkbenchSceneService {
     this.debugs.subscribe(
       (debug: DebugBean) => {
         this.debug = debug;
-        if (this.mesh) {
+        if (this.group) {
           this.normals(this.debug.normals);
           this.wireframe(this.debug.wireframe);
         }
@@ -120,41 +122,48 @@ export class WorkbenchSceneService {
       });
   }
 
-  private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh {
-    // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
-    class MeshToonMaterial extends THREE.MeshPhongMaterial {
-      public isMeshToonMaterial(): boolean {
-        return true;
-      }
-    }
-
+  private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh[] {
+    const meshes = [];
     const geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
     geometry.computeVertexNormals();
 
-    const material = new MeshToonMaterial({
+    const isolatedGeometries = ScanMeshes.findObjects(geometry);
+
+    const material = new MeshPhongMaterial({
       lights: true,
       transparent: true,
-      opacity: 0.5,
+      color: 0x556688,
+      opacity: 0.8,
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.name = 'piece';
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
+    let indice = 0;
+    _.each(isolatedGeometries, (isolatedGeometry) => {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = 'object#' + indice;
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      meshes.push(mesh);
+      indice++;
+    });
 
-    return mesh;
+    return meshes;
   }
 
   public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
-    if (this.mesh) {
-      this.scene.remove(this.mesh);
-      this.mesh.remove();
+    if (this.group) {
+      this.scene.remove(this.group);
+      this.group.remove();
     }
-    this.mesh = this.factoryPiece(originalGeometry);
+    const meshes = this.factoryPiece(originalGeometry);
+    this.group = new THREE.Group();
+    _.each(meshes, (mesh) => {
+      this.group.add(mesh);
+    });
+    console.log(this.group);
     /*
      * scan piece
      */
-    this.scan = PlanarUtils.scan(this.mesh, 1);
+    this.scan = PlanarUtils.scan(this.group, 1);
     this.parametersService.dispatch({
       type: SCAN_PIECES,
       payload: {
@@ -163,13 +172,13 @@ export class WorkbenchSceneService {
         allZ: this.scan.allZ
       }
     });
-    this.scene.add(this.mesh);
+    this.scene.add(this.group);
     this.onLayerChange(this.layer);
     this.showLayer(this.layer.visible);
   }
 
   public onLayerChange(layer: any) {
-    const planar = this.millingService.moveToZ(this.scene, this.mesh, layer.top / 1000);
+    const planar = this.millingService.moveToZ(this.scene, this.group, layer.top / 1000);
 
     // remove previous slicing object
     _.each(this.slice, (child) => {
@@ -191,20 +200,29 @@ export class WorkbenchSceneService {
   }
 
   wireframe(enable: boolean) {
-    if (this.mesh) {
-      (<THREE.MeshNormalMaterial>this.mesh.material).wireframe = enable;
+    if (this.group) {
+      _.each(this.group.children, (element) => {
+        (<THREE.MeshNormalMaterial>element.material).wireframe = enable;
+      });
     }
   }
 
   normals(enable: boolean) {
-    if (this.mesh) {
-      if (!this.helper) {
-        const material = new THREE.MeshNormalMaterial();
-        this.normal = new THREE.Mesh(this.mesh.geometry, material);
-        this.helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
-        this.scene.add(this.helper);
+    if (this.group) {
+      if (!this.helpers) {
+        this.helpers = [];
+        _.each(this.group.children, (element) => {
+          const material = new THREE.MeshNormalMaterial();
+          this.normal = new THREE.Mesh(element.geometry, material);
+          // TODO convert helper to array
+          const helper = new THREE.FaceNormalsHelper(this.normal, 2, 0x00ff00, 1);
+          this.helpers.push(helper);
+          this.scene.add(helper);
+        });
       }
-      this.helper.visible = enable;
+      _.each(this.helpers, (helper) => {
+        helper.visible = enable;
+      });
       this.normal.visible = enable;
     }
   }
