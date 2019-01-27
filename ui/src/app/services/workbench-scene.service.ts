@@ -123,22 +123,38 @@ export class WorkbenchSceneService {
   }
 
   private factoryPiece(originalGeometry: THREE.BufferGeometry): THREE.Mesh[] {
+    // Cf. https://threejs.org/docs/#api/en/materials/MeshToonMaterial
+    class MeshToonMaterial extends THREE.MeshPhongMaterial {
+      defines: any;
+      gradientMap: any;
+      constructor(parameters) {
+        super(parameters);
+        this.defines = { 'TOON': '' };
+        this.type = 'MeshToonMaterial';
+        this.gradientMap = null;
+        this.setValues(parameters);
+      }
+      public isMeshToonMaterial(): boolean {
+        return true;
+      }
+    }
+
     const meshes = [];
     const geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
     geometry.computeVertexNormals();
 
     const isolatedGeometries = ScanMeshes.findObjects(geometry);
 
-    const material = new MeshPhongMaterial({
+    const material = new MeshToonMaterial({
       lights: true,
       transparent: true,
-      color: 0x556688,
-      opacity: 0.8,
+      color: 0xff6688,
+      opacity: 0.7,
     });
 
     let indice = 0;
     _.each(isolatedGeometries, (isolatedGeometry) => {
-      const mesh = new THREE.Mesh(geometry, material);
+      const mesh = new THREE.Mesh(isolatedGeometry, material);
       mesh.name = 'object#' + indice;
       mesh.receiveShadow = true;
       mesh.castShadow = true;

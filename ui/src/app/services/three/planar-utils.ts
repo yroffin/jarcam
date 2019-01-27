@@ -87,25 +87,15 @@ export class PlanarUtils {
      * planar intersect compute
      */
     private planeIntersect(radius: number, layer: THREE.Plane, group: THREE.Group): void {
+        const segments: Segment[] = [];
+        // Reset
+        this.bounds = [];
+        this.areas = [];
         _.each(group.children, (from) => {
             const fromGeometry = (<THREE.Geometry>from.geometry);
 
-            // Reset
-            this.bounds = [];
-            this.areas = [];
-
             // find all matching faces
-            const keep: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
-                const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
-                const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
-                const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
-                const intersect = layer.intersectsLine(l1) || layer.intersectsLine(l2) || layer.intersectsLine(l3);
-                const touch = Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.a])) === 0
-                    || Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.b])) === 0
-                    || Math.abs(layer.distanceToPoint(fromGeometry.vertices[face.c])) === 0;
-                return intersect || touch;
-
-            });
+            let keep: THREE.Face3[] = this.filter(fromGeometry, layer);
 
             // find all matching faces
             const manifoldUp: THREE.Face3[] = _.filter(keep, (face: THREE.Face3) => {
@@ -119,15 +109,15 @@ export class PlanarUtils {
             });
 
             if (manifoldUp.length > 0) {
-                let toto = 0;
+                return;
             }
 
             if (manifoldDown.length > 0) {
-                let toto = 0;
+                layer.constant += 0.05;
+                keep = this.filter(fromGeometry, layer);
             }
 
             // find all intersections as segments
-            const segments: Segment[] = [];
             _.each(keep, (face) => {
                 const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
                 const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
@@ -162,6 +152,26 @@ export class PlanarUtils {
             // Find all chain
             this.findAllChains(segments, this.areas);
         });
+    }
+
+    /**
+     * filter geometry with layer
+     * @param geometry geometry
+     * @param layer layer
+     */
+    private filter(geometry: THREE.Geometry, layer: THREE.Plane): THREE.Face3[] {
+        // find all matching faces
+        const keep: THREE.Face3[] = _.filter(geometry.faces, (face: THREE.Face3) => {
+            const l1 = new THREE.Line3(geometry.vertices[face.a], geometry.vertices[face.b]);
+            const l2 = new THREE.Line3(geometry.vertices[face.b], geometry.vertices[face.c]);
+            const l3 = new THREE.Line3(geometry.vertices[face.c], geometry.vertices[face.a]);
+            const intersect = layer.intersectsLine(l1) || layer.intersectsLine(l2) || layer.intersectsLine(l3);
+            const touch = Math.abs(layer.distanceToPoint(geometry.vertices[face.a])) === 0
+                || Math.abs(layer.distanceToPoint(geometry.vertices[face.b])) === 0
+                || Math.abs(layer.distanceToPoint(geometry.vertices[face.c])) === 0;
+            return intersect || touch;
+        });
+        return keep;
     }
 
     /**
