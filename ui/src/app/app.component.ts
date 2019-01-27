@@ -22,7 +22,13 @@ export class AppComponent implements OnInit {
 
   layers: Observable<LayerBean>;
   debugs: Observable<DebugBean>;
+
   scanPieces: Observable<ScanPiecesBean>;
+
+  private layerIndex = 0;
+  private layerMin = 0;
+  private layerMax = 0;
+  private layerArray = [];
 
   constructor(
     private parametersService: ParametersService,
@@ -96,6 +102,10 @@ export class AppComponent implements OnInit {
     this.scanPieces.subscribe(
       (scanPieces: ScanPiecesBean) => {
         this.options.scanPieces = scanPieces;
+        this.layerIndex = 0;
+        this.layerMin = 0;
+        this.layerMax = scanPieces.allZ.length;
+        this.layerArray = scanPieces.allZ;
       },
       (err) => console.error(err),
       () => {
@@ -133,6 +143,7 @@ export class AppComponent implements OnInit {
   }
 
   public onLayerChange() {
+    this.options.layer.top = this.layerArray[this.layerIndex] * 1000;
     this.parametersService.dispatch({
       type: CHANGE_LAYER,
       payload: {

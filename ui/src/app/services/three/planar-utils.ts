@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import * as _ from 'lodash';
 import { Area } from 'src/app/services/three/area.class';
+import { MathUtils } from 'src/app/services/math-utils';
 
 class Segment {
     start: THREE.Vector3;
@@ -22,7 +23,7 @@ export class PlanarUtils {
     /**
      * scan pieces
      */
-    public static scan(from: THREE.Mesh): any {
+    public static scan(from: THREE.Mesh, slice: number): any {
         const fromGeometry = (<THREE.Geometry>from.geometry);
 
         let minz = 0;
@@ -37,12 +38,37 @@ export class PlanarUtils {
             maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
             maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
             const normal = face.normal;
-            return normal.z >= 0.5;
+            return normal.z >= 0.01;
         });
+
+        const allZ = [minz, maxz];
+        _.each(surfaces, (face: THREE.Face3) => {
+            allZ.push(MathUtils.round(fromGeometry.vertices[face.a].z, 100));
+            allZ.push(MathUtils.round(fromGeometry.vertices[face.b].z, 100));
+            allZ.push(MathUtils.round(fromGeometry.vertices[face.c].z, 100));
+        });
+
+        const sortedAllZ = _.orderBy(_.uniq(allZ), (value) => {
+            return value;
+        });
+
+        // Insert slice
+        const reduced = _.transform(sortedAllZ, (result, value) => {
+            if (result.length === 0) {
+                result.push(value);
+            } else {
+                let last = _.last(result) + slice;
+                for (; last < value; last += slice) {
+                    result.push(last);
+                }
+                result.push(value);
+            }
+        }, []);
 
         return {
             minz: minz,
-            maxz: maxz
+            maxz: maxz,
+            allZ: reduced
         };
     }
 

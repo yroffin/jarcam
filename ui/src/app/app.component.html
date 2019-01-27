@@ -15,7 +15,7 @@
     <div class="max-width">
       <p-inputSwitch (onChange)="onLayerVisibilityChange($event)" [(ngModel)]="options.layer.visible"></p-inputSwitch>
       <h4>Layer: {{options.layer.top / 1000}}</h4>
-      <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="options.layer.top" [min]="options.scanPieces.minz" [max]="options.scanPieces.maxz" [step]="1" [style]="{'width':'14em'}"
+      <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1" [style]="{'width':'14em'}"
         [animate]="true"></p-slider>
     </div>
 

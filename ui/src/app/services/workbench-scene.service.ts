@@ -154,12 +154,13 @@ export class WorkbenchSceneService {
     /*
      * scan piece
      */
-    this.scan = PlanarUtils.scan(this.mesh);
+    this.scan = PlanarUtils.scan(this.mesh, 1);
     this.parametersService.dispatch({
       type: SCAN_PIECES,
       payload: {
         minz: this.scan.minz * 1000,
-        maxz: this.scan.maxz * 1000
+        maxz: this.scan.maxz * 1000,
+        allZ: this.scan.allZ
       }
     });
     this.scene.add(this.mesh);

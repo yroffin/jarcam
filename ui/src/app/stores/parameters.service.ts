@@ -25,6 +25,7 @@ export interface DebugBean {
 export interface ScanPiecesBean {
   minz: number;
   maxz: number;
+  allZ: number[];
 }
 
 // State Type
@@ -73,10 +74,11 @@ export const initialState: ParametersState = {
     ground: false
   },
 
-  // Camera
+  // pieces
   scanPieces: {
     minz: 0,
-    maxz: 0
+    maxz: 0,
+    allZ: []
   },
 };
 
@@ -147,7 +149,8 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: {
             minz: action.payload.minz,
-            maxz: action.payload.maxz
+            maxz: action.payload.maxz,
+            allZ: action.payload.allZ
           }
         };
       }
