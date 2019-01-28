@@ -177,10 +177,16 @@ export class PaperJSSlicer {
                     selected: false,
                     closed: true,
                     name: area.name,
-                    strokeColor: 'red',
+                    strokeColor: 'purple',
                     strokeWidth: 0.2,
                     visible: true
                 });
+                areaPath.onMouseEnter = function (event) {
+                    this.selected = true;
+                };
+                areaPath.onMouseLeave = function (event) {
+                    this.selected = false;
+                };
                 shapeGroup.closed.addChild(areaPath);
             }
         });

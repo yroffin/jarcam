@@ -12,14 +12,6 @@ class Segment {
 
 export class PlanarUtils {
 
-    public areas: Array<Area>;
-
-    public bounds: THREE.Object3D[];
-    public topLeft: THREE.Vector3;
-    public topRight: THREE.Vector3;
-    public bottomRight: THREE.Vector3;
-    public bottomLeft: THREE.Vector3;
-
     /**
      * scan pieces
      */
@@ -76,30 +68,21 @@ export class PlanarUtils {
         };
     }
 
-    public PlanarUtils() {
-    }
-
-    public intersect(radius: number, layer: THREE.Plane, from: THREE.Group) {
-        this.planeIntersect(radius, layer, from);
-    }
-
     /**
      * planar intersect compute
      */
-    private planeIntersect(radius: number, layer: THREE.Plane, group: THREE.Group): void {
+    public static intersect(radius: number, layer: THREE.Plane, group: THREE.Group): Area[] {
         const segments: Segment[] = [];
         // Reset
-        this.bounds = [];
-        this.areas = [];
-        _.each(group.children, (from) => {
+        const areas: Area[] = [];
+        _.each(group.children, (from: THREE.Mesh) => {
             const fromGeometry = (<THREE.Geometry>from.geometry);
 
             // find all matching faces
-            let keep: THREE.Face3[] = this.filter(fromGeometry, layer);
+            let keep: THREE.Face3[] = PlanarUtils.filter(fromGeometry, layer);
 
             // find all matching faces
             const manifoldUp: THREE.Face3[] = _.filter(keep, (face: THREE.Face3) => {
-                face.color.setHex(0x000000);
                 return face.normal.z === 1;
             });
 
@@ -114,7 +97,7 @@ export class PlanarUtils {
 
             if (manifoldDown.length > 0) {
                 layer.constant += 0.05;
-                keep = this.filter(fromGeometry, layer);
+                keep = PlanarUtils.filter(fromGeometry, layer);
             }
 
             // find all intersections as segments
@@ -150,8 +133,9 @@ export class PlanarUtils {
             });
 
             // Find all chain
-            this.findAllChains(segments, this.areas);
+            PlanarUtils.findAllChains(from.name, segments, areas);
         });
+        return areas;
     }
 
     /**
@@ -159,7 +143,7 @@ export class PlanarUtils {
      * @param geometry geometry
      * @param layer layer
      */
-    private filter(geometry: THREE.Geometry, layer: THREE.Plane): THREE.Face3[] {
+    private static filter(geometry: THREE.Geometry, layer: THREE.Plane): THREE.Face3[] {
         // find all matching faces
         const keep: THREE.Face3[] = _.filter(geometry.faces, (face: THREE.Face3) => {
             const l1 = new THREE.Line3(geometry.vertices[face.a], geometry.vertices[face.b]);
@@ -177,12 +161,12 @@ export class PlanarUtils {
     /**
      * compute all chains
      */
-    private findAllChains(segments: Segment[], areas: Array<Area>): void {
+    private static findAllChains(name: string, segments: Segment[], areas: Array<Area>): void {
         let chain: Array<Segment>;
         let offset = 1;
-        chain = this.findNextChain(segments);
+        chain = PlanarUtils.findNextChain(segments);
         while (chain && chain.length > 0) {
-            const localArea: Area = new Area('shape#' + offset++);
+            const localArea: Area = new Area(name + '.shape#' + offset++);
 
             // Build contour
             const geometry = new THREE.Geometry();
@@ -221,8 +205,9 @@ export class PlanarUtils {
 
             localArea.normals = new THREE.LineSegments(normals, new THREE.LineBasicMaterial({
                 name: 'normals',
-                color: 0x3949AB,
+                color: 0x000000,
                 linewidth: 10,
+                visible: true
             }));
 
             // Build contour for 2D render
@@ -240,37 +225,36 @@ export class PlanarUtils {
                     element.end.y,
                     element.normal.x,
                     element.normal.y);
-
                 indice++;
             });
 
             areas.push(localArea);
 
             // Find next chain
-            chain = this.findNextChain(segments);
+            chain = PlanarUtils.findNextChain(segments);
         }
     }
 
-    public split(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
+    private static split(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
         const geometry = new THREE.Geometry();
-        _.each(this.splitWithDuplicates(a, b, distance), (vertices) => {
+        _.each(PlanarUtils.splitWithDuplicates(a, b, distance), (vertices) => {
             geometry.vertices.push(vertices);
         });
         geometry.mergeVertices();
         return geometry.vertices;
     }
 
-    private splitWithDuplicates(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
+    private static splitWithDuplicates(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
         const result: THREE.Vector3[] = [];
         const geometry = new THREE.Geometry();
         geometry.vertices.push(a);
         geometry.vertices.push(b);
         geometry.computeBoundingSphere();
         if ((geometry.boundingSphere.radius * 2) > distance) {
-            _.each(this.split(a, geometry.boundingSphere.center, distance), (vertice) => {
+            _.each(PlanarUtils.split(a, geometry.boundingSphere.center, distance), (vertice) => {
                 result.push(vertice);
             });
-            _.each(this.split(geometry.boundingSphere.center, b, distance), (vertice) => {
+            _.each(PlanarUtils.split(geometry.boundingSphere.center, b, distance), (vertice) => {
                 result.push(vertice);
             });
             result.push(a);
@@ -280,7 +264,7 @@ export class PlanarUtils {
         return result;
     }
 
-    private findNextChain(segments: Segment[]): Segment[] {
+    private static findNextChain(segments: Segment[]): Segment[] {
         const chain: Segment[] = [];
         let current = _.find(segments, (segment) => {
             return segment.linked === false;
@@ -289,18 +273,18 @@ export class PlanarUtils {
             current.linked = true;
             while (current) {
                 chain.push(current);
-                current = this.findNext(current, segments);
+                current = PlanarUtils.findNext(current, segments);
             }
         }
         return chain;
     }
 
-    private findNext(current: Segment, segments: Segment[]): Segment {
+    private static findNext(current: Segment, segments: Segment[]): Segment {
         const nextByStart = _.find(segments, (it: Segment) => {
             if (it.linked === true) {
                 return false;
             }
-            return this.compare(current.end, it.start);
+            return PlanarUtils.compare(current.end, it.start);
         });
         if (nextByStart) {
             nextByStart.linked = true;
@@ -315,7 +299,7 @@ export class PlanarUtils {
             if (it.linked === true) {
                 return false;
             }
-            return this.compare(current.end, it.end);
+            return PlanarUtils.compare(current.end, it.end);
         });
         if (nextByEnd) {
             nextByEnd.linked = true;
@@ -328,10 +312,14 @@ export class PlanarUtils {
         }
     }
 
-    private compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
+    /**
+     * simple comparaison of two vector
+     * @param left left
+     * @param right right
+     */
+    private static compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
         return Math.round(left.x * 10000 + Number.EPSILON) / 10000 === Math.round(right.x * 10000 + Number.EPSILON) / 10000
             && Math.round(left.y * 10000 + Number.EPSILON) / 10000 === Math.round(right.y * 10000 + Number.EPSILON) / 10000
             && Math.round(left.z * 10000 + Number.EPSILON) / 10000 === Math.round(right.z * 10000 + Number.EPSILON) / 10000;
     }
-
 }

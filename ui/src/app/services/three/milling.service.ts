@@ -12,15 +12,13 @@ import { MillPosition } from 'src/app/services/paperjs/paperjs-model';
 })
 export class MillingService {
 
+  private _areas: Area[];
   private _mill: THREE.Mesh;
-  private _detection: PlanarUtils;
   private _layer: THREE.Plane;
   private _radius = 4;
   private _tolerance = 0.01;
 
   constructor() {
-    // Detection
-    this._detection = new PlanarUtils();
   }
 
   public get layer() {
@@ -54,18 +52,18 @@ export class MillingService {
     this._mill.geometry = geometry;
   }
 
-  public moveToZ(scene: THREE.Scene, from: THREE.Group, value: number): PlanarUtils {
+  public moveToZ(scene: THREE.Scene, from: THREE.Group, value: number): Area[] {
     // Fix plane level
     this._layer.constant = value;
     this._mill.translateZ(this._layer.constant - this._mill.position.z);
 
-    this._detection.intersect(this._radius, this._layer, from);
+    this._areas = PlanarUtils.intersect(this._radius, this._layer, from);
 
-    return this._detection;
+    return this._areas;
   }
 
-  public getAreas(): Array<Area> {
-    return this._detection.areas;
+  public getAreas(): Area[] {
+    return this._areas;
   }
 
   public getStart(): MillPosition {

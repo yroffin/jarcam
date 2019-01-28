@@ -165,11 +165,18 @@ export class WorkbenchSceneService {
     return meshes;
   }
 
+  /**
+   * load a new geometry
+   * @param originalGeometry loaded geometry
+   */
   public setGeometryPiece(originalGeometry: THREE.BufferGeometry) {
     if (this.group) {
       this.scene.remove(this.group);
       this.group.remove();
     }
+    /**
+     * Build group from this geometry
+     */
     const meshes = this.factoryPiece(originalGeometry);
     this.group = new THREE.Group();
     _.each(meshes, (mesh) => {
@@ -177,14 +184,14 @@ export class WorkbenchSceneService {
     });
     console.log(this.group);
     /*
-     * scan piece
+     * Scan all pieces in group
      */
     this.scan = PlanarUtils.scan(this.group, 1);
     this.parametersService.dispatch({
       type: SCAN_PIECES,
       payload: {
-        minz: this.scan.minz * 1000,
-        maxz: this.scan.maxz * 1000,
+        minz: this.scan.minz,
+        maxz: this.scan.maxz,
         allZ: this.scan.allZ
       }
     });
@@ -194,7 +201,8 @@ export class WorkbenchSceneService {
   }
 
   public onLayerChange(layer: any) {
-    const planar = this.millingService.moveToZ(this.scene, this.group, layer.top / 1000);
+    // Move to Z
+    const areas = this.millingService.moveToZ(this.scene, this.group, layer.top);
 
     // remove previous slicing object
     _.each(this.slice, (child) => {
@@ -205,7 +213,7 @@ export class WorkbenchSceneService {
     this.slice = [];
 
     // add new slicing object and infos
-    _.each(planar.areas, (area) => {
+    _.each(areas, (area) => {
       _.each(area.meshes, (child) => {
         this.slice.push(child);
         this.scene.add(child);

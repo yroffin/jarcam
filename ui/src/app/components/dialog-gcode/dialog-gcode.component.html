@@ -1,0 +1,11 @@
+<h1 mat-dialog-title>GCODE</h1>
+<div mat-dialog-content>
+<pre>
+<code [innerHTML]="gcode">
+</code>
+</pre>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">No Thanks</button>
+  <button mat-button [mat-dialog-close]="data.gcode" cdkFocusInitial>Ok</button>
+</div>

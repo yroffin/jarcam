@@ -37,10 +37,10 @@ export class Area {
     }
 
     public isOpen(): boolean {
-        return this.area() - this.areaNormal() < 0;
+        return (this.area() - this.areaNormal()) < 0;
     }
 
-    private area(): number {
+    public area(): number {
         const shape: Array<THREE.Vector2> = [];
         _.each(this.internalPoints, (point: AreaPoint) => {
             shape.push(new THREE.Vector2(point.origin.x, point.origin.y));
@@ -48,7 +48,7 @@ export class Area {
         return Math.abs(THREE.ShapeUtils.area(shape));
     }
 
-    private areaNormal(): number {
+    public areaNormal(): number {
         const shape: Array<THREE.Vector2> = [];
         _.each(this.internalPoints, (point: AreaPoint) => {
             shape.push(new THREE.Vector2(point.origin.x + point.normal.x, point.origin.y + point.normal.y));

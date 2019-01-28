@@ -1,5 +1,6 @@
 import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle, Segment } from 'paper';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 import * as _ from 'lodash';
 
@@ -13,8 +14,9 @@ import { Journey, ShapeGroup } from 'src/app/services/paperjs/paperjs-model';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
-
-declare var Prism: any;
+import { ParametersService, ScanPiecesBean, LayerBean } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
+import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gcode.component';
 
 @Component({
   selector: 'app-toolpath-view',
@@ -24,20 +26,58 @@ declare var Prism: any;
 export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
-  @ViewChild('gcodeArea') gcodeArea: ElementRef;
 
   private zoom = 5;
 
   private slicer: PaperJSSlicer;
-  public gcode: string;
+  private shapes: ShapeGroup;
+
+  scanPieces: Observable<ScanPiecesBean>;
+  layers: Observable<LayerBean>;
+
+  public options: {
+    layer: LayerBean,
+    scanPieces: ScanPiecesBean
+  };
 
   constructor(
     private appComponent: AppComponent,
-    private millingService: MillingService
+    private parametersService: ParametersService,
+    private millingService: MillingService,
+    public dialog: MatDialog
   ) {
+    this.scanPieces = this.parametersService.scanPieces();
+    this.layers = this.parametersService.layers();
+    this.options = {
+      layer: {
+        top: 0,
+        visible: true
+      },
+      scanPieces: {
+        minz: 0,
+        maxz: 0,
+        allZ: []
+      }
+    };
   }
 
   ngOnInit() {
+    this.layers.subscribe(
+      (layer: LayerBean) => {
+        this.options.layer = layer;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.scanPieces.subscribe(
+      (scanPieces: ScanPiecesBean) => {
+        this.options.scanPieces = scanPieces;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   ngAfterViewInit() {
@@ -52,15 +92,24 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       this.millingService.radius());
 
     // Render shape
-    const shapes = this.slicer.render(false, true);
-
-    setTimeout(() => {
-      // build gcode
-      this.gcode = PaperJSGcode.buildGcode(shapes.opened, shapes.aroundJourney);
-    }, 1);
+    this.shapes = this.slicer.render(false, true);
   }
 
   public onToolChange() {
     this.slicer.onToolChange(this.zoom);
   }
+
+  openDialog(): void {
+    const dialogRef = this.dialog.open(DialogGcodeComponent, {
+      width: '100%',
+      data: {
+        gcode: PaperJSGcode.buildGcode(this.shapes.opened, this.options.layer.top, this.options.scanPieces.maxz, this.shapes.aroundJourney)
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+    });
+  }
+
 }
+

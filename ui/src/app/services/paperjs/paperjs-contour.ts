@@ -97,6 +97,10 @@ export class PaperJSContour {
     static calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, domInsert: boolean): Path[] {
         const normals: Path[] = [];
 
+        if (path.clockwise) {
+            path.reverse();
+        }
+
         let indice = 0;
         for (; indice < path.segments.length; indice++) {
             const segment = path.segments[indice % path.segments.length];

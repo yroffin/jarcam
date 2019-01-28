@@ -8,13 +8,13 @@
         Layer
       </mat-panel-title>
       <mat-panel-description>
-        {{options.layer.top / 1000 + 'mm'}}
+        {{options.layer.top + 'mm'}}
       </mat-panel-description>
     </mat-expansion-panel-header>
 
     <div class="max-width">
       <p-inputSwitch (onChange)="onLayerVisibilityChange($event)" [(ngModel)]="options.layer.visible"></p-inputSwitch>
-      <h4>Layer: {{options.layer.top / 1000}}</h4>
+      <h4>Layer: {{options.layer.top}}</h4>
       <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1" [style]="{'width':'14em'}"
         [animate]="true"></p-slider>
     </div>

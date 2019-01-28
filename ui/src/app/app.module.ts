@@ -55,6 +55,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
 import { ParametersService } from 'src/app/stores/parameters.service';
+import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.component';
 
 @NgModule({
   declarations: [
@@ -62,7 +63,8 @@ import { ParametersService } from 'src/app/stores/parameters.service';
     StlViewComponent,
     HomePageComponent,
     RendererComponent,
-    ToolpathViewComponent
+    ToolpathViewComponent,
+    DialogGcodeComponent
   ],
   imports: [
     BrowserModule,
@@ -122,6 +124,7 @@ import { ParametersService } from 'src/app/stores/parameters.service';
     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }
   ],
   entryComponents: [
+    DialogGcodeComponent
   ],
   bootstrap: [AppComponent],
   schemas: [
