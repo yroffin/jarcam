@@ -8,6 +8,8 @@ import { ShapeGroup, Journey } from 'src/app/services/paperjs/paperjs-model';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
+import { PaperJSShapeBuilder } from 'src/app/services/paperjs/paperjs-shape-builder';
+import { PaperJSShapeBuilderInterface } from 'src/app/services/paperjs/paperjs-interface';
 
 export class PaperJSSlicer {
 
@@ -20,6 +22,8 @@ export class PaperJSSlicer {
     private zoom = 5;
     private scope: PaperScope;
     private project: Project;
+
+    private shaper: PaperJSShapeBuilderInterface = new PaperJSShapeBuilder();
 
     /**
      * constructor
@@ -76,13 +80,7 @@ export class PaperJSSlicer {
         }
 
         // init the areas
-        const shapes = this.buildShape(domInsert);
-
-        // open area
-        shapes.openPath = this.openedShape(shapes.opened, domInsert);
-
-        // closed area and bound
-        shapes.closePath = this.closedShape(shapes.closed, domInsert);
+        const shapes = this.shaper.build(this.areas, this.radius, domInsert);
 
         // Compute bound
         const inner = PaperJSUtils.bounds(this.scanPieces, this.radius);
@@ -145,97 +143,6 @@ export class PaperJSSlicer {
         el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
-    }
-
-    /**
-     * build all shape
-     * @param domInsert should insert in dom ?
-     */
-    private buildShape(domInsert: boolean): ShapeGroup {
-        const shapeGroup: ShapeGroup = {
-            opened: new Group(),
-            closed: new Group()
-        };
-
-        const tool = new Path.Circle({
-            center: new Point(this.x, this.y),
-            radius: this.radius,
-            insert: domInsert
-        });
-        tool.strokeColor = 'purple';
-
-        _.each(this.areas, (area: Area) => {
-            const segments = [];
-            _.each(area.points(), (vertice: AreaPoint) => {
-                segments.push([vertice.origin.x, vertice.origin.y]);
-            });
-
-            if (area.isOpen()) {
-                const areaPath = new Path({
-                    segments: segments,
-                    selected: false,
-                    closed: true,
-                    name: area.name,
-                    strokeColor: 'red',
-                    strokeWidth: 0.1,
-                    visible: true
-                });
-                areaPath.onMouseEnter = function (event) {
-                    this.selected = true;
-                };
-                areaPath.onMouseLeave = function (event) {
-                    this.selected = false;
-                };
-                shapeGroup.opened.addChild(areaPath);
-            } else {
-                const areaPath = new Path({
-                    segments: segments,
-                    selected: false,
-                    closed: true,
-                    name: area.name,
-                    strokeColor: 'purple',
-                    strokeWidth: 0.2,
-                    visible: true
-                });
-                areaPath.onMouseEnter = function (event) {
-                    this.selected = true;
-                };
-                areaPath.onMouseLeave = function (event) {
-                    this.selected = false;
-                };
-                shapeGroup.closed.addChild(areaPath);
-            }
-        });
-
-        return shapeGroup;
-    }
-
-    /**
-     * build contour on opened shape
-     * @param closed group
-     * @param domInsert should insert it in dom ?
-     */
-    private openedShape(opened: Group, domInsert: boolean): Group {
-        const group: Group = new Group();
-        _.each(opened.children, (path: Path) => {
-            const contour = PaperJSContour.contour(true, path, this.radius, 10, 0.05, false, domInsert);
-            group.addChild(contour);
-        });
-        return group;
-    }
-
-    /**
-     * build contour on closed shape
-     * @param closed group
-     * @param domInsert should insert it in dom ?
-     */
-    private closedShape(closed: Group, domInsert: boolean): Group {
-        const group: Group = new Group();
-        _.each(closed.children, (path: Path) => {
-            const contour = PaperJSContour.contour(false, path, this.radius, 10, 0.05, false, domInsert);
-            group.addChild(contour);
-        });
-        return group;
     }
 
     /**
