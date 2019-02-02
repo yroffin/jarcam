@@ -26,19 +26,44 @@ Prism.languages.gcode = {
 })
 export class DialogGcodeComponent implements OnInit {
 
+  @ViewChild('clipboard') code: ElementRef;
   gcode: string;
 
   constructor(public dialogRef: MatDialogRef<DialogGcodeComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any) {
-      this.gcode = this.data.gcode;
-    }
+    this.gcode = this.data.gcode;
+  }
 
   ngOnInit() {
-    this.gcode = Prism.highlight(this.data.gcode, Prism.languages.gcode, 'gcode');
-    console.log('gcode', this.data);
+  }
+
+  /**
+   * Cf. http://www.javascriptkit.com/javatutors/copytoclipboard.shtml
+   */
+  private selectElementText() {
+    const range = document.createRange(); // create new range object
+    range.selectNodeContents(this.code.nativeElement); // set range to encompass desired element text
+    const selection = window.getSelection(); // get Selection object from currently user selected text
+    selection.removeAllRanges(); // unselect any user selected text (if any)
+    selection.addRange(range); // add range to Selection object to select it
+  }
+
+  /**
+   * Cf. http://www.javascriptkit.com/javatutors/copytoclipboard.shtml
+   */
+  private copySelectionText() {
+    let copysuccess; // var to check whether execCommand successfully executed
+    try {
+      copysuccess = document.execCommand('copy'); // run command to copy selected text to clipboard
+    } catch (e) {
+      copysuccess = false;
+    }
+    return copysuccess;
   }
 
   onNoClick(): void {
+    this.selectElementText();
+    this.copySelectionText();
     this.dialogRef.close();
   }
 }

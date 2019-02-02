@@ -111,8 +111,7 @@ export class PaperJSSlicer {
 
         shapes.fillJourney = this.computePath(shapes, 0, this.radius, area.bounds, [], false, domInsert);
 
-        if (false) {
-            let journeyCounter = 0;
+        if (fill) {
             _.each(shapes.fillJourney, (journey) => {
                 const circle = new Path.Circle({
                     center: journey.position,
@@ -133,7 +132,6 @@ export class PaperJSSlicer {
                     tool.strokeColor = 'black';
                     tool.strokeWidth = 0.05;
                 }
-                journeyCounter++;
             });
         }
 
@@ -281,7 +279,7 @@ export class PaperJSSlicer {
                     selected: false,
                     dashArray: [2, 0.5],
                     // always true, joiner must not be reversed
-                    data: {even: true},
+                    data: { even: true },
                     insert: true
                 });
                 journeylines.push(joiner);
@@ -322,7 +320,7 @@ export class PaperJSSlicer {
                     strokeWidth: 0.2,
                     selected: false,
                     dashArray: [2, 0.5],
-                    data: {even: even},
+                    data: { even: even },
                     insert: true
                 }));
                 from = curve.point;
@@ -333,7 +331,7 @@ export class PaperJSSlicer {
                 strokeColor: 'black',
                 strokeWidth: 0.2,
                 selected: false,
-                data: {even: even},
+                data: { even: even },
                 dashArray: [2, 0.5],
                 insert: true
             }));
@@ -364,7 +362,7 @@ export class PaperJSSlicer {
         let journey: Journey = {
             position: new Point(area.left, area.top),
             path: new Path({
-                strokeColor: 'red',
+                strokeColor: 'black',
                 strokeWidth: 0.2,
                 selected: false,
                 dashArray: [2, 0.5],
@@ -381,7 +379,7 @@ export class PaperJSSlicer {
                 journey = {
                     position: from,
                     path: new Path({
-                        strokeColor: 'red',
+                        strokeColor: 'black',
                         strokeWidth: 0.2,
                         selected: false,
                         dashArray: [2, 0.5],
