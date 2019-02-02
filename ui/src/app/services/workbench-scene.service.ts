@@ -186,10 +186,14 @@ export class WorkbenchSceneService {
     /*
      * Scan all pieces in group
      */
-    this.scan = PlanarUtils.scan(this.group, 1);
+    this.scan = ScanMeshes.scan(this.group, 1);
     this.parametersService.dispatch({
       type: SCAN_PIECES,
       payload: {
+        minx: this.scan.minx,
+        maxx: this.scan.maxx,
+        miny: this.scan.miny,
+        maxy: this.scan.maxy,
         minz: this.scan.minz,
         maxz: this.scan.maxz,
         allZ: this.scan.allZ

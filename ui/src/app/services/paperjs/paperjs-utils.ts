@@ -1,6 +1,7 @@
 import { Path, Point } from 'paper';
 import * as _ from 'lodash';
 import { Group } from 'paper';
+import { ScanPiecesBean } from 'src/app/stores/parameters.service';
 
 export class PaperJSUtils {
     /**
@@ -55,23 +56,9 @@ export class PaperJSUtils {
      * @param area the area
      * @param distance the distance to add to these bounds
      */
-    public static bounds(area: Group, distance: number): any {
+    public static bounds(scan: ScanPiecesBean, distance: number): any {
         // Compute bound
-        let top = 0, bottom = 0, left = 0, right = 0;
-        _.each(area.children, (path: Path) => {
-            if (path.bounds.top < top) {
-                top = path.bounds.top;
-            }
-            if (path.bounds.bottom > bottom) {
-                bottom = path.bounds.bottom;
-            }
-            if (path.bounds.left < left) {
-                left = path.bounds.left;
-            }
-            if (path.bounds.right > right) {
-                right = path.bounds.right;
-            }
-        });
+        const top = scan.miny, bottom = scan.maxy, left = scan.minx, right = scan.maxx;
 
         return {
             top: top - distance,

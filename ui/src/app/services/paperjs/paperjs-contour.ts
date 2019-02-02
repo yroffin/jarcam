@@ -1,7 +1,8 @@
-import { Path, Point, PointText } from 'paper';
+import { Path, Point, PointText, Shape } from 'paper';
 import * as _ from 'lodash';
 import { Group } from 'paper';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
+import { PaperJSOffset } from 'src/app/services/paperjs/paperjs-offset';
 
 export class PaperJSContour {
     /**
@@ -27,43 +28,43 @@ export class PaperJSContour {
         const contour = new Path();
         contour.strokeColor = 'black';
         contour.strokeWidth = 0.2;
+        contour.dashArray = [2, 0.5];
         contour.closed = true;
         contour.selected = false;
         contour.name = path.name + '.contour';
         contour.visible = true;
 
-        const normals = PaperJSContour.calcNormals(open, path, distance, smoothAngle, domInsert);
+        if (path.clockwise) {
+            path.reverse();
+        }
+
+        let cnt: Path;
+        if (open) {
+            cnt = PaperJSOffset.offsetPath(path, -distance, false);
+        } else {
+            cnt = PaperJSOffset.offsetPath(path, distance, false);
+        }
+        cnt.strokeWidth = 0.2;
+        cnt.strokeColor = 'black';
+        cnt.selected = false;
+
         const hittest = new Path.Circle({
             center: new Point(0, 0),
             radius: distance - precision,
             insert: domInsert
         });
 
-        let indice = 0;
-        _.each(normals, (normal: Path) => {
-            const position = normal.segments[1].point;
-            indice++;
-            hittest.position.x = position.x;
-            hittest.position.y = position.y;
-            hittest.name = path.name + '.circle#' + indice;
-            hittest.strokeColor = 'blue';
+        for (let indice = 0; indice < cnt.length; indice++) {
+            const point = cnt.getPointAt(indice);
+            hittest.position.x = point.x;
+            hittest.position.y = point.y;
 
             if (!hittest.intersects(path)) {
-                contour.add(normal.segments[1].point);
-                normal.remove();
+                contour.add(point);
             }
+        }
 
-            if (circle) {
-                hittest.strokeColor = 'purple';
-                hittest.strokeWidth = 0.05;
-                hittest.clone();
-                normal.strokeColor = 'purple';
-            } else {
-                normal.remove();
-            }
-        });
-
-        hittest.remove();
+        cnt.remove();
 
         this.display(contour.bounds.bottomRight, contour.name);
 

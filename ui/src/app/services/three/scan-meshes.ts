@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as _ from 'lodash';
 import { Area } from 'src/app/services/three/area.class';
 import { MathUtils } from 'src/app/services/math-utils';
+import { ScanPiecesBean } from 'src/app/stores/parameters.service';
 
 class FacesGroup {
     neighbours: THREE.Face3[];
@@ -9,6 +10,85 @@ class FacesGroup {
 }
 
 export class ScanMeshes {
+
+    /**
+     * scan pieces
+     */
+    public static scan(group: THREE.Group, slice: number): ScanPiecesBean {
+        let minx = 0;
+        let maxx = 0;
+        let miny = 0;
+        let maxy = 0;
+        let minz = 0;
+        let maxz = 0;
+
+        const allZ = [minz, maxz];
+
+        _.each(group.children, (from) => {
+            const fromGeometry = (<THREE.Geometry>from.geometry);
+
+            // find all matching surfaces
+            const surfaces: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
+                // X
+                minx = fromGeometry.vertices[face.a].x < minx ? fromGeometry.vertices[face.a].x : minx;
+                minx = fromGeometry.vertices[face.b].x < minx ? fromGeometry.vertices[face.b].x : minx;
+                minx = fromGeometry.vertices[face.c].x < minx ? fromGeometry.vertices[face.c].x : minx;
+                maxx = fromGeometry.vertices[face.a].x > maxx ? fromGeometry.vertices[face.a].x : maxx;
+                maxx = fromGeometry.vertices[face.b].x > maxx ? fromGeometry.vertices[face.b].x : maxx;
+                maxx = fromGeometry.vertices[face.c].x > maxx ? fromGeometry.vertices[face.c].x : maxx;
+                // Y
+                miny = fromGeometry.vertices[face.a].y < miny ? fromGeometry.vertices[face.a].y : miny;
+                miny = fromGeometry.vertices[face.b].y < miny ? fromGeometry.vertices[face.b].y : miny;
+                miny = fromGeometry.vertices[face.c].y < miny ? fromGeometry.vertices[face.c].y : miny;
+                maxy = fromGeometry.vertices[face.a].y > maxy ? fromGeometry.vertices[face.a].y : maxy;
+                maxy = fromGeometry.vertices[face.b].y > maxy ? fromGeometry.vertices[face.b].y : maxy;
+                maxy = fromGeometry.vertices[face.c].y > maxy ? fromGeometry.vertices[face.c].y : maxy;
+                // Z
+                minz = fromGeometry.vertices[face.a].z < minz ? fromGeometry.vertices[face.a].z : minz;
+                minz = fromGeometry.vertices[face.b].z < minz ? fromGeometry.vertices[face.b].z : minz;
+                minz = fromGeometry.vertices[face.c].z < minz ? fromGeometry.vertices[face.c].z : minz;
+                maxz = fromGeometry.vertices[face.a].z > maxz ? fromGeometry.vertices[face.a].z : maxz;
+                maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
+                maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
+                const normal = face.normal;
+                return normal.z >= 0.01;
+            });
+
+            // Scann surfaces
+            _.each(surfaces, (face: THREE.Face3) => {
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.a].z, 100));
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.b].z, 100));
+                allZ.push(MathUtils.round(fromGeometry.vertices[face.c].z, 100));
+            });
+        });
+
+        const sortedAllZ = _.orderBy(_.uniq(allZ), (value) => {
+            return value;
+        });
+
+        // Insert slice
+        const reduced = _.transform(sortedAllZ, (result, value) => {
+            if (result.length === 0) {
+                result.push(value);
+            } else {
+                let last = _.last(result) + slice;
+                for (; last < value; last += slice) {
+                    result.push(last);
+                }
+                result.push(value);
+            }
+        }, []);
+
+        return {
+            minx: minx,
+            maxx: maxx,
+            miny: miny,
+            maxy: maxy,
+            minz: minz,
+            maxz: maxz,
+            allZ: reduced
+        };
+    }
 
     /**
      * find isolated objects in this geometry

@@ -3,6 +3,7 @@ import { MenuItem } from 'primeng/api';
 import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { WorkbenchService } from 'src/app/services/workbench.service';
+import { StorageService } from 'src/app/services/utility/storage.service';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +33,8 @@ export class AppComponent implements OnInit {
 
   constructor(
     private parametersService: ParametersService,
-    private workbenchService: WorkbenchService) {
+    private workbenchService: WorkbenchService,
+    private storageService: StorageService) {
     this.options = {
       // layers
       layer: {
@@ -131,6 +133,7 @@ export class AppComponent implements OnInit {
         // Initialize the FileReader object to read the 2file
         const fileReader = new FileReader();
         fileReader.onload = () => {
+          this.storageService.save('lastLoaded', fileReader.result);
           this.workbenchService.loadBinary(fileReader.result, () => {
           });
         };

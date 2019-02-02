@@ -23,6 +23,10 @@ export interface DebugBean {
 }
 
 export interface ScanPiecesBean {
+  minx: number;
+  maxx: number;
+  miny: number;
+  maxy: number;
   minz: number;
   maxz: number;
   allZ: number[];
@@ -76,6 +80,10 @@ export const initialState: ParametersState = {
 
   // pieces
   scanPieces: {
+    minx: 0,
+    maxx: 0,
+    miny: 0,
+    maxy: 0,
     minz: 0,
     maxz: 0,
     allZ: []
@@ -148,6 +156,10 @@ export class ParametersService {
           layer: state.layer,
           debug: state.debug,
           scanPieces: {
+            minx: action.payload.minx,
+            maxx: action.payload.maxx,
+            miny: action.payload.miny,
+            maxy: action.payload.maxy,
             minz: action.payload.minz,
             maxz: action.payload.maxz,
             allZ: action.payload.allZ

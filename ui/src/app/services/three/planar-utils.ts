@@ -13,62 +13,6 @@ class Segment {
 export class PlanarUtils {
 
     /**
-     * scan pieces
-     */
-    public static scan(group: THREE.Group, slice: number): any {
-        let minz = 0;
-        let maxz = 0;
-
-        const allZ = [minz, maxz];
-
-        _.each(group.children, (from) => {
-            const fromGeometry = (<THREE.Geometry>from.geometry);
-
-            // find all matching surfaces
-            const surfaces: THREE.Face3[] = _.filter((fromGeometry).faces, (face: THREE.Face3) => {
-                minz = fromGeometry.vertices[face.a].z < minz ? fromGeometry.vertices[face.a].z : minz;
-                minz = fromGeometry.vertices[face.b].z < minz ? fromGeometry.vertices[face.b].z : minz;
-                minz = fromGeometry.vertices[face.c].z < minz ? fromGeometry.vertices[face.c].z : minz;
-                maxz = fromGeometry.vertices[face.a].z > maxz ? fromGeometry.vertices[face.a].z : maxz;
-                maxz = fromGeometry.vertices[face.b].z > maxz ? fromGeometry.vertices[face.b].z : maxz;
-                maxz = fromGeometry.vertices[face.c].z > maxz ? fromGeometry.vertices[face.c].z : maxz;
-                const normal = face.normal;
-                return normal.z >= 0.01;
-            });
-
-            // Scann surfaces
-            _.each(surfaces, (face: THREE.Face3) => {
-                allZ.push(MathUtils.round(fromGeometry.vertices[face.a].z, 100));
-                allZ.push(MathUtils.round(fromGeometry.vertices[face.b].z, 100));
-                allZ.push(MathUtils.round(fromGeometry.vertices[face.c].z, 100));
-            });
-        });
-
-        const sortedAllZ = _.orderBy(_.uniq(allZ), (value) => {
-            return value;
-        });
-
-        // Insert slice
-        const reduced = _.transform(sortedAllZ, (result, value) => {
-            if (result.length === 0) {
-                result.push(value);
-            } else {
-                let last = _.last(result) + slice;
-                for (; last < value; last += slice) {
-                    result.push(last);
-                }
-                result.push(value);
-            }
-        }, []);
-
-        return {
-            minz: minz,
-            maxz: maxz,
-            allZ: reduced
-        };
-    }
-
-    /**
      * planar intersect compute
      */
     public static intersect(radius: number, layer: THREE.Plane, group: THREE.Group): Area[] {
