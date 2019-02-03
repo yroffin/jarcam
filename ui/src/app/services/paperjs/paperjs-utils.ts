@@ -56,9 +56,26 @@ export class PaperJSUtils {
      * @param area the area
      * @param distance the distance to add to these bounds
      */
-    public static bounds(scan: ScanPiecesBean, distance: number): any {
+    public static pieceBounds(scan: ScanPiecesBean, distance: number): any {
         // Compute bound
         const top = scan.miny, bottom = scan.maxy, left = scan.minx, right = scan.maxx;
+
+        return {
+            top: top - distance,
+            left: left - distance,
+            bottom: bottom + distance,
+            right: right + distance
+        };
+    }
+
+    /**
+     * compute bound of this area
+     * @param area the area
+     * @param distance the distance to add to these bounds
+     */
+    public static bounds(minx: number, maxx: number, miny: number, maxy: number, distance: number): any {
+        // Compute bound
+        const top = miny, bottom = maxy, left = minx, right = maxx;
 
         return {
             top: top - distance,

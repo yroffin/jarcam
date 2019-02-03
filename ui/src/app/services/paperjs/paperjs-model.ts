@@ -17,6 +17,5 @@ export class ShapeGroup {
     closed: Group;
     openPath?: Group;
     closePath?: Group;
-    aroundJourney?: Journey[];
-    fillJourney?: Journey[];
+    journeys: Journey[];
 }

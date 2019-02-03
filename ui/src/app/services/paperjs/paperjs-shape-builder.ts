@@ -18,7 +18,8 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
     public build(areas: Array<Area>, radius: number, domInsert: boolean): ShapeGroup {
         const shapes: ShapeGroup = {
             opened: new Group(),
-            closed: new Group()
+            closed: new Group(),
+            journeys: []
         };
 
         // Iterate on area to build shape

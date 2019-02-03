@@ -4,26 +4,32 @@ import * as _ from 'lodash';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { Group } from 'paper';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
+import { PaperJSGcodeInterface } from 'src/app/services/paperjs/paperjs-interface';
 
-export class PaperJSGcode {
-    public static buildGcode(
-        area: Group,
-        scan: ScanPiecesBean,
+export class PaperJSGcode implements PaperJSGcodeInterface {
+
+    public build(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
         current: number,
         maxz: number,
-        arounds: Journey[],
-        fills: Journey[]): string {
-        return this._buildGcode(area, scan, current, maxz, arounds)
-        + this._buildGcode(area, scan, current, maxz, fills);
+        radius: number,
+        journeys: Journey[]): string {
+        return this._buildGcode(minx, maxx, miny, maxy, current, maxz, radius, journeys);
     }
 
-    public static _buildGcode(
-        area: Group,
-        scan: ScanPiecesBean,
+    private _buildGcode(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
         current: number,
         maxz: number,
+        radius: number,
         journeys: Journey[]): string {
-        const inner = PaperJSUtils.bounds(scan, 4);
+        const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
 
         let gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
         gcode = `${gcode}G90 (Absolute Positioning)\n`;
