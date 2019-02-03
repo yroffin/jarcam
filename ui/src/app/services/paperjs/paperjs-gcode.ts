@@ -8,27 +8,17 @@ import { PaperJSGcodeInterface } from 'src/app/services/paperjs/paperjs-interfac
 
 export class PaperJSGcode implements PaperJSGcodeInterface {
 
-    public build(
-        minx: number,
-        maxx: number,
-        miny: number,
-        maxy: number,
-        current: number,
-        maxz: number,
-        radius: number,
-        journeys: Journey[]): string {
-        return this._buildGcode(minx, maxx, miny, maxy, current, maxz, radius, journeys);
+    private static round(n: number, precision: number): number {
+        return Math.round(n * precision + Number.EPSILON) / precision;
     }
 
-    private _buildGcode(
+    public header(
         minx: number,
         maxx: number,
         miny: number,
         maxy: number,
-        current: number,
-        maxz: number,
-        radius: number,
-        journeys: Journey[]): string {
+        maxz: number
+    ): string {
         const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
 
         let gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
@@ -36,6 +26,21 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         gcode = `${gcode}M03 S18000 (Spindle CW on)\n`;
         gcode = `${gcode}G0 Z${maxz}   (move to ${maxz}mm on the Z axis)\n`;
         gcode = `${gcode}G0 F900 (set the feedrate to 900mm/minute)\n`;
+
+        return gcode;
+    }
+
+    public build(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
+        current: number,
+        maxz: number,
+        journeys: Journey[]): string {
+        const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
+
+        let gcode = ``;
 
         let it = 0;
         _.each(journeys, (journey: Journey) => {
@@ -59,9 +64,5 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         });
 
         return gcode;
-    }
-
-    public static round(n: number, precision: number): number {
-        return Math.round(n * precision + Number.EPSILON) / precision;
     }
 }

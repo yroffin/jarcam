@@ -39,10 +39,10 @@ export class PaperJSSlicer {
      * constructor
      * @param target html element ref
      */
-    constructor(target: HTMLCanvasElement) {
+    constructor(target?: HTMLCanvasElement) {
         this.scope = new PaperScope();
-        this.project = new Project(target);
 
+        this.project = new Project(target);
         this.project.currentStyle = {
             fontFamily: 'roboto'
         };
@@ -87,6 +87,10 @@ export class PaperJSSlicer {
      * @param domInsert insert it (not when computing only
      */
     public render(fill: boolean, domInsert: boolean): ShapeGroup {
+        if (this.project === undefined) {
+            return;
+        }
+
         // Clear area for rendering a new one
         this.project.clear();
 
@@ -119,6 +123,16 @@ export class PaperJSSlicer {
         return shapes;
     }
 
+    public header(
+        maxz: number): string {
+        return this.gcoder.header(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            maxz);
+    }
+
     /**
      * build gcode
      * @param current current Z
@@ -129,14 +143,13 @@ export class PaperJSSlicer {
     public gcode(
         current: number,
         maxz: number,
-        radius: number,
         journeys: Journey[]): string {
         return this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            current, maxz, radius, journeys);
+            current, maxz, journeys);
     }
 
     /**

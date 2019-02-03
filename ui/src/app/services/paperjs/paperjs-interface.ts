@@ -16,6 +16,12 @@ export interface PaperJSSimulatorInterface {
 }
 
 export interface PaperJSGcodeInterface {
+    header(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
+        maxz: number): string;
     build(
         minx: number,
         maxx: number,
@@ -23,6 +29,5 @@ export interface PaperJSGcodeInterface {
         maxy: number,
         current: number,
         maxz: number,
-        radius: number,
         journeys: Journey[]): string;
 }

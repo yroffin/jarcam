@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import { WorkbenchSceneService } from 'src/app/services/workbench-scene.service';
+import { LayerBean } from 'src/app/stores/parameters.service';
 
 @Injectable({
   providedIn: 'root'
@@ -127,6 +128,10 @@ export class WorkbenchService {
     infos.push(`camera.position.y : ${this.worldCamera.position.y}`);
     infos.push(`camera.position.z : ${this.worldCamera.position.z}`);
     return infos;
+  }
+
+  public onLayerChange(layer: LayerBean) {
+    this.workbenchSceneService.onLayerChange(layer);
   }
 
   setPosition(target: THREE.Object3D, position: Array<number>) {

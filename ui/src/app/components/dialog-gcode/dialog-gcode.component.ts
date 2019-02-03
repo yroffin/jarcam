@@ -40,18 +40,13 @@ export class DialogGcodeComponent implements OnInit {
   /**
    * Cf. http://www.javascriptkit.com/javatutors/copytoclipboard.shtml
    */
-  private selectElementText() {
+  private copySelectionText() {
     const range = document.createRange(); // create new range object
     range.selectNodeContents(this.code.nativeElement); // set range to encompass desired element text
     const selection = window.getSelection(); // get Selection object from currently user selected text
     selection.removeAllRanges(); // unselect any user selected text (if any)
     selection.addRange(range); // add range to Selection object to select it
-  }
 
-  /**
-   * Cf. http://www.javascriptkit.com/javatutors/copytoclipboard.shtml
-   */
-  private copySelectionText() {
     let copysuccess; // var to check whether execCommand successfully executed
     try {
       copysuccess = document.execCommand('copy'); // run command to copy selected text to clipboard
@@ -62,7 +57,6 @@ export class DialogGcodeComponent implements OnInit {
   }
 
   onNoClick(): void {
-    this.selectElementText();
     this.copySelectionText();
     this.dialogRef.close();
   }

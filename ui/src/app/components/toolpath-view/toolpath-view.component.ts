@@ -124,7 +124,6 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         gcode: this.slicer.gcode(
           this.options.layer.top,
           this.options.scanPieces.maxz,
-          this.millingService.radius(),
           this.shapes.journeys)
       }
     });

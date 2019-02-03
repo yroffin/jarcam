@@ -4,6 +4,11 @@ import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, Sc
 import { Observable } from 'rxjs';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
+import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
+import { MillingService } from 'src/app/services/three/milling.service';
+import { ElementRef } from '@angular/core';
+import * as _ from 'lodash';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +18,7 @@ import { StorageService } from 'src/app/services/utility/storage.service';
 export class AppComponent implements OnInit {
 
   @ViewChild('fileInput') fileInput;
+  @ViewChild('gcodeView') paperCanvas: ElementRef;
 
   public options: any;
 
@@ -33,6 +39,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private parametersService: ParametersService,
+    private millingService: MillingService,
     private workbenchService: WorkbenchService,
     private storageService: StorageService) {
     this.options = {
@@ -70,6 +77,11 @@ export class AppComponent implements OnInit {
             label: 'Open', icon: 'pi pi-fw pi-file', command: (event) => {
               this.load();
             }
+          },
+          {
+            label: 'Gcode', icon: 'pi pi-fw pi-save', command: (event) => {
+              this.gcodeBuild();
+            }
           }
         ]
       },
@@ -103,12 +115,14 @@ export class AppComponent implements OnInit {
     );
     this.scanPieces.subscribe(
       (scanPieces: ScanPiecesBean) => {
-        this.options.scanPieces = scanPieces;
-        this.layerIndex = 0;
-        this.layerMin = 0;
-        this.layerMax = scanPieces.allZ.length - 1;
-        this.layerArray = scanPieces.allZ;
-        this.onLayerChange();
+        setTimeout(() => {
+          this.options.scanPieces = scanPieces;
+          this.layerIndex = 0;
+          this.layerMin = 0;
+          this.layerMax = scanPieces.allZ.length - 1;
+          this.layerArray = scanPieces.allZ;
+          this.onLayerChange();
+        }, 1);
       },
       (err) => console.error(err),
       () => {
@@ -120,6 +134,64 @@ export class AppComponent implements OnInit {
 
   public load() {
     this.fileInput.nativeElement.click();
+  }
+
+  public gcodeBuild() {
+    const slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
+
+    // Init slice
+    slicer.init(
+      this.options.scanPieces,
+      this.millingService.getAreas(),
+      1,
+      this.millingService.getStart().x,
+      this.millingService.getStart().y,
+      this.millingService.radius());
+
+    const saveLayer: LayerBean = {
+      top: 0,
+      visible: true
+    };
+
+    // Header
+    let gcode = slicer.header(this.options.scanPieces.maxz);
+
+    // Iterate on all Z to build this piece
+    _.each(_.reverse(_.clone(this.options.scanPieces.allZ)), (top: number) => {
+      const currentLayer: LayerBean = {
+        top: top,
+        visible: true
+      };
+      this.workbenchService.onLayerChange(currentLayer);
+
+      // Render shape
+      const shapes = slicer.render(false, false);
+
+      // Calc gcode
+      gcode += slicer.gcode(
+        currentLayer.top,
+        this.options.scanPieces.maxz,
+        shapes.journeys);
+    });
+
+    // Download
+    this.download(gcode);
+
+    // Restore old layer position
+    this.onLayerChange();
+  }
+
+  private download(myOutputData: string) {
+    const datePipe = new DatePipe('en-US');
+    const fileName = 'export-' + datePipe.transform(new Date(), 'yyyyMMdd-HHmmss') + '.txt';
+    const a: any = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    const file = new Blob([myOutputData], { type: 'application/text' });
+    const fileURL = window.URL.createObjectURL(file);
+    a.href = fileURL;
+    a.download = fileName;
+    a.click();
   }
 
   private _load() {

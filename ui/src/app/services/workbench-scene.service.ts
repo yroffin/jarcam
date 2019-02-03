@@ -201,10 +201,9 @@ export class WorkbenchSceneService {
     });
     this.scene.add(this.group);
     this.onLayerChange(this.layer);
-    this.showLayer(this.layer.visible);
   }
 
-  public onLayerChange(layer: any) {
+  public onLayerChange(layer: LayerBean) {
     // Move to Z
     const areas = this.millingService.moveToZ(this.scene, this.group, layer.top);
 
@@ -225,6 +224,7 @@ export class WorkbenchSceneService {
       this.slice.push(area.normals);
       this.scene.add(area.normals);
     });
+    this.showLayer(this.layer.visible);
   }
 
   wireframe(enable: boolean) {
@@ -271,7 +271,7 @@ export class WorkbenchSceneService {
     this.ground.visible = enable;
   }
 
-  public showLayer(enable: boolean) {
+  private showLayer(enable: boolean) {
     this.layerHelper.visible = enable;
     _.each(this.slice, (slice: THREE.Object3D) => {
       slice.visible = enable;

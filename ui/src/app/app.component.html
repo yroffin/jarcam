@@ -1,5 +1,7 @@
 <p-menubar [model]="items"></p-menubar>
 <input [ngStyle]="{'display': 'none'}" #fileInput type="file" id="txtfiletoread"/>
+<canvas [ngStyle]="{'display': 'none'}" #gcodeView [width]="0" [height]="0"></canvas>
+
 <router-outlet></router-outlet>
 <p-sidebar [(visible)]="display" >
   <mat-expansion-panel>
