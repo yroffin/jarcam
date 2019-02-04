@@ -20,7 +20,9 @@ import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gco
 import { ActivatedRoute } from '@angular/router';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-toolpath-view',
   templateUrl: './toolpath-view.component.html',
@@ -30,7 +32,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
 
-  private zoom = 5;
+  public zoom = 5;
 
   private slicer: PaperJSSlicer;
   private shapes: ShapeGroup;

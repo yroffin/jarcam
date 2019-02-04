@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, Inject } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
 declare var Prism: any;
 
@@ -19,6 +20,7 @@ Prism.languages.gcode = {
   'punctuation': /:/
 };
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-dialog-gcode',
   templateUrl: './dialog-gcode.component.html',

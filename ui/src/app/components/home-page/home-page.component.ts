@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-home-page',
   templateUrl: './home-page.component.html',

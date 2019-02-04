@@ -9,7 +9,9 @@ import { MillingService } from 'src/app/services/three/milling.service';
 import { ElementRef } from '@angular/core';
 import * as _ from 'lodash';
 import { DatePipe } from '@angular/common';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -32,10 +34,10 @@ export class AppComponent implements OnInit {
 
   scanPieces: Observable<ScanPiecesBean>;
 
-  private layerIndex = 0;
-  private layerMin = 0;
-  private layerMax = 0;
-  private layerArray = [];
+  public layerIndex = 0;
+  public layerMin = 0;
+  public layerMax = 0;
+  public layerArray = [];
 
   constructor(
     private parametersService: ParametersService,

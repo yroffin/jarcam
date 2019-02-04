@@ -8,7 +8,9 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-renderer',
   templateUrl: './renderer.component.html',
@@ -16,8 +18,8 @@ import { WorkbenchService } from 'src/app/services/workbench.service';
 })
 export class RendererComponent implements AfterViewInit {
 
-  private width = window.innerWidth;
-  private height = window.innerHeight;
+  public width = window.innerWidth;
+  public height = window.innerHeight;
 
   @Input() orbit = true;
 
@@ -28,7 +30,7 @@ export class RendererComponent implements AfterViewInit {
   private controls: OrbitControls;
   private renderCube: THREE.WebGLRenderer;
 
-  private infos = [];
+  public infos = [];
 
   constructor(
     private workbenchService: WorkbenchService) {

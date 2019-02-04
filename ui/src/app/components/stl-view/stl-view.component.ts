@@ -11,7 +11,9 @@ import { AppComponent } from 'src/app/app.component';
 import { Store } from '@ngrx/store';
 import { ParametersState, ParametersService } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 
+@AutoUnsubscribe()
 @Component({
   selector: 'app-stl-view',
   templateUrl: './stl-view.component.html',

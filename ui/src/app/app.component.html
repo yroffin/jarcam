@@ -15,9 +15,9 @@
     </mat-expansion-panel-header>
 
     <div class="max-width">
-      <p-inputSwitch (onChange)="onLayerVisibilityChange($event)" [(ngModel)]="options.layer.visible"></p-inputSwitch>
+      <p-inputSwitch (onChange)="onLayerVisibilityChange()" [(ngModel)]="options.layer.visible"></p-inputSwitch>
       <h4>Layer: {{options.layer.top}}</h4>
-      <p-slider (onChange)="onLayerChange($event)" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1" [style]="{'width':'14em'}"
+      <p-slider (onChange)="onLayerChange()" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1" [style]="{'width':'14em'}"
         [animate]="true"></p-slider>
     </div>
 
