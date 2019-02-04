@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as THREE from 'three';
 import { WorkbenchSceneService } from 'src/app/services/workbench-scene.service';
 import { LayerBean } from 'src/app/stores/parameters.service';
+import * as _ from 'lodash';
 
 @Injectable({
   providedIn: 'root'
@@ -127,6 +128,9 @@ export class WorkbenchService {
     infos.push(`camera.position.x : ${this.worldCamera.position.x}`);
     infos.push(`camera.position.y : ${this.worldCamera.position.y}`);
     infos.push(`camera.position.z : ${this.worldCamera.position.z}`);
+    _.each(this.workbenchSceneService.infos(), (info) => {
+      infos.push(info);
+    });
     return infos;
   }
 

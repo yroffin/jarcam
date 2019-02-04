@@ -142,6 +142,9 @@ export class WorkbenchSceneService {
     const meshes = [];
     const geometry = new THREE.Geometry().fromBufferGeometry(originalGeometry);
     geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    // move object with global bouding gemometry
+    geometry.translate(-geometry.boundingBox.min.x, -geometry.boundingBox.min.y, -geometry.boundingBox.min.z);
 
     const isolatedGeometries = ScanMeshes.findObjects(geometry);
 
@@ -183,6 +186,8 @@ export class WorkbenchSceneService {
       this.group.add(mesh);
     });
     console.log(this.group);
+    this.scene.add(this.group);
+
     /*
      * Scan all pieces in group
      */
@@ -199,8 +204,21 @@ export class WorkbenchSceneService {
         allZ: this.scan.allZ
       }
     });
-    this.scene.add(this.group);
+
     this.onLayerChange(this.layer);
+  }
+
+  public infos() {
+    const infos = [];
+    if (this.scan) {
+      infos.push(`scan.minx : ${this.scan.minx}`);
+      infos.push(`scan.maxx : ${this.scan.maxx}`);
+      infos.push(`scan.miny : ${this.scan.miny}`);
+      infos.push(`scan.maxy : ${this.scan.maxy}`);
+      infos.push(`scan.minz : ${this.scan.minz}`);
+      infos.push(`scan.maxz : ${this.scan.maxz}`);
+    }
+    return infos;
   }
 
   public onLayerChange(layer: LayerBean) {
