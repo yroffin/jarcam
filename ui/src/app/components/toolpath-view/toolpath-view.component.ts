@@ -103,14 +103,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     // Init slice
     this.slicer.init(
       this.options.scanPieces,
-      this.millingService.getAreas(),
       this.zoom,
-      this.millingService.getStart().x,
-      this.millingService.getStart().y,
       this.millingService.radius());
 
     // Render shape
-    this.shapes = this.slicer.render(false, true);
+    this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
   }
 
   public onToolChange() {

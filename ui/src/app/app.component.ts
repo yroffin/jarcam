@@ -142,10 +142,7 @@ export class AppComponent implements OnInit {
     // Init slice
     slicer.init(
       this.options.scanPieces,
-      this.millingService.getAreas(),
       1,
-      this.millingService.getStart().x,
-      this.millingService.getStart().y,
       this.millingService.radius());
 
     const saveLayer: LayerBean = {
@@ -165,7 +162,7 @@ export class AppComponent implements OnInit {
       this.workbenchService.onLayerChange(currentLayer);
 
       // Render shape
-      const shapes = slicer.render(false, false);
+      const shapes = slicer.render(this.millingService.getAreas(), false, false);
 
       // Calc gcode
       gcode += slicer.gcode(

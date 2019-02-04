@@ -20,10 +20,7 @@ import { PaperJSSimulator } from 'src/app/services/paperjs/paperjs-tool-simulato
 
 export class PaperJSSlicer {
 
-    private x: number;
-    private y: number;
     private radius: number;
-    private areas: Array<Area>;
     private scanPieces: ScanPiecesBean;
 
     private zoom = 5;
@@ -66,12 +63,9 @@ export class PaperJSSlicer {
      * @param y y
      * @param radius mill radius
      */
-    init(scanPieces: ScanPiecesBean, areas: Array<Area>, zoom: number, x: number, y: number, radius: number) {
+    init(scanPieces: ScanPiecesBean, zoom: number, radius: number) {
         this.scanPieces = scanPieces;
-        this.areas = areas;
         this.zoom = zoom;
-        this.x = x;
-        this.y = y;
         this.radius = radius;
     }
 
@@ -86,7 +80,7 @@ export class PaperJSSlicer {
      * @param fill fill it (simulate tool path)
      * @param domInsert insert it (not when computing only
      */
-    public render(fill: boolean, domInsert: boolean): ShapeGroup {
+    public render(areas: Array<Area>, fill: boolean, domInsert: boolean): ShapeGroup {
         if (this.project === undefined) {
             return;
         }
@@ -105,7 +99,7 @@ export class PaperJSSlicer {
         }
 
         // Init the areas
-        const shapes = this.shaper.build(this.areas, this.radius, domInsert);
+        const shapes = this.shaper.build(areas, this.radius, domInsert);
 
         // Compute path around shape
         shapes.journeys = this.contourer.around(
@@ -114,7 +108,6 @@ export class PaperJSSlicer {
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy, this.radius, domInsert);
-
 
         if (fill) {
             this.simulator.simulation(shapes.journeys, this.radius, domInsert);
