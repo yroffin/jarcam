@@ -3,6 +3,24 @@
         <div class="view-cube">
             <canvas #cubeView [width]="80" [height]="80"></canvas>
         </div>
+        <div matRipple class="parameters">
+            <div class="ui-inputgroup" pTooltip="Tool size" tooltipPosition="left">
+                <span class="ui-inputgroup-addon">T</span>
+                <input type="text" pInputText placeholder="Tool size">
+                <span class="ui-inputgroup-addon">in mm</span>
+            </div>
+            <br>
+            <div class="ui-inputgroup">
+                <span class="ui-inputgroup-addon">L</span>
+                <input type="text" [(ngModel)]="layerIndex" pInputText placeholder="Layer">
+                <span class="ui-inputgroup-addon">in mm</span>
+            </div>
+            <br>
+            <div pTooltip="Layer height" tooltipPosition="left">
+                <p-slider (onChange)="onLayerChange()" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1"></p-slider>
+            </div>
+            <br>
+        </div>
     </div>
     <canvas class="canvas" #threeView [width]="width" [height]="height" resize></canvas>
 </div>

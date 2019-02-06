@@ -1,4 +1,4 @@
-import { Component, OnChanges, AfterViewInit } from '@angular/core';
+import { Component, OnChanges, OnInit, AfterViewInit } from '@angular/core';
 import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
 
 import * as THREE from 'three';
@@ -9,6 +9,8 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
+import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
 
 @AutoUnsubscribe()
 @Component({
@@ -16,7 +18,7 @@ import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
   templateUrl: './renderer.component.html',
   styleUrls: ['./renderer.component.css']
 })
-export class RendererComponent implements AfterViewInit {
+export class RendererComponent implements OnInit, AfterViewInit {
 
   public width = window.innerWidth;
   public height = window.innerHeight;
@@ -30,10 +32,40 @@ export class RendererComponent implements AfterViewInit {
   private controls: OrbitControls;
   private renderCube: THREE.WebGLRenderer;
 
+  public layerIndex = 0;
+  public layerMin = 0;
+  public layerMax = 0;
+  public layerArray = [];
+  public layer: LayerBean = {
+    top: 0,
+    visible: true
+  };
+
+  scanPiecesStream: Observable<ScanPiecesBean>;
+  scanPieces: ScanPiecesBean;
+
   public infos = [];
 
   constructor(
-    private workbenchService: WorkbenchService) {
+    private workbenchService: WorkbenchService,
+    private parametersService: ParametersService) {
+    this.scanPiecesStream = this.parametersService.scanPieces();
+  }
+
+  ngOnInit() {
+    this.scanPiecesStream.subscribe(
+      (scanPieces: ScanPiecesBean) => {
+        this.scanPieces = scanPieces;
+        this.layerIndex = 0;
+        this.layerMin = 0;
+        this.layerMax = scanPieces.allZ.length - 1;
+        this.layerArray = scanPieces.allZ;
+        this.onLayerChange();
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   ngAfterViewInit() {
@@ -64,6 +96,17 @@ export class RendererComponent implements AfterViewInit {
     };
 
     requestAnimationFrame(callback);
+  }
+
+  public onLayerChange() {
+    this.layer.top = this.layerArray[this.layerIndex];
+    this.parametersService.dispatch({
+      type: CHANGE_LAYER,
+      payload: {
+        visible: this.layer.visible,
+        top: this.layer.top
+      }
+    });
   }
 
   public setSize(width: number, height: number) {

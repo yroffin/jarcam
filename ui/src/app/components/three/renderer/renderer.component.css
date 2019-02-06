@@ -24,6 +24,18 @@
     transition: opacity 0.2s ease;
 }
 
+.editor-3d-container .hud .parameters {
+    font-size: 9px;
+    left: 12px;
+    top: 160px;
+    display: block;
+    position: absolute;
+    outline: none;
+    opacity: 0.6 !important;
+    margin: 0;
+    transition: opacity 0.2s ease;
+}
+
 canvas {
     display: inline-block;
     vertical-align: baseline;
@@ -32,7 +44,7 @@ canvas {
 .info {
     position: absolute;
     color: black;
-    left: 200px;
+    left: 300px;
 	top: 12px;
 	width: 100%;
 	text-align: left;

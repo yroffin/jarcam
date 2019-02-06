@@ -20,6 +20,7 @@ import { MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION } from '@angular/material/
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatRippleModule } from '@angular/material/core';
 
 import { SliderModule } from 'primeng/slider';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -115,7 +116,8 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     MatCheckboxModule,
     MatCardModule,
     MatTabsModule,
-    MatDividerModule
+    MatDividerModule,
+    MatRippleModule
   ],
   providers: [
     StlLoaderService,
