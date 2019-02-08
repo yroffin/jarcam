@@ -21,6 +21,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRippleModule } from '@angular/material/core';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatListModule } from '@angular/material/list';
 
 import { SliderModule } from 'primeng/slider';
 import { InputSwitchModule } from 'primeng/inputswitch';
@@ -45,6 +47,7 @@ import { CodeHighlighterModule } from 'primeng/codehighlighter';
 import { InputTextModule } from 'primeng/inputtext';
 import { MenubarModule } from 'primeng/menubar';
 import { SidebarModule } from 'primeng/sidebar';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
@@ -101,6 +104,7 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     InputTextModule,
     MenubarModule,
     SidebarModule,
+    OverlayPanelModule,
     /*
      * material
      */
@@ -117,7 +121,9 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     MatCardModule,
     MatTabsModule,
     MatDividerModule,
-    MatRippleModule
+    MatRippleModule,
+    MatRadioModule,
+    MatListModule
   ],
   providers: [
     StlLoaderService,

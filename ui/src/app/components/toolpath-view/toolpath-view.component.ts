@@ -14,7 +14,7 @@ import { Journey, ShapeGroup } from 'src/app/services/paperjs/paperjs-model';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
-import { ParametersService, ScanPiecesBean, LayerBean } from 'src/app/stores/parameters.service';
+import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gcode.component';
 import { ActivatedRoute } from '@angular/router';
@@ -36,6 +36,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   private slicer: PaperJSSlicer;
   private shapes: ShapeGroup;
+  private brimMode = 'cross';
 
   scanPieces: Observable<ScanPiecesBean>;
   layers: Observable<LayerBean>;
@@ -114,6 +115,16 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   public onToolChange() {
     this.slicer.onToolChange(this.zoom);
+  }
+
+  public onClick() {
+    this.slicer.setBrimMode(this.brimMode);
+    this.parametersService.dispatch({
+      type: CHANGE_BRIMMODE,
+      payload: {
+        brimMode: this.brimMode
+      }
+    });
   }
 
   openDialog(): void {

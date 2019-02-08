@@ -36,6 +36,7 @@ export interface ScanPiecesBean {
 export interface ParametersState {
   layer: LayerBean;
   debug: DebugBean;
+  brimMode: string;
   scanPieces: ScanPiecesBean;
 }
 
@@ -43,10 +44,16 @@ export interface ParametersState {
 export const CHANGE_LAYER = 'CHANGE_LAYER';
 export const CHANGE_DEBUG = 'CHANGE_DEBUG';
 export const SCAN_PIECES = 'SCAN_PIECES';
+export const CHANGE_BRIMMODE = 'CHANGE_BRIMMODE';
 
 // Les actions
 export class ChangeLayer implements Action {
   readonly type = CHANGE_LAYER;
+  payload: any;
+}
+
+export class ChangeBimMode implements Action {
+  readonly type = CHANGE_BRIMMODE;
   payload: any;
 }
 
@@ -59,7 +66,7 @@ export class ScanPieces implements Action {
   readonly type = SCAN_PIECES;
   payload: any;
 }
-export type AllActions = ChangeLayer | ChangeDebug | ScanPieces;
+export type AllActions = ChangeLayer | ChangeDebug | ScanPieces | ChangeBimMode;
 
 
 // Initial state
@@ -88,6 +95,8 @@ export const initialState: ParametersState = {
     maxz: 0,
     allZ: []
   },
+
+  brimMode: 'cross'
 };
 
 @Injectable({
@@ -133,7 +142,17 @@ export class ParametersService {
         return {
           layer: action.payload,
           debug: state.debug,
-          scanPieces: state.scanPieces
+          scanPieces: state.scanPieces,
+          brimMode: state.brimMode
+        };
+      }
+
+      case CHANGE_BRIMMODE: {
+        return {
+          layer: state.layer,
+          debug: state.debug,
+          scanPieces: state.scanPieces,
+          brimMode: action.payload.brimMode
         };
       }
 
@@ -146,7 +165,8 @@ export class ParametersService {
             normals: action.payload.normals === undefined ? state.debug.normals : action.payload.normals,
             ground: action.payload.ground === undefined ? state.debug.ground : action.payload.ground,
           },
-          scanPieces: state.scanPieces
+          scanPieces: state.scanPieces,
+          brimMode: state.brimMode
         };
         return nstate;
       }
@@ -163,7 +183,8 @@ export class ParametersService {
             minz: action.payload.minz,
             maxz: action.payload.maxz,
             allZ: action.payload.allZ
-          }
+          },
+          brimMode: state.brimMode
         };
       }
 

@@ -1,4 +1,4 @@
-import { Path, Point, PointText, PaperScope, Project, Rectangle, CurveLocation, Segment } from 'paper';
+import { Path, Point, PointText, PaperScope, Project, Rectangle, CurveLocation, Segment, Item } from 'paper';
 import * as _ from 'lodash';
 import { Group } from 'paper';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
@@ -13,10 +13,12 @@ import {
     PaperJSShapeBuilderInterface,
     PaperJSShapeAroundInterface,
     PaperJSSimulatorInterface,
-    PaperJSGcodeInterface
+    PaperJSGcodeInterface,
+    PaperJSShapeBrimInterface
 } from 'src/app/services/paperjs/paperjs-interface';
 import { PaperJSShapeContour } from 'src/app/services/paperjs/paperjs-shape-contour';
 import { PaperJSSimulator } from 'src/app/services/paperjs/paperjs-tool-simulator';
+import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
 
 export class PaperJSSlicer {
 
@@ -26,11 +28,13 @@ export class PaperJSSlicer {
     private zoom = 5;
     private scope: PaperScope;
     private project: Project;
+    private brimMode = 'cross';
 
     private shaper: PaperJSShapeBuilderInterface = new PaperJSShapeBuilder();
     private contourer: PaperJSShapeAroundInterface = new PaperJSShapeContour();
     private simulator: PaperJSSimulatorInterface = new PaperJSSimulator();
     private gcoder: PaperJSGcodeInterface = new PaperJSGcode();
+    private brim: PaperJSShapeBrimInterface = new PaperJSShapeBrim();
 
     /**
      * constructor
@@ -76,6 +80,13 @@ export class PaperJSSlicer {
     }
 
     /**
+     * set brim mode
+     */
+    public setBrimMode(brimMode: string): void {
+        this.brimMode = brimMode;
+    }
+
+    /**
      * render this layer
      * @param fill fill it (simulate tool path)
      * @param domInsert insert it (not when computing only
@@ -108,6 +119,41 @@ export class PaperJSSlicer {
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy, this.radius, domInsert);
+
+        if (domInsert) {
+            const segment = new Path({
+                fillColor: 'orange',
+                strokeColor: 'red'
+            });
+
+            // Compute bound
+            const inner = PaperJSUtils.bounds(
+                this.scanPieces.minx, this.scanPieces.maxx, this.scanPieces.miny, this.scanPieces.maxy, this.radius);
+
+            // Build contour
+            const boundContour = new Path.Rectangle({
+                from: new Point(inner.left, inner.top),
+                to: new Point(inner.right, inner.bottom),
+                strokeColor: 'red',
+                strokeWidth: 0.5,
+                fillColor: 'white',
+                selected: false,
+                visible: true,
+                insert: domInsert
+            });
+            boundContour.sendToBack();
+
+            // Handler for brim capture
+            boundContour.onMouseMove = (event) => {
+                this.brim.brim(
+                    shapes,
+                    segment,
+                    this.brimMode,
+                    event.point,
+                    this.radius,
+                    this.scanPieces.minx, this.scanPieces.maxx, this.scanPieces.miny, this.scanPieces.maxy);
+            };
+        }
 
         if (fill) {
             this.simulator.simulation(shapes.journeys, this.radius, domInsert);

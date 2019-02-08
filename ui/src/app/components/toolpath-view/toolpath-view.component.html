@@ -1,5 +1,28 @@
-<div class="max-width">
+<canvas #paperView resize (dblclick)="display = true"></canvas>
+
+<p-sidebar #side [(visible)]="display">
     <h4>zoom: {{zoom}}</h4>
-    <p-slider (onChange)="onToolChange()" [(ngModel)]="zoom" [min]="1" [max]="30" [step]="1" [animate]="true"></p-slider>
-</div>
-<canvas #paperView resize (dblclick)="openDialog()"></canvas>
+    <p-slider (onChange)="onToolChange()" [(ngModel)]="zoom" [min]="1" [max]="30" [step]="1"></p-slider>
+    <br> Brim mode = {{brimMode}}
+    <br>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="cross" label="cross" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="inline" label="inline" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="border-minx" label="left" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="border-maxx" label="right" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="border-maxy" label="top" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <div>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="border-miny" label="bottom" [(ngModel)]="brimMode"></p-radioButton>
+    </div>
+    <br>
+    <button pButton type="button" label="Gcode" (click)="openDialog()"></button>
+</p-sidebar>

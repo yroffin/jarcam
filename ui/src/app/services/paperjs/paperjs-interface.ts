@@ -1,7 +1,16 @@
 import { ShapeGroup, Journey } from 'src/app/services/paperjs/paperjs-model';
 import { Area } from 'src/app/services/three/area.class';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
-import { Group } from 'paper';
+import { Group, Path, Point } from 'paper';
+
+export interface PaperJSShapeBrimInterface {
+    brim(
+        shapes: ShapeGroup,
+        segment: Path,
+        brimMode: string,
+        pointer: Point,
+        radius, minx, maxx, miny, maxy: number): boolean;
+}
 
 export interface PaperJSShapeBuilderInterface {
     build(areas: Array<Area>, radius: number, domInsert: boolean): ShapeGroup;

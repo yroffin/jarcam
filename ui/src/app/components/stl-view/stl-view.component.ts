@@ -12,6 +12,9 @@ import { Store } from '@ngrx/store';
 import { ParametersState, ParametersService } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
+import { ActivatedRoute } from '@angular/router';
+import { StorageService } from 'src/app/services/utility/storage.service';
+import { WorkbenchService } from 'src/app/services/workbench.service';
 
 @AutoUnsubscribe()
 @Component({
@@ -19,7 +22,7 @@ import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
   templateUrl: './stl-view.component.html',
   styleUrls: ['./stl-view.component.css']
 })
-export class StlViewComponent implements AfterViewInit {
+export class StlViewComponent implements AfterViewInit, OnInit {
 
   @ViewChild('renderView') rendererView: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
@@ -30,8 +33,21 @@ export class StlViewComponent implements AfterViewInit {
   private progressObserver;
 
   constructor(
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private route: ActivatedRoute,
+    private workbenchService: WorkbenchService,
+    private storageService: StorageService
   ) {
+  }
+
+  ngOnInit() {
+    // get param
+    const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];
+    if (lastLoaded) {
+      const data = this.storageService.load('lastLoaded');
+      this.workbenchService.loadBinary(data, () => {
+      });
+    }
   }
 
   ngAfterViewInit() {
