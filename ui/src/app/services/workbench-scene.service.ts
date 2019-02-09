@@ -11,6 +11,7 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
 import { ScanMeshes } from 'src/app/services/three/scan-meshes';
 import { MeshPhongMaterial } from 'three';
+import { Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -35,6 +36,9 @@ export class WorkbenchSceneService {
 
   layers: Observable<LayerBean>;
   debugs: Observable<DebugBean>;
+
+  layersSubscription: Subscription;
+  debugsSubscription: Subscription;
 
   constructor(
     private parametersService: ParametersService,
@@ -66,7 +70,7 @@ export class WorkbenchSceneService {
     this.debugs = this.parametersService.debugs();
 
     // Subscribe
-    this.layers.subscribe(
+    this.layersSubscription = this.layers.subscribe(
       (layer: LayerBean) => {
         this.layer = layer;
         if (this.group) {
@@ -80,7 +84,7 @@ export class WorkbenchSceneService {
     );
 
     // Subscribe
-    this.debugs.subscribe(
+    this.debugsSubscription = this.debugs.subscribe(
       (debug: DebugBean) => {
         this.debug = debug;
         if (this.group) {

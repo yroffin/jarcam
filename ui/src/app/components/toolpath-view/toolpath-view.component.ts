@@ -21,6 +21,7 @@ import { ActivatedRoute } from '@angular/router';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
+import { Subscription } from 'rxjs';
 
 @AutoUnsubscribe()
 @Component({
@@ -37,9 +38,16 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   private slicer: PaperJSSlicer;
   private shapes: ShapeGroup;
   private brimMode = 'cross';
+  private radius = 4;
 
-  scanPieces: Observable<ScanPiecesBean>;
-  layers: Observable<LayerBean>;
+  scanPiecesStream: Observable<ScanPiecesBean>;
+  layersStream: Observable<LayerBean>;
+  radiusStream: Observable<number>;
+
+  layersSubscription: Subscription;
+  scanPiecesSubscription: Subscription;
+  radiusSubscription: Subscription;
+  dialogSubscription: Subscription;
 
   public options: {
     layer: LayerBean,
@@ -55,8 +63,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     private workbenchService: WorkbenchService,
     private storageService: StorageService
   ) {
-    this.scanPieces = this.parametersService.scanPieces();
-    this.layers = this.parametersService.layers();
+    this.scanPiecesStream = this.parametersService.scanPieces();
+    this.layersStream = this.parametersService.layers();
+    this.radiusStream = this.parametersService.radius();
     this.options = {
       layer: {
         top: 0,
@@ -82,7 +91,15 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       this.workbenchService.loadBinary(data, () => {
       });
     }
-    this.layers.subscribe(
+    this.radiusSubscription = this.radiusStream.subscribe(
+      (radius: number) => {
+        this.radius = radius;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.layersSubscription = this.layersStream.subscribe(
       (layer: LayerBean) => {
         this.options.layer = layer;
       },
@@ -90,7 +107,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       () => {
       }
     );
-    this.scanPieces.subscribe(
+    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
       (scanPieces: ScanPiecesBean) => {
         this.options.scanPieces = scanPieces;
       },
@@ -107,7 +124,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.slicer.init(
       this.options.scanPieces,
       this.zoom,
-      this.millingService.radius());
+      this.radius);
 
     // Render shape
     this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
@@ -138,7 +155,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    this.dialogSubscription = dialogRef.afterClosed().subscribe(result => {
     });
   }
 

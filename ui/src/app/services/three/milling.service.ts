@@ -5,6 +5,9 @@ import * as _ from 'lodash';
 import { PlanarUtils } from 'src/app/services/three/planar-utils';
 import { Area } from 'src/app/services/three/area.class';
 import { MillPosition } from 'src/app/services/paperjs/paperjs-model';
+import { ParametersService } from 'src/app/stores/parameters.service';
+import { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 
 @Injectable({
@@ -15,10 +18,25 @@ export class MillingService {
   private _areas: Area[];
   private _mill: THREE.Mesh;
   private _layer: THREE.Plane;
-  private _radius = 4;
+  private _radius = 1;
   private _tolerance = 0.01;
 
-  constructor() {
+  radiusStream: Observable<number>;
+  radiusSubscription: Subscription;
+
+
+  constructor(
+    private parametersService: ParametersService
+  ) {
+    this.radiusStream = this.parametersService.radius();
+    this.radiusSubscription = this.radiusStream.subscribe(
+      (radius: number) => {
+        this.setRadius(radius);
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   public get layer() {
@@ -42,14 +60,11 @@ export class MillingService {
     return this._mill;
   }
 
-  public radius(): number {
-    return this._radius;
-  }
-
-  public setRadius(radius: number) {
+  private setRadius(radius: number) {
+    console.log('Set radius', radius);
     this._radius = radius;
     const geometry = new THREE.CylinderGeometry(this._radius, this._radius, 4, 32);
-    this._mill.geometry = geometry;
+    this.mill.geometry = geometry;
   }
 
   public moveToZ(scene: THREE.Scene, from: THREE.Group, value: number): Area[] {

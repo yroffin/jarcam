@@ -10,6 +10,7 @@ import { ElementRef } from '@angular/core';
 import * as _ from 'lodash';
 import { DatePipe } from '@angular/common';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
+import { Subscription } from 'rxjs';
 
 @AutoUnsubscribe()
 @Component({
@@ -22,17 +23,29 @@ export class AppComponent implements OnInit {
   @ViewChild('fileInput') fileInput;
   @ViewChild('gcodeView') paperCanvas: ElementRef;
 
-  public options: any;
-
   title = 'ui';
 
   items: MenuItem[];
   display = false;
 
-  layers: Observable<LayerBean>;
-  debugs: Observable<DebugBean>;
+  axesHelper: boolean;
+  wireframe: boolean;
+  normals: boolean;
+  ground: boolean;
 
-  scanPieces: Observable<ScanPiecesBean>;
+  radius: number;
+  layer: LayerBean;
+  scanPieces: ScanPiecesBean;
+  debug: DebugBean;
+
+  layersStream: Observable<LayerBean>;
+  debugsStream: Observable<DebugBean>;
+  scanPiecesStream: Observable<ScanPiecesBean>;
+  radiusStream: Observable<number>;
+  layersSubscription: Subscription;
+  debugsSubscription: Subscription;
+  scanPiecesSubscription: Subscription;
+  radiusSubscription: Subscription;
 
   public layerIndex = 0;
   public layerMin = 0;
@@ -44,24 +57,18 @@ export class AppComponent implements OnInit {
     private millingService: MillingService,
     private workbenchService: WorkbenchService,
     private storageService: StorageService) {
-    this.options = {
-      // layers
-      layer: {
-        visible: false,
-        top: 0,
-      },
-
-      // debug
-      debug: {
-        axesHelper: false,
-        wireframe: false,
-        normals: false,
-        ground: false
-      }
+    this.layer = {
+      visible: false,
+      top: 0,
     };
-    this.layers = this.parametersService.layers();
-    this.debugs = this.parametersService.debugs();
-    this.scanPieces = this.parametersService.scanPieces();
+    this.axesHelper = false;
+    this.wireframe = false;
+    this.normals = false;
+    this.ground = false;
+    this.layersStream = this.parametersService.layers();
+    this.debugsStream = this.parametersService.debugs();
+    this.scanPiecesStream = this.parametersService.scanPieces();
+    this.radiusStream = this.parametersService.radius();
   }
 
   ngOnInit() {
@@ -99,26 +106,34 @@ export class AppComponent implements OnInit {
         ]
       }
     ];
-    this.layers.subscribe(
+    this.radiusSubscription = this.radiusStream.subscribe(
+      (radius: number) => {
+        this.radius = radius;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.layersSubscription = this.layersStream.subscribe(
       (layer: LayerBean) => {
-        this.options.layer = layer;
+        this.layer = layer;
       },
       (err) => console.error(err),
       () => {
       }
     );
-    this.debugs.subscribe(
+    this.debugsSubscription = this.debugsStream.subscribe(
       (debug: DebugBean) => {
-        this.options.debug = debug;
+        this.debug = debug;
       },
       (err) => console.error(err),
       () => {
       }
     );
-    this.scanPieces.subscribe(
+    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
       (scanPieces: ScanPiecesBean) => {
         setTimeout(() => {
-          this.options.scanPieces = scanPieces;
+          this.scanPieces = scanPieces;
           this.layerIndex = 0;
           this.layerMin = 0;
           this.layerMax = scanPieces.allZ.length - 1;
@@ -143,9 +158,9 @@ export class AppComponent implements OnInit {
 
     // Init slice
     slicer.init(
-      this.options.scanPieces,
+      this.scanPieces,
       1,
-      this.millingService.radius());
+      this.radius);
 
     const saveLayer: LayerBean = {
       top: 0,
@@ -153,10 +168,10 @@ export class AppComponent implements OnInit {
     };
 
     // Header
-    let gcode = slicer.header(this.options.scanPieces.maxz);
+    let gcode = slicer.header(this.scanPieces.maxz);
 
     // Iterate on all Z to build this piece
-    _.each(_.reverse(_.clone(this.options.scanPieces.allZ)), (top: number) => {
+    _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
       const currentLayer: LayerBean = {
         top: top,
         visible: true
@@ -169,7 +184,7 @@ export class AppComponent implements OnInit {
       // Calc gcode
       gcode += slicer.gcode(
         currentLayer.top,
-        this.options.scanPieces.maxz,
+        this.scanPieces.maxz,
         shapes.journeys);
     });
 
@@ -218,12 +233,12 @@ export class AppComponent implements OnInit {
   }
 
   public onLayerChange() {
-    this.options.layer.top = this.layerArray[this.layerIndex];
+    this.layer.top = this.layerArray[this.layerIndex];
     this.parametersService.dispatch({
       type: CHANGE_LAYER,
       payload: {
-        visible: this.options.layer.visible,
-        top: this.options.layer.top
+        visible: this.layer.visible,
+        top: this.layer.top
       }
     });
   }
@@ -232,8 +247,8 @@ export class AppComponent implements OnInit {
     this.parametersService.dispatch({
       type: CHANGE_LAYER,
       payload: {
-        visible: this.options.layer.visible,
-        top: this.options.layer.top
+        visible: this.layer.visible,
+        top: this.layer.top
       }
     });
   }
@@ -241,25 +256,25 @@ export class AppComponent implements OnInit {
   public onDebugChange(event?, name?: string) {
     switch (name) {
       case 'axisHelper':
-        this.options.axesHelper = event.checked;
+        this.axesHelper = event.checked;
         break;
       case 'normals':
-        this.options.normals = event.checked;
+        this.normals = event.checked;
         break;
       case 'wireframe':
-        this.options.wireframe = event.checked;
+        this.wireframe = event.checked;
         break;
       case 'ground':
-        this.options.ground = event.checked;
+        this.ground = event.checked;
         break;
     }
     this.parametersService.dispatch({
       type: CHANGE_DEBUG,
       payload: {
-        axesHelper: this.options.axesHelper,
-        normals: this.options.normals,
-        wireframe: this.options.wireframe,
-        ground: this.options.ground
+        axesHelper: this.axesHelper,
+        normals: this.normals,
+        wireframe: this.wireframe,
+        ground: this.ground
       }
     });
   }

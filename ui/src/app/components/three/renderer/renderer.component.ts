@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnChanges, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
 
 import * as THREE from 'three';
@@ -9,8 +9,9 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
-import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean } from 'src/app/stores/parameters.service';
+import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean, CHANGE_RADIUS } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @AutoUnsubscribe()
 @Component({
@@ -18,7 +19,7 @@ import { Observable } from 'rxjs';
   templateUrl: './renderer.component.html',
   styleUrls: ['./renderer.component.css']
 })
-export class RendererComponent implements OnInit, AfterViewInit {
+export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public width = window.innerWidth;
   public height = window.innerHeight;
@@ -31,6 +32,11 @@ export class RendererComponent implements OnInit, AfterViewInit {
   private renderer: THREE.WebGLRenderer;
   private controls: OrbitControls;
   private renderCube: THREE.WebGLRenderer;
+  private callback: any;
+
+  radius: number;
+  radiusStream: Observable<number>;
+  radiusSubscription: Subscription;
 
   public layerIndex = 0;
   public layerMin = 0;
@@ -43,6 +49,7 @@ export class RendererComponent implements OnInit, AfterViewInit {
 
   scanPiecesStream: Observable<ScanPiecesBean>;
   scanPieces: ScanPiecesBean;
+  scanPiecesSubscription: Subscription;
 
   public infos = [];
 
@@ -50,10 +57,19 @@ export class RendererComponent implements OnInit, AfterViewInit {
     private workbenchService: WorkbenchService,
     private parametersService: ParametersService) {
     this.scanPiecesStream = this.parametersService.scanPieces();
+    this.radiusStream = this.parametersService.radius();
   }
 
   ngOnInit() {
-    this.scanPiecesStream.subscribe(
+    this.radiusSubscription = this.radiusStream.subscribe(
+      (radius: number) => {
+        this.radius = radius;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
       (scanPieces: ScanPiecesBean) => {
         this.scanPieces = scanPieces;
         this.layerIndex = 0;
@@ -90,12 +106,25 @@ export class RendererComponent implements OnInit, AfterViewInit {
 
     this.updateControls();
 
-    const callback = (args) => {
-      requestAnimationFrame(callback);
+    this.callback = (args) => {
+      requestAnimationFrame(this.callback);
       this.render();
     };
 
-    requestAnimationFrame(callback);
+    requestAnimationFrame(this.callback);
+  }
+
+  ngOnDestroy() {
+    cancelAnimationFrame(this.callback);
+  }
+
+  public onRadiusChange() {
+    this.parametersService.dispatch({
+      type: CHANGE_RADIUS,
+      payload: {
+        radius: this.radius
+      }
+    });
   }
 
   public onLayerChange() {

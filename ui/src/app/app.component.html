@@ -10,13 +10,13 @@
         Layer
       </mat-panel-title>
       <mat-panel-description>
-        {{options.layer.top + 'mm'}}
+        {{layer.top + 'mm'}}
       </mat-panel-description>
     </mat-expansion-panel-header>
 
     <div class="max-width">
-      <p-inputSwitch (onChange)="onLayerVisibilityChange()" [(ngModel)]="options.layer.visible"></p-inputSwitch>
-      <h4>Layer: {{options.layer.top}}</h4>
+      <p-inputSwitch (onChange)="onLayerVisibilityChange()" [(ngModel)]="layer.visible"></p-inputSwitch>
+      <h4>Layer: {{layer.top}}</h4>
       <p-slider (onChange)="onLayerChange()" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1" [style]="{'width':'14em'}"
         [animate]="true"></p-slider>
     </div>
@@ -34,16 +34,16 @@
     </mat-expansion-panel-header>
 
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="options.debug.axesHelper"></p-inputSwitch>Axis helper
+      <p-inputSwitch (onChange)="onDebugChange($event,'axisHelper')" [(ngModel)]="axesHelper"></p-inputSwitch>Axis helper
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="options.debug.wireframe"></p-inputSwitch>Wireframe
+      <p-inputSwitch (onChange)="onDebugChange($event,'wireframe')" [(ngModel)]="wireframe"></p-inputSwitch>Wireframe
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="options.debug.normals"></p-inputSwitch>Normals
+      <p-inputSwitch (onChange)="onDebugChange($event,'normals')" [(ngModel)]="normals"></p-inputSwitch>Normals
     </div>
     <div class="max-width">
-      <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="options.debug.ground">xxx</p-inputSwitch>Ground
+      <p-inputSwitch (onChange)="onDebugChange($event,'ground')" [(ngModel)]="ground">xxx</p-inputSwitch>Ground
     </div>
 
   </mat-expansion-panel>

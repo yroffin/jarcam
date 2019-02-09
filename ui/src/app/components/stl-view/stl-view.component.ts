@@ -15,6 +15,7 @@ import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { ActivatedRoute } from '@angular/router';
 import { StorageService } from 'src/app/services/utility/storage.service';
 import { WorkbenchService } from 'src/app/services/workbench.service';
+import { Subscription } from 'rxjs';
 
 @AutoUnsubscribe()
 @Component({
@@ -32,12 +33,26 @@ export class StlViewComponent implements AfterViewInit, OnInit {
   private progress = 0;
   private progressObserver;
 
+  radius: number;
+  radiusStream: Observable<number>;
+  radiusSubscription: Subscription;
+
   constructor(
     private elementRef: ElementRef,
     private route: ActivatedRoute,
     private workbenchService: WorkbenchService,
+    private parametersService: ParametersService,
     private storageService: StorageService
   ) {
+    this.radiusStream = this.parametersService.radius();
+    this.radiusSubscription = this.radiusStream.subscribe(
+      (radius: number) => {
+        this.radius = radius;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   ngOnInit() {
