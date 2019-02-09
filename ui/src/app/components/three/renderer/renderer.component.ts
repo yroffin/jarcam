@@ -9,7 +9,7 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
-import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean, CHANGE_RADIUS } from 'src/app/stores/parameters.service';
+import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean, CHANGE_RADIUS, CHANGE_SLICE } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { Subscription } from 'rxjs';
 
@@ -33,6 +33,10 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
   private controls: OrbitControls;
   private renderCube: THREE.WebGLRenderer;
   private callback: any;
+
+  slice: number;
+  sliceStream: Observable<number>;
+  sliceSubscription: Subscription;
 
   radius: number;
   radiusStream: Observable<number>;
@@ -58,9 +62,18 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
     private parametersService: ParametersService) {
     this.scanPiecesStream = this.parametersService.scanPieces();
     this.radiusStream = this.parametersService.radius();
+    this.sliceStream = this.parametersService.slice();
   }
 
   ngOnInit() {
+    this.sliceSubscription = this.sliceStream.subscribe(
+      (slice: number) => {
+        this.slice = slice;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
     this.radiusSubscription = this.radiusStream.subscribe(
       (radius: number) => {
         this.radius = radius;
@@ -116,6 +129,15 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     cancelAnimationFrame(this.callback);
+  }
+
+  public onSliceChange() {
+    this.parametersService.dispatch({
+      type: CHANGE_SLICE,
+      payload: {
+        slice: this.slice
+      }
+    });
   }
 
   public onRadiusChange() {

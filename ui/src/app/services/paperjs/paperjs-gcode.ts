@@ -24,8 +24,8 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         let gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
         gcode = `${gcode}G90 (Absolute Positioning)\n`;
         gcode = `${gcode}M03 S18000 (Spindle CW on)\n`;
-        gcode = `${gcode}G0 Z${maxz}   (move to ${maxz}mm on the Z axis)\n`;
         gcode = `${gcode}G0 F900 (set the feedrate to 900mm/minute)\n`;
+        gcode = `${gcode}G92 X0 Y0 Z${maxz} (reset origin)\n`;
 
         return gcode;
     }

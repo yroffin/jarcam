@@ -24,7 +24,7 @@ export class StlLoaderService {
    *  ASCII decoding assumes file is UTF-8.
    *
    * Usage:
-   *  var loader = new THREE.STLLoader();
+   *  let loader = new THREE.STLLoader();
    *  loader.load( './models/stl/slotted_disk.stl', function ( geometry ) {
    *    scene.add( new THREE.Mesh( geometry ) );
    *  });
@@ -34,7 +34,7 @@ export class StlLoaderService {
    *  if (geometry.hasColors) {
    *    material = new THREE.MeshPhongMaterial({ opacity: geometry.alpha, vertexColors: THREE.VertexColors });
    *  } else { .... }
-   *  var mesh = new THREE.Mesh( geometry, material );
+   *  let mesh = new THREE.Mesh( geometry, material );
    */
 
   private manager: any;
@@ -74,9 +74,9 @@ export class StlLoaderService {
 
   private parse(data): THREE.BufferGeometry {
 
-    var isBinary = () => {
+    const isBinary = () => {
 
-      var expect, face_size, n_faces, reader;
+      let expect, face_size, n_faces, reader;
       reader = new DataView(binData);
       face_size = (32 / 8 * 3) + ((32 / 8 * 3) * 3) + (16 / 8);
       n_faces = reader.getUint32(80, true);
@@ -93,9 +93,9 @@ export class StlLoaderService {
       // plentiful.  So, check the first 5 bytes for 'solid'.
 
       // US-ASCII ordinal values for 's', 'o', 'l', 'i', 'd'
-      var solid = [115, 111, 108, 105, 100];
+      let solid = [115, 111, 108, 105, 100];
 
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
 
         // If solid[ i ] does not match the i-th byte, then it is not an
         // ASCII STL; hence, it is binary and return true.
@@ -109,23 +109,23 @@ export class StlLoaderService {
 
     };
 
-    var binData = this.ensureBinary(data);
+    const binData = this.ensureBinary(data);
 
     return isBinary() ? this.parseBinary(binData) : this.parseASCII(this.ensureString(data));
   }
 
   private parseBinary(data): THREE.BufferGeometry {
 
-    var reader = new DataView(data);
-    var faces = reader.getUint32(80, true);
+    const reader = new DataView(data);
+    const faces = reader.getUint32(80, true);
 
-    var r, g, b, hasColors = false, colors;
-    var defaultR, defaultG, defaultB, alpha;
+    let r, g, b, hasColors = false, colors;
+    let defaultR, defaultG, defaultB, alpha;
 
     // process STL header
     // check for default color in header ("COLOR=rgba" sequence).
 
-    for (var index = 0; index < 80 - 10; index++) {
+    for (let index = 0; index < 80 - 10; index++) {
 
       if ((reader.getUint32(index, false) == 0x434F4C4F /*COLO*/) &&
         (reader.getUint8(index + 4) == 0x52 /*'R'*/) &&
@@ -143,24 +143,24 @@ export class StlLoaderService {
 
     }
 
-    let dataOffset = 84;
-    let faceLength = 12 * 4 + 2;
+    const dataOffset = 84;
+    const faceLength = 12 * 4 + 2;
 
-    let geometry = new THREE.BufferGeometry();
+    const geometry = new THREE.BufferGeometry();
 
-    let vertices = [];
-    let normals = [];
+    const vertices = [];
+    const normals = [];
 
-    for (var face = 0; face < faces; face++) {
+    for (let face = 0; face < faces; face++) {
 
-      let start = dataOffset + face * faceLength;
-      let normalX = reader.getFloat32(start, true);
-      let normalY = reader.getFloat32(start + 4, true);
-      let normalZ = reader.getFloat32(start + 8, true);
+      const start = dataOffset + face * faceLength;
+      const normalX = reader.getFloat32(start, true);
+      const normalY = reader.getFloat32(start + 4, true);
+      const normalZ = reader.getFloat32(start + 8, true);
 
       if (hasColors) {
 
-        let packedColor = reader.getUint16(start + 48, true);
+        const packedColor = reader.getUint16(start + 48, true);
 
         if ((packedColor & 0x8000) === 0) {
 
@@ -180,9 +180,9 @@ export class StlLoaderService {
 
       }
 
-      for (var i = 1; i <= 3; i++) {
+      for (let i = 1; i <= 3; i++) {
 
-        var vertexstart = start + i * 12;
+        const vertexstart = start + i * 12;
 
         vertices.push(reader.getFloat32(vertexstart, true));
         vertices.push(reader.getFloat32(vertexstart + 4, true));
@@ -215,14 +215,14 @@ export class StlLoaderService {
 
   private parseASCII(data): THREE.BufferGeometry {
 
-    let geometry, length, patternFace, patternNormal, patternVertex, result, text;
+    let geometry, patternFace, patternNormal, patternVertex, result, text;
     geometry = new THREE.BufferGeometry();
     patternFace = /facet([\s\S]*?)endfacet/g;
 
-    let vertices = [];
-    let normals = [];
+    const vertices = [];
+    const normals = [];
 
-    let normal = new THREE.Vector3();
+    const normal = new THREE.Vector3();
 
     while ((result = patternFace.exec(data)) !== null) {
 
@@ -258,9 +258,9 @@ export class StlLoaderService {
 
     if (typeof buf !== "string") {
 
-      var array_buffer = new Uint8Array(buf);
-      var strArray = [];
-      for (var i = 0; i < buf.byteLength; i++) {
+      const array_buffer = new Uint8Array(buf);
+      const strArray = [];
+      for (let i = 0; i < buf.byteLength; i++) {
 
         strArray.push(String.fromCharCode(array_buffer[i])); // implicitly assumes little-endian
 
@@ -279,8 +279,8 @@ export class StlLoaderService {
 
     if (typeof buf === "string") {
 
-      var array_buffer = new Uint8Array(buf.length);
-      for (var i = 0; i < buf.length; i++) {
+      const array_buffer = new Uint8Array(buf.length);
+      for (let i = 0; i < buf.length; i++) {
 
         array_buffer[i] = buf.charCodeAt(i) & 0xff; // implicitly assumes little-endian
 

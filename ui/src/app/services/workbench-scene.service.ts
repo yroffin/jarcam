@@ -161,7 +161,10 @@ export class WorkbenchSceneService {
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     // move object with global bouding gemometry
-    geometry.translate(-geometry.boundingBox.min.x, -geometry.boundingBox.min.y, -geometry.boundingBox.min.z);
+    geometry.translate(
+      -geometry.boundingBox.min.x - (geometry.boundingBox.max.x - geometry.boundingBox.min.x) / 2,
+      -geometry.boundingBox.min.y - (geometry.boundingBox.max.y - geometry.boundingBox.min.y) / 2,
+      -geometry.boundingBox.min.z);
 
     const isolatedGeometries = ScanMeshes.findObjects(geometry);
 
@@ -205,28 +208,33 @@ export class WorkbenchSceneService {
     console.log(this.group);
     this.scene.add(this.group);
 
-    /*
-     * Scan all pieces in group
-     */
-    this.scan = ScanMeshes.scan(this.group, this.slice);
-    this.parametersService.dispatch({
-      type: SCAN_PIECES,
-      payload: {
-        minx: this.scan.minx,
-        maxx: this.scan.maxx,
-        miny: this.scan.miny,
-        maxy: this.scan.maxy,
-        minz: this.scan.minz,
-        maxz: this.scan.maxz,
-        allZ: this.scan.allZ
-      }
-    });
+    // Slice
+    this.onSliceChange(this.slice);
 
+    // Layer
     this.onLayerChange(this.layer);
   }
 
   private onSliceChange(slice: number) {
     this.slice = slice;
+    /*
+     * Scan all pieces in group
+     */
+    if (this.group) {
+      this.scan = ScanMeshes.scan(this.group, this.slice);
+      this.parametersService.dispatch({
+        type: SCAN_PIECES,
+        payload: {
+          minx: this.scan.minx,
+          maxx: this.scan.maxx,
+          miny: this.scan.miny,
+          maxy: this.scan.maxy,
+          minz: this.scan.minz,
+          maxz: this.scan.maxz,
+          allZ: this.scan.allZ
+        }
+      });
+    }
   }
 
   public infos() {
