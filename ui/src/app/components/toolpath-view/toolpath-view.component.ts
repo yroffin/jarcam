@@ -37,7 +37,8 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   private slicer: PaperJSSlicer;
   private shapes: ShapeGroup;
-  private brimMode = 'cross';
+  public brimMode = 'cross';
+  public display = false;
   private radius = 4;
 
   scanPiecesStream: Observable<ScanPiecesBean>;
