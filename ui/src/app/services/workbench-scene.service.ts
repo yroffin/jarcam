@@ -21,7 +21,7 @@ export class WorkbenchSceneService {
   public scene: THREE.Scene;
 
   private group: THREE.Group;
-  private slice: THREE.Object3D[];
+  private slices: THREE.Object3D[];
   private layerHelper: THREE.PlaneHelper;
 
   private normal: THREE.Mesh;
@@ -33,12 +33,15 @@ export class WorkbenchSceneService {
   private layer: LayerBean;
   private scan: any;
   private debug: DebugBean;
+  private slice: number;
 
-  layers: Observable<LayerBean>;
-  debugs: Observable<DebugBean>;
+  layerStream: Observable<LayerBean>;
+  debugStream: Observable<DebugBean>;
+  sliceStream: Observable<number>;
 
-  layersSubscription: Subscription;
-  debugsSubscription: Subscription;
+  layerSubscription: Subscription;
+  debugSubscription: Subscription;
+  sliceSubscription: Subscription;
 
   constructor(
     private parametersService: ParametersService,
@@ -60,17 +63,27 @@ export class WorkbenchSceneService {
     this.scene.add(this.millingService.mill);
 
     // slice group
-    this.slice = [];
+    this.slices = [];
 
     // Axis
     this._axis = new Axis(this.scene, false);
 
     // Observable
-    this.layers = this.parametersService.layers();
-    this.debugs = this.parametersService.debugs();
+    this.layerStream = this.parametersService.layers();
+    this.debugStream = this.parametersService.debugs();
+    this.sliceStream = this.parametersService.slice();
 
     // Subscribe
-    this.layersSubscription = this.layers.subscribe(
+    this.sliceSubscription = this.sliceStream.subscribe(
+      (slice: number) => {
+        this.onSliceChange(slice);
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+
+    this.layerSubscription = this.layerStream.subscribe(
       (layer: LayerBean) => {
         this.layer = layer;
         if (this.group) {
@@ -84,7 +97,7 @@ export class WorkbenchSceneService {
     );
 
     // Subscribe
-    this.debugsSubscription = this.debugs.subscribe(
+    this.debugSubscription = this.debugStream.subscribe(
       (debug: DebugBean) => {
         this.debug = debug;
         if (this.group) {
@@ -195,7 +208,7 @@ export class WorkbenchSceneService {
     /*
      * Scan all pieces in group
      */
-    this.scan = ScanMeshes.scan(this.group, 1);
+    this.scan = ScanMeshes.scan(this.group, this.slice);
     this.parametersService.dispatch({
       type: SCAN_PIECES,
       payload: {
@@ -210,6 +223,10 @@ export class WorkbenchSceneService {
     });
 
     this.onLayerChange(this.layer);
+  }
+
+  private onSliceChange(slice: number) {
+    this.slice = slice;
   }
 
   public infos() {
@@ -230,20 +247,20 @@ export class WorkbenchSceneService {
     const areas = this.millingService.moveToZ(this.scene, this.group, layer.top);
 
     // remove previous slicing object
-    _.each(this.slice, (child) => {
+    _.each(this.slices, (child) => {
       this.scene.remove(child);
     });
 
     // compute new slice
-    this.slice = [];
+    this.slices = [];
 
     // add new slicing object and infos
     _.each(areas, (area) => {
       _.each(area.meshes, (child) => {
-        this.slice.push(child);
+        this.slices.push(child);
         this.scene.add(child);
       });
-      this.slice.push(area.normals);
+      this.slices.push(area.normals);
       this.scene.add(area.normals);
     });
     this.showLayer(this.layer.visible);
@@ -295,7 +312,7 @@ export class WorkbenchSceneService {
 
   private showLayer(enable: boolean) {
     this.layerHelper.visible = enable;
-    _.each(this.slice, (slice: THREE.Object3D) => {
+    _.each(this.slices, (slice: THREE.Object3D) => {
       slice.visible = enable;
     });
   }

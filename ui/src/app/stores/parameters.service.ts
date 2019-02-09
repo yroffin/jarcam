@@ -38,6 +38,7 @@ export interface ParametersState {
   debug: DebugBean;
   brimMode: string;
   radius: number;
+  slice: number;
   scanPieces: ScanPiecesBean;
 }
 
@@ -47,6 +48,7 @@ export const CHANGE_DEBUG = 'CHANGE_DEBUG';
 export const SCAN_PIECES = 'SCAN_PIECES';
 export const CHANGE_BRIMMODE = 'CHANGE_BRIMMODE';
 export const CHANGE_RADIUS = 'CHANGE_RADIUS';
+export const CHANGE_SLICE = 'CHANGE_SLICE';
 
 // Les actions
 export class ChangeLayer implements Action {
@@ -74,7 +76,12 @@ export class ChangeRadius implements Action {
   payload: any;
 }
 
-export type AllActions = ChangeLayer | ChangeDebug | ScanPieces | ChangeBimMode | ChangeRadius;
+export class ChangeSlice implements Action {
+  readonly type = CHANGE_SLICE;
+  payload: any;
+}
+
+export type AllActions = ChangeLayer | ChangeDebug | ScanPieces | ChangeBimMode | ChangeRadius | ChangeSlice;
 
 
 // Initial state
@@ -105,7 +112,8 @@ export const initialState: ParametersState = {
   },
 
   brimMode: 'cross',
-  radius: 4
+  radius: 4,
+  slice: 2
 };
 
 @Injectable({
@@ -128,6 +136,9 @@ export class ParametersService {
   // radius
   getRadius: Selector<object, number>;
 
+  // slice
+  getSlice: Selector<object, number>;
+
   constructor(
     private _store: Store<ParametersState>
   ) {
@@ -145,6 +156,9 @@ export class ParametersService {
 
     // radius
     this.getRadius = createSelector(this.getParametersState, (state: ParametersState) => state.radius);
+
+    // slice
+    this.getSlice = createSelector(this.getParametersState, (state: ParametersState) => state.slice);
   }
 
   // REDUCER
@@ -159,6 +173,7 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
+          slice: state.slice,
           radius: state.radius
         };
       }
@@ -169,6 +184,7 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: action.payload.brimMode,
+          slice: state.slice,
           radius: state.radius
         };
       }
@@ -179,7 +195,19 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
+          slice: state.slice,
           radius: action.payload.radius
+        };
+      }
+
+      case CHANGE_SLICE: {
+        return {
+          layer: state.layer,
+          debug: state.debug,
+          scanPieces: state.scanPieces,
+          brimMode: state.brimMode,
+          slice: action.payload.slice,
+          radius: state.radius
         };
       }
 
@@ -194,6 +222,7 @@ export class ParametersService {
           },
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
+          slice: state.slice,
           radius: state.radius
         };
         return nstate;
@@ -213,6 +242,7 @@ export class ParametersService {
             allZ: action.payload.allZ
           },
           brimMode: state.brimMode,
+          slice: state.slice,
           radius: state.radius
         };
       }
@@ -248,6 +278,13 @@ export class ParametersService {
    */
   public radius(): Observable<number> {
     return this._store.select(this.getRadius);
+  }
+
+  /**
+   * select this store service
+   */
+  public slice(): Observable<number> {
+    return this._store.select(this.getSlice);
   }
 
   /**
