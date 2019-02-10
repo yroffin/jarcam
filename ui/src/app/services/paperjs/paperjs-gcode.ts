@@ -5,12 +5,9 @@ import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { Group } from 'paper';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
 import { PaperJSGcodeInterface } from 'src/app/services/paperjs/paperjs-interface';
+import { StringUtils } from 'src/app/services/string-utils';
 
 export class PaperJSGcode implements PaperJSGcodeInterface {
-
-    private static round(n: number, precision: number): number {
-        return Math.round(n * precision + Number.EPSILON) / precision;
-    }
 
     public header(
         minx: number,
@@ -22,12 +19,21 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
 
         let gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
-        gcode = `${gcode}G90 (Absolute Positioning)\n`;
+        gcode = `${gcode}G90\n`;
         gcode = `${gcode}M03 S18000 (Spindle CW on)\n`;
-        gcode = `${gcode}G0 F900 (set the feedrate to 900mm/minute)\n`;
-        gcode = `${gcode}G92 X0 Y0 Z${maxz} (reset origin)\n`;
+        gcode = `${gcode}(set the feedrate to 2000mm/minute)\n`;
+        gcode = `${gcode}G00 F2000\n`;
+        gcode = `${gcode}(set the feedrate to 900mm/minute)\n`;
+        gcode = `${gcode}G01 F900\n`;
+        gcode = `${gcode}G01 S1\n`;
+        gcode = `${gcode}(move to ${this.formatter(0)}mm on the Z axis)\n`;
+        gcode = `${gcode}G00 Z${this.formatter(0)}\n`;
 
         return gcode;
+    }
+
+    private formatter(value: number) {
+        return StringUtils.format('%5.4f', [value]);
     }
 
     public build(
@@ -44,21 +50,26 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
 
         let it = 0;
         _.each(journeys, (journey: Journey) => {
+            if (!journey.position) {
+                return;
+            }
             gcode = `${gcode}(Shape ${journey.path.name})\n`;
             const start = journey.position.clone();
             start.x -= inner.left;
             start.y -= inner.top;
             gcode = `${gcode}(Start ${start})\n`;
-            gcode = `${gcode}G0 Z${maxz}   (move to ${maxz}mm on the Z axis)\n`;
-            gcode = `${gcode}G0 X${PaperJSGcode.round(start.x, 100)} Y${PaperJSGcode.round(start.y, 100)}\n`;
-            gcode = `${gcode}G1 Z${current}   (move to ${current}mm on the Z axis)\n`;
+            gcode = `${gcode}(move to ${this.formatter(0)} mm on the Z axis)\n`;
+            gcode = `${gcode}G00 Z${this.formatter(0)}\n`;
+            gcode = `${gcode}G00 X${this.formatter(start.x)} Y${this.formatter(start.y)}\n`;
+            gcode = `${gcode}(move to ${this.formatter(current - maxz)}mm on the Z axis)\n`;
+            gcode = `${gcode}G01 Z${this.formatter(current - maxz)} F600\n`;
             // path begin can be away from start
             const offset = journey.path.getOffsetOf(journey.position);
             for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
                 const point = journey.path.getPointAt(indice % journey.path.length);
                 point.x -= inner.left;
                 point.y -= inner.top;
-                gcode = `${gcode}G1 X${PaperJSGcode.round(point.x, 100)} Y${PaperJSGcode.round(point.y, 100)}\n`;
+                gcode = `${gcode}G01 X${this.formatter(point.x)} Y${this.formatter(point.y)}\n`;
             }
             it++;
         });

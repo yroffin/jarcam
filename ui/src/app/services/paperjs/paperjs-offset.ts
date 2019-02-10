@@ -78,7 +78,7 @@ export class PaperJSOffset {
                 }
             }
         }
-        if (path.isClosed()) {
+        if (path.isClosed() && outerPath.lastSegment) {
             if (!outerPath.lastSegment.point.isClose(outerPath.firstSegment.point, epsilon) && (enforeArcs ||
                 outerPath.lastCurve.getTangentAt(1, true).dot(outerPath.firstSegment.point.subtract(path.firstSegment.point)) >= 0)) {
                 this.addRoundJoin(outerPath, outerPath.firstSegment.point, path.firstSegment.point, Math.abs(offset));
