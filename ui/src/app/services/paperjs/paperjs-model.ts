@@ -12,6 +12,10 @@ export class Journey {
     path: Path;
 }
 
+export class BrimBean {
+    points: Point[];
+}
+
 export class TouchBean {
     id: string;
     touch: Point;

@@ -1,5 +1,5 @@
 import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
-import { ShapeGroup, Journey, TouchBean } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { Group, Path, Point, Rectangle, CurveLocation, Segment } from 'paper';
 import { AreaPoint, Area } from 'src/app/services/three/area.class';
 
@@ -17,13 +17,12 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
         segment: Path,
         brimMode: string,
         pointer: Point,
-        radius, minx, maxx, miny, maxy: number): boolean {
+        radius, area: Path, minx, maxx, miny, maxy: number): boolean {
         // Store all points in a map
         const nearests: TouchBean[] = [];
 
         if (brimMode !== 'inline') {
             _.each(shapes.opened.children, (shape: Path) => {
-                const result = shape.hitTest(pointer);
                 nearests.push({
                     id: shape.name,
                     touch: shape.getNearestPoint(pointer)
@@ -31,7 +30,6 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
             });
         } else {
             _.each(shapes.closed.children, (shape: Path) => {
-                const result = shape.hitTest(pointer);
                 nearests.push({
                     id: shape.name,
                     touch: shape.getNearestPoint(pointer)
@@ -40,7 +38,7 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
         }
 
         const takes: TouchBean[] = _.sortBy(_.flatMap(nearests, (nearest: TouchBean) => {
-            return <TouchBean> {
+            return <TouchBean>{
                 id: nearest.id,
                 touch: nearest.touch,
                 distance: pointer.getDistance(nearest.touch)
@@ -56,7 +54,7 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                 // Only 2 points is relevant
                 if (dists.length === 1) {
                     const closest = _.take(_.sortBy(_.flatMap(shapes.closePath.children, (path: Path) => {
-                        return <TouchBean> {
+                        return <TouchBean>{
                             id: path.name,
                             touch: path.bounds.center,
                             distance: dists[0].touch.getDistance(path.bounds.center)
@@ -69,12 +67,8 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                         segment.removeSegments();
                         segment.add(dists[0].touch);
                         segment.add(closest[0].touch);
-                        segment.data = {
-                            inline: {
-                                from: dists[0],
-                                to: closest[0]
-                            }
-                        };
+                        segment.data = new BrimBean();
+                        segment.data.points = [dists[0].touch, closest[0].touch];
                         return true;
                     }
                 }
@@ -88,59 +82,35 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                     segment.removeSegments();
                     segment.add(dists[0].touch);
                     segment.add(dists[1].touch);
-                    segment.data = {
-                        cross: {
-                            from: dists[0],
-                            to: dists[1]
-                        }
-                    };
+                    segment.data = new BrimBean();
+                    segment.data.points = [dists[0].touch, dists[1].touch];
                     return true;
                 }
             }
                 break;
-            case 'border-minx':
-                return this.border(takes, segment, () => {
-                    let border = pointer.y <= miny ? miny : pointer.y;
-                    border = border >= maxy ? maxy : border;
-                    return new Point(minx - radius, border);
-                });
-            case 'border-maxx':
-                return this.border(takes, segment, () => {
-                    let border = pointer.y <= miny ? miny : pointer.y;
-                    border = border >= maxy ? maxy : border;
-                    return new Point(maxx + radius, border);
-                });
-            case 'border-miny':
-                return this.border(takes, segment, () => {
-                    let border = pointer.x <= minx ? minx : pointer.x;
-                    border = border >= maxx ? maxx : border;
-                    return new Point(border, miny - radius);
-                });
-            case 'border-maxy':
-                return this.border(takes, segment, () => {
-                    let border = pointer.x <= minx ? minx : pointer.x;
-                    border = border >= maxx ? maxx : border;
-                    return new Point(border, maxy + radius);
-                });
+            case 'border':
+                return this.border(takes, segment, area);
         }
         return false;
     }
 
-    public border(takes: any, segment: Path, compute: () => Point): boolean {
+    /**
+     * build border
+     * @param takes all neareast point to shape
+     * @param segment result
+     * @param area rect area
+     */
+    private border(takes: any, segment: Path, area: Path): boolean {
         // Compute distance
         const dists: TouchBean[] = _.take(takes, 1);
         // Only 1 points is relevant
         if (dists.length === 1) {
             segment.removeSegments();
-            const point = compute();
+            const point = area.getNearestPoint(dists[0].touch);
             segment.add(point);
             segment.add(dists[0].touch);
-            segment.data = {
-                border: {
-                    from: dists[0],
-                    to: point
-                }
-            };
+            segment.data = new BrimBean();
+            segment.data.points = [point, dists[0].touch];
             return true;
         }
         return false;

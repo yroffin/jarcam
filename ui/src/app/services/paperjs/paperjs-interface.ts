@@ -9,7 +9,7 @@ export interface PaperJSShapeBrimInterface {
         segment: Path,
         brimMode: string,
         pointer: Point,
-        radius, minx, maxx, miny, maxy: number): boolean;
+        radius, area: Path, minx, maxx, miny, maxy: number): boolean;
 }
 
 export interface PaperJSShapeBuilderInterface {

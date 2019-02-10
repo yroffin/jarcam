@@ -10,7 +10,7 @@ import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
 import { AppComponent } from 'src/app/app.component';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
-import { Journey, ShapeGroup, TouchBean } from 'src/app/services/paperjs/paperjs-model';
+import { Journey, ShapeGroup, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
@@ -52,7 +52,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   radiusStream: Observable<number>;
   radiusSubscription: Subscription;
 
-  brimStream: Observable<TouchBean[]>;
+  brimStream: Observable<BrimBean[]>;
   brimSubscription: Subscription;
 
   dialogSubscription: Subscription;
@@ -60,7 +60,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   public options: {
     layer: LayerBean,
     scanPieces: ScanPiecesBean
-    brims: TouchBean[]
+    brims: BrimBean[]
   };
 
   private brim: PaperJSShapeBrimInterface = new PaperJSShapeBrim();
@@ -129,9 +129,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       }
     );
     this.brimSubscription = this.brimStream.subscribe(
-      (brims: TouchBean[]) => {
+      (brims: BrimBean[]) => {
         this.options.brims = brims;
-        //this.sliceInit();
+        if (this.slicer) {
+          this.slicer.refreshBrims(this.options.brims);
+        }
       },
       (err) => console.error(err),
       () => {
@@ -155,6 +157,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     // Render shape
     this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
+    this.slicer.refreshBrims(this.options.brims);
 
     const brim = new Path({
       fillColor: 'orange',
@@ -164,7 +167,11 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     // Compute bound
     const inner = PaperJSUtils.bounds(
-      this.options.scanPieces.minx, this.options.scanPieces.maxx, this.options.scanPieces.miny, this.options.scanPieces.maxy, this.radius);
+      this.options.scanPieces.minx,
+      this.options.scanPieces.maxx,
+      this.options.scanPieces.miny,
+      this.options.scanPieces.maxy,
+      this.radius * 2);
 
     // Build contour
     const bound = new Path.Rectangle({
@@ -187,13 +194,14 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         this.brimMode,
         event.point,
         this.radius,
+        bound,
         this.options.scanPieces.minx, this.options.scanPieces.maxx, this.options.scanPieces.miny, this.options.scanPieces.maxy);
     };
     brim.onClick = (event) => {
       this.parametersService.dispatch({
         type: ADD_BRIM,
         payload: {
-          brim: brim
+          brim: brim.data
         }
       });
     };

@@ -4,7 +4,7 @@ import { Group } from 'paper';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { ElementRef } from '@angular/core';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
-import { ShapeGroup, Journey } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
@@ -28,6 +28,7 @@ export class PaperJSSlicer {
     private zoom = 5;
     private scope: PaperScope;
     private project: Project;
+    private brims: Group;
     private brimMode = 'cross';
 
     private shaper: PaperJSShapeBuilderInterface = new PaperJSShapeBuilder();
@@ -100,6 +101,7 @@ export class PaperJSSlicer {
 
         // Add grid only in domInsert mode
         if (domInsert) {
+            this.brims = new Group();
             const size = Math.max(
                 Math.abs(this.scanPieces.maxx),
                 Math.abs(this.scanPieces.minx),
@@ -124,6 +126,26 @@ export class PaperJSSlicer {
         }
 
         return shapes;
+    }
+
+    /**
+     * draw all brims
+     * @param brims brims
+     */
+    public refreshBrims(brims: BrimBean[]): void {
+        _.each(this.brims.children, (brim: Path) => {
+            brim.remove();
+        });
+        _.each(brims, (brim: BrimBean) => {
+            const path = new Path({
+                fillColor: 'orange',
+                strokeColor: 'red',
+                insert: true
+            });
+            _.each(brim.points, (point) => {
+                path.add(point);
+            });
+        });
     }
 
     public header(

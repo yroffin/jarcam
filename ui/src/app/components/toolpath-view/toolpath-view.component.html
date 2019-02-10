@@ -12,16 +12,7 @@
         <p-radioButton (onClick)="onClick()" name="groupname" value="inline" label="inline" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="border-minx" label="left" [(ngModel)]="brimMode"></p-radioButton>
-    </div>
-    <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="border-maxx" label="right" [(ngModel)]="brimMode"></p-radioButton>
-    </div>
-    <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="border-maxy" label="top" [(ngModel)]="brimMode"></p-radioButton>
-    </div>
-    <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="border-miny" label="bottom" [(ngModel)]="brimMode"></p-radioButton>
+        <p-radioButton (onClick)="onClick()" name="groupname" value="border" label="border" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <br>
     <button pButton type="button" label="Gcode" (click)="openDialog()"></button>

@@ -4,7 +4,7 @@ import { ActionReducerMap, createFeatureSelector, createSelector } from '@ngrx/s
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { Selector } from '@ngrx/store';
-import { TouchBean } from 'src/app/services/paperjs/paperjs-model';
+import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import * as _ from 'lodash';
 
 // State Type
@@ -42,7 +42,7 @@ export interface ParametersState {
   radius: number;
   slice: number;
   scanPieces: ScanPiecesBean;
-  brims: TouchBean[];
+  brims: BrimBean[];
 }
 
 // Les types des differentes actions
@@ -150,7 +150,7 @@ export class ParametersService {
   getSlice: Selector<object, number>;
 
   // brims
-  getBrims: Selector<object, TouchBean[]>;
+  getBrims: Selector<object, BrimBean[]>;
 
   constructor(
     private _store: Store<ParametersState>
@@ -324,7 +324,7 @@ export class ParametersService {
   /**
    * select this store service
    */
-  public brims(): Observable<TouchBean[]> {
+  public brims(): Observable<BrimBean[]> {
     return this._store.select(this.getBrims);
   }
 
