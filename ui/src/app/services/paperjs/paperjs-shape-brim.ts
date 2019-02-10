@@ -1,5 +1,5 @@
 import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
-import { ShapeGroup, Journey } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean } from 'src/app/services/paperjs/paperjs-model';
 import { Group, Path, Point, Rectangle, CurveLocation, Segment } from 'paper';
 import { AreaPoint, Area } from 'src/app/services/three/area.class';
 
@@ -19,30 +19,31 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
         pointer: Point,
         radius, minx, maxx, miny, maxy: number): boolean {
         // Store all points in a map
-        const nearests: Point[] = [];
+        const nearests: TouchBean[] = [];
 
         if (brimMode !== 'inline') {
             _.each(shapes.opened.children, (shape: Path) => {
                 const result = shape.hitTest(pointer);
-                if (result) {
-                    console.log(result);
-                }
-                nearests.push(shape.getNearestPoint(pointer));
+                nearests.push({
+                    id: shape.name,
+                    touch: shape.getNearestPoint(pointer)
+                });
             });
         } else {
             _.each(shapes.closed.children, (shape: Path) => {
                 const result = shape.hitTest(pointer);
-                if (result) {
-                    console.log(result);
-                }
-                nearests.push(shape.getNearestPoint(pointer));
+                nearests.push({
+                    id: shape.name,
+                    touch: shape.getNearestPoint(pointer)
+                });
             });
         }
 
-        const takes = _.sortBy(_.flatMap(nearests, (pt: Point) => {
-            return {
-                point: pt,
-                distance: pointer.getDistance(pt)
+        const takes: TouchBean[] = _.sortBy(_.flatMap(nearests, (nearest: TouchBean) => {
+            return <TouchBean> {
+                id: nearest.id,
+                touch: nearest.touch,
+                distance: pointer.getDistance(nearest.touch)
             };
         }), (element) => {
             return element.distance;
@@ -51,13 +52,14 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
         switch (brimMode) {
             case 'inline': {
                 // Compute distance
-                const dists = _.take(takes, 1);
+                const dists: TouchBean[] = _.take(takes, 1);
                 // Only 2 points is relevant
                 if (dists.length === 1) {
                     const closest = _.take(_.sortBy(_.flatMap(shapes.closePath.children, (path: Path) => {
-                        return {
-                            point: path.bounds.center,
-                            distance: dists[0].point.getDistance(path.bounds.center)
+                        return <TouchBean> {
+                            id: path.name,
+                            touch: path.bounds.center,
+                            distance: dists[0].touch.getDistance(path.bounds.center)
                         };
                     }), (element) => {
                         return element.distance;
@@ -65,8 +67,14 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
 
                     if (closest.length > 0) {
                         segment.removeSegments();
-                        segment.add(dists[0].point);
-                        segment.add(closest[0].point);
+                        segment.add(dists[0].touch);
+                        segment.add(closest[0].touch);
+                        segment.data = {
+                            inline: {
+                                from: dists[0],
+                                to: closest[0]
+                            }
+                        };
                         return true;
                     }
                 }
@@ -74,12 +82,18 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                 break;
             case 'cross': {
                 // Compute distance
-                const dists = _.take(takes, 2);
+                const dists: TouchBean[] = _.take(takes, 2);
                 // Only 2 points is relevant
                 if (dists.length === 2) {
                     segment.removeSegments();
-                    segment.add(dists[0]);
-                    segment.add(dists[1]);
+                    segment.add(dists[0].touch);
+                    segment.add(dists[1].touch);
+                    segment.data = {
+                        cross: {
+                            from: dists[0],
+                            to: dists[1]
+                        }
+                    };
                     return true;
                 }
             }
@@ -114,13 +128,19 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
 
     public border(takes: any, segment: Path, compute: () => Point): boolean {
         // Compute distance
-        const dists = _.take(takes, 1);
+        const dists: TouchBean[] = _.take(takes, 1);
         // Only 1 points is relevant
         if (dists.length === 1) {
             segment.removeSegments();
             const point = compute();
             segment.add(point);
-            segment.add(dists.pop());
+            segment.add(dists[0].touch);
+            segment.data = {
+                border: {
+                    from: dists[0],
+                    to: point
+                }
+            };
             return true;
         }
         return false;

@@ -12,6 +12,12 @@ export class Journey {
     path: Path;
 }
 
+export class TouchBean {
+    id: string;
+    touch: Point;
+    distance?: number;
+}
+
 export class ShapeGroup {
     opened: Group;
     closed: Group;

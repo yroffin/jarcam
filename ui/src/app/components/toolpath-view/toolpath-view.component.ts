@@ -10,11 +10,11 @@ import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
 import { AppComponent } from 'src/app/app.component';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
-import { Journey, ShapeGroup } from 'src/app/services/paperjs/paperjs-model';
+import { Journey, ShapeGroup, TouchBean } from 'src/app/services/paperjs/paperjs-model';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
-import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE } from 'src/app/stores/parameters.service';
+import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, ADD_BRIM } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gcode.component';
 import { ActivatedRoute } from '@angular/router';
@@ -22,6 +22,8 @@ import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
+import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
+import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
 
 @AutoUnsubscribe()
 @Component({
@@ -42,18 +44,26 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
   private radius = 4;
 
   scanPiecesStream: Observable<ScanPiecesBean>;
-  layersStream: Observable<LayerBean>;
-  radiusStream: Observable<number>;
-
-  layersSubscription: Subscription;
   scanPiecesSubscription: Subscription;
+
+  layersStream: Observable<LayerBean>;
+  layersSubscription: Subscription;
+
+  radiusStream: Observable<number>;
   radiusSubscription: Subscription;
+
+  brimStream: Observable<TouchBean[]>;
+  brimSubscription: Subscription;
+
   dialogSubscription: Subscription;
 
   public options: {
     layer: LayerBean,
     scanPieces: ScanPiecesBean
+    brims: TouchBean[]
   };
+
+  private brim: PaperJSShapeBrimInterface = new PaperJSShapeBrim();
 
   constructor(
     private appComponent: AppComponent,
@@ -67,6 +77,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     this.scanPiecesStream = this.parametersService.scanPieces();
     this.layersStream = this.parametersService.layers();
     this.radiusStream = this.parametersService.radius();
+    this.brimStream = this.parametersService.brims();
     this.options = {
       layer: {
         top: 0,
@@ -80,7 +91,8 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         minz: 0,
         maxz: 0,
         allZ: []
-      }
+      },
+      brims: []
     };
   }
 
@@ -116,9 +128,23 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       () => {
       }
     );
+    this.brimSubscription = this.brimStream.subscribe(
+      (brims: TouchBean[]) => {
+        this.options.brims = brims;
+        //this.sliceInit();
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   ngAfterViewInit() {
+    this.sliceInit();
+  }
+
+  sliceInit() {
+    console.log('Render slice of current layer');
     this.slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
 
     // Init slice
@@ -129,6 +155,48 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     // Render shape
     this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
+
+    const brim = new Path({
+      fillColor: 'orange',
+      strokeColor: 'red',
+      insert: true
+    });
+
+    // Compute bound
+    const inner = PaperJSUtils.bounds(
+      this.options.scanPieces.minx, this.options.scanPieces.maxx, this.options.scanPieces.miny, this.options.scanPieces.maxy, this.radius);
+
+    // Build contour
+    const bound = new Path.Rectangle({
+      from: new Point(inner.left, inner.top),
+      to: new Point(inner.right, inner.bottom),
+      strokeColor: 'red',
+      strokeWidth: 0.5,
+      fillColor: 'white',
+      selected: false,
+      visible: true,
+      insert: true
+    });
+    bound.sendToBack();
+
+    // Handler for brim capture
+    bound.onMouseMove = (event) => {
+      this.brim.brim(
+        this.shapes,
+        brim,
+        this.brimMode,
+        event.point,
+        this.radius,
+        this.options.scanPieces.minx, this.options.scanPieces.maxx, this.options.scanPieces.miny, this.options.scanPieces.maxy);
+    };
+    brim.onClick = (event) => {
+      this.parametersService.dispatch({
+        type: ADD_BRIM,
+        payload: {
+          brim: brim
+        }
+      });
+    };
   }
 
   public onToolChange() {

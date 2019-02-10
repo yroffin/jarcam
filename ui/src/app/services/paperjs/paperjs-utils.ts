@@ -1,4 +1,4 @@
-import { Path, Point } from 'paper';
+import { Path, Point, PointText } from 'paper';
 import * as _ from 'lodash';
 import { Group } from 'paper';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
@@ -49,6 +49,22 @@ export class PaperJSUtils {
         });
         axeY.strokeColor = 'green';
         axeY.strokeWidth = 0.2;
+    }
+
+    /**
+     * display text
+     * @param center text position
+     * @param message message
+     */
+    static display(center: Point, message: string): void {
+        // Angle Label
+        const text = new PointText({
+            point: center,
+            content: message,
+            fillColor: 'black',
+            fontSize: 1.5,
+        });
+        text.scale(1, -1);
     }
 
     /**

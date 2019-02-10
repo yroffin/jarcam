@@ -66,25 +66,9 @@ export class PaperJSContour {
 
         cnt.remove();
 
-        this.display(contour.bounds.bottomRight, contour.name);
+        PaperJSUtils.display(contour.bounds.bottomRight, contour.name);
 
         return contour;
-    }
-
-    /**
-     * display text
-     * @param center text position
-     * @param message message
-     */
-    static display(center: Point, message: string): void {
-        // Angle Label
-        const text = new PointText({
-            point: center,
-            content: message,
-            fillColor: 'black',
-            fontSize: 1.5,
-        });
-        text.scale(1, -1);
     }
 
     /**

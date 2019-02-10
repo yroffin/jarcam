@@ -5,6 +5,7 @@ import { AreaPoint, Area } from 'src/app/services/three/area.class';
 
 import * as _ from 'lodash';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
+import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 
 export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
 
@@ -47,6 +48,7 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
                     this.selected = false;
                 };
                 shapes.opened.addChild(areaPath);
+                PaperJSUtils.display(areaPath.bounds.bottomRight, areaPath.name);
             } else {
                 const areaPath = new Path({
                     segments: segments,
@@ -64,6 +66,7 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
                     this.selected = false;
                 };
                 shapes.closed.addChild(areaPath);
+                PaperJSUtils.display(areaPath.bounds.bottomRight, areaPath.name);
             }
         });
 

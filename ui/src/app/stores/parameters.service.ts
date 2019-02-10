@@ -4,6 +4,8 @@ import { ActionReducerMap, createFeatureSelector, createSelector } from '@ngrx/s
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { Selector } from '@ngrx/store';
+import { TouchBean } from 'src/app/services/paperjs/paperjs-model';
+import * as _ from 'lodash';
 
 // State Type
 export interface AppState {
@@ -40,6 +42,7 @@ export interface ParametersState {
   radius: number;
   slice: number;
   scanPieces: ScanPiecesBean;
+  brims: TouchBean[];
 }
 
 // Les types des differentes actions
@@ -49,6 +52,7 @@ export const SCAN_PIECES = 'SCAN_PIECES';
 export const CHANGE_BRIMMODE = 'CHANGE_BRIMMODE';
 export const CHANGE_RADIUS = 'CHANGE_RADIUS';
 export const CHANGE_SLICE = 'CHANGE_SLICE';
+export const ADD_BRIM = 'ADD_BRIM';
 
 // Les actions
 export class ChangeLayer implements Action {
@@ -81,7 +85,12 @@ export class ChangeSlice implements Action {
   payload: any;
 }
 
-export type AllActions = ChangeLayer | ChangeDebug | ScanPieces | ChangeBimMode | ChangeRadius | ChangeSlice;
+export class AddBrim implements Action {
+  readonly type = ADD_BRIM;
+  payload: any;
+}
+
+export type AllActions = ChangeLayer | ChangeDebug | ScanPieces | ChangeBimMode | ChangeRadius | ChangeSlice | AddBrim;
 
 
 // Initial state
@@ -113,7 +122,8 @@ export const initialState: ParametersState = {
 
   brimMode: 'cross',
   radius: 4,
-  slice: 2
+  slice: 2,
+  brims: []
 };
 
 @Injectable({
@@ -139,6 +149,9 @@ export class ParametersService {
   // slice
   getSlice: Selector<object, number>;
 
+  // brims
+  getBrims: Selector<object, TouchBean[]>;
+
   constructor(
     private _store: Store<ParametersState>
   ) {
@@ -159,6 +172,9 @@ export class ParametersService {
 
     // slice
     this.getSlice = createSelector(this.getParametersState, (state: ParametersState) => state.slice);
+
+    // brims
+    this.getBrims = createSelector(this.getParametersState, (state: ParametersState) => state.brims);
   }
 
   // REDUCER
@@ -167,6 +183,18 @@ export class ParametersService {
     action: AllActions
   ): ParametersState {
     switch (action.type) {
+      case ADD_BRIM: {
+        return {
+          layer: state.layer,
+          debug: state.debug,
+          scanPieces: state.scanPieces,
+          brimMode: state.brimMode,
+          slice: state.slice,
+          brims: _.concat([action.payload.brim], state.brims),
+          radius: state.radius
+        };
+      }
+
       case CHANGE_LAYER: {
         return {
           layer: action.payload,
@@ -174,6 +202,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          brims: state.brims,
           radius: state.radius
         };
       }
@@ -185,6 +214,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: action.payload.brimMode,
           slice: state.slice,
+          brims: state.brims,
           radius: state.radius
         };
       }
@@ -196,6 +226,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          brims: state.brims,
           radius: action.payload.radius
         };
       }
@@ -207,6 +238,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: action.payload.slice,
+          brims: state.brims,
           radius: state.radius
         };
       }
@@ -223,6 +255,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          brims: state.brims,
           radius: state.radius
         };
         return nstate;
@@ -241,6 +274,7 @@ export class ParametersService {
             maxz: action.payload.maxz,
             allZ: action.payload.allZ
           },
+          brims: state.brims,
           brimMode: state.brimMode,
           slice: state.slice,
           radius: state.radius
@@ -288,10 +322,18 @@ export class ParametersService {
   }
 
   /**
+   * select this store service
+   */
+  public brims(): Observable<TouchBean[]> {
+    return this._store.select(this.getBrims);
+  }
+
+  /**
    * dispatch
    * @param action dispatch action
    */
   public dispatch(action: AllActions) {
+    console.log('dispatch', action.type);
     this._store.dispatch(action);
   }
 }

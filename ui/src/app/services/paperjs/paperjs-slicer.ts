@@ -34,7 +34,6 @@ export class PaperJSSlicer {
     private contourer: PaperJSShapeAroundInterface = new PaperJSShapeContour();
     private simulator: PaperJSSimulatorInterface = new PaperJSSimulator();
     private gcoder: PaperJSGcodeInterface = new PaperJSGcode();
-    private brim: PaperJSShapeBrimInterface = new PaperJSShapeBrim();
 
     /**
      * constructor
@@ -119,41 +118,6 @@ export class PaperJSSlicer {
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy, this.radius, domInsert);
-
-        if (domInsert) {
-            const segment = new Path({
-                fillColor: 'orange',
-                strokeColor: 'red'
-            });
-
-            // Compute bound
-            const inner = PaperJSUtils.bounds(
-                this.scanPieces.minx, this.scanPieces.maxx, this.scanPieces.miny, this.scanPieces.maxy, this.radius);
-
-            // Build contour
-            const boundContour = new Path.Rectangle({
-                from: new Point(inner.left, inner.top),
-                to: new Point(inner.right, inner.bottom),
-                strokeColor: 'red',
-                strokeWidth: 0.5,
-                fillColor: 'white',
-                selected: false,
-                visible: true,
-                insert: domInsert
-            });
-            boundContour.sendToBack();
-
-            // Handler for brim capture
-            boundContour.onMouseMove = (event) => {
-                this.brim.brim(
-                    shapes,
-                    segment,
-                    this.brimMode,
-                    event.point,
-                    this.radius,
-                    this.scanPieces.minx, this.scanPieces.maxx, this.scanPieces.miny, this.scanPieces.maxy);
-            };
-        }
 
         if (fill) {
             this.simulator.simulation(shapes.journeys, this.radius, domInsert);
