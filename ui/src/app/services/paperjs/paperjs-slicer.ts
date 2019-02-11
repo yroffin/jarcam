@@ -4,7 +4,7 @@ import { Group } from 'paper';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { ElementRef } from '@angular/core';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
-import { ShapeGroup, Journey, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean, BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
@@ -142,8 +142,8 @@ export class PaperJSSlicer {
                 strokeColor: 'red',
                 insert: true
             });
-            _.each(brim.points, (point) => {
-                path.add(point);
+            _.each(brim.points, (point: PointBean) => {
+                path.add(new Point(point.x, point.y));
             });
         });
     }

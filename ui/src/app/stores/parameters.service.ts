@@ -333,7 +333,7 @@ export class ParametersService {
    * @param action dispatch action
    */
   public dispatch(action: AllActions) {
-    console.log('dispatch', action.type);
+    console.log('dispatch', action.type, action.payload);
     this._store.dispatch(action);
   }
 }

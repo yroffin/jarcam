@@ -28,6 +28,12 @@ export class StorageService {
     return atob(value);
   }
 
+  loadAsObject(key: string): any {
+    const storageKey = StorageService.generateStorageKey(key);
+    const value = this.storage.getItem(storageKey);
+    return JSON.parse(value);
+  }
+
   set(key: string, value: any): void {
     const storageKey = StorageService.generateStorageKey(key);
     this.storage.setItem(storageKey, this.getSettable(value));
@@ -36,6 +42,11 @@ export class StorageService {
   public save(key: string, value: any): void {
     const storageKey = StorageService.generateStorageKey(key);
     this.storage.setItem(storageKey, btoa(value));
+  }
+
+  public saveAsObject(key: string, value: any): void {
+    const storageKey = StorageService.generateStorageKey(key);
+    this.storage.setItem(storageKey, JSON.stringify(value));
   }
 
   remove(key: string): void {

@@ -9,13 +9,14 @@ import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath
 import { MatTabGroup, getMatInputUnsupportedTypeError } from '@angular/material';
 import { AppComponent } from 'src/app/app.component';
 import { Store } from '@ngrx/store';
-import { ParametersState, ParametersService } from 'src/app/stores/parameters.service';
+import { ParametersState, ParametersService, ADD_BRIM } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { ActivatedRoute } from '@angular/router';
 import { StorageService } from 'src/app/services/utility/storage.service';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { Subscription } from 'rxjs';
+import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
 
 @AutoUnsubscribe()
 @Component({
@@ -61,6 +62,20 @@ export class StlViewComponent implements AfterViewInit, OnInit {
     if (lastLoaded) {
       const data = this.storageService.load('lastLoaded');
       this.workbenchService.loadBinary(data, () => {
+      });
+    }
+
+    // get param
+    const lastBrimConfig = this.route.snapshot.queryParams['lastBrimConfig'];
+    if (lastBrimConfig) {
+      const data: BrimBean[] = this.storageService.loadAsObject('lastBrimConfig');
+      _.each(data, (brim) => {
+        this.parametersService.dispatch({
+          type: ADD_BRIM,
+          payload: {
+            brim: brim
+          }
+        });
       });
     }
   }

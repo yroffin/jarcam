@@ -1,5 +1,5 @@
 import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
-import { ShapeGroup, Journey, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean, BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
 import { Group, Path, Point, Rectangle, CurveLocation, Segment } from 'paper';
 import { AreaPoint, Area } from 'src/app/services/three/area.class';
 
@@ -68,7 +68,9 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                         segment.add(dists[0].touch);
                         segment.add(closest[0].touch);
                         segment.data = new BrimBean();
-                        segment.data.points = [dists[0].touch, closest[0].touch];
+                        segment.data.points = [
+                            <PointBean>{x: dists[0].touch.x, y: dists[0].touch.y},
+                            <PointBean>{x: closest[0].touch.x, y: closest[0].touch.y}];
                         return true;
                     }
                 }
@@ -83,7 +85,9 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                     segment.add(dists[0].touch);
                     segment.add(dists[1].touch);
                     segment.data = new BrimBean();
-                    segment.data.points = [dists[0].touch, dists[1].touch];
+                    segment.data.points = [
+                        <PointBean>{x: dists[0].touch.x, y: dists[0].touch.y},
+                        <PointBean>{x: dists[1].touch.x, y: dists[1].touch.y}];
                     return true;
                 }
             }
@@ -111,6 +115,7 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
             segment.add(dists[0].touch);
             segment.data = new BrimBean();
             segment.data.points = [point, dists[0].touch];
+            segment.data.points = [<PointBean>{x: point.x, y: point.y}, <PointBean>{x: dists[0].touch.x, y: dists[0].touch.y}];
             return true;
         }
         return false;

@@ -104,6 +104,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       this.workbenchService.loadBinary(data, () => {
       });
     }
+
     this.radiusSubscription = this.radiusStream.subscribe(
       (radius: number) => {
         this.radius = radius;
@@ -236,5 +237,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     });
   }
 
+  saveBrims(): void {
+    this.storageService.saveAsObject('lastBrimConfig', this.options.brims);
+  }
 }
-
