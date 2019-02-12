@@ -210,6 +210,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
                 strokeWidth: 0.2,
                 selected: false,
                 dashArray: [2, 0.5],
+                name: 'line',
                 insert: true
             })
         };
@@ -227,6 +228,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
                         strokeWidth: 0.2,
                         selected: false,
                         dashArray: [2, 0.5],
+                        name: 'line',
                         insert: true
                     })
                 };

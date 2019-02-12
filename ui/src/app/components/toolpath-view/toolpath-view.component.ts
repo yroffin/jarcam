@@ -226,10 +226,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(DialogGcodeComponent, {
       width: '100%',
       data: {
-        gcode: this.slicer.gcode(
+        gcode: this.slicer.sampleGcode(
           this.options.layer.top,
-          this.options.scanPieces.maxz,
-          this.shapes.journeys, this.options.brims)
+          this.options.scanPieces.maxz, this.options.brims, 3,
+          this.shapes.journeys)
       }
     });
 

@@ -148,13 +148,39 @@ export class PaperJSSlicer {
     }
 
     public header(
-        maxz: number): string {
+        maxz: number, brims: BrimBean[], brimSize: number): string {
         return this.gcoder.header(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            maxz);
+            maxz, brims, 2 + (this.radius * 2));
+    }
+
+    /**
+     * build gcode
+     * @param current current Z
+     * @param maxz maxZ
+     * @param radius tool radius
+     * @param journeys all fill journey
+     */
+    public sampleGcode(
+        current: number,
+        maxz: number, brims: BrimBean[], brimSize: number,
+        journeys: Journey[]): string {
+        // Header
+        const gcode = this.gcoder.header(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            this.scanPieces.maxz, brims, 3);
+        return gcode + this.gcoder.build(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            current, maxz, journeys);
     }
 
     /**
@@ -167,13 +193,13 @@ export class PaperJSSlicer {
     public gcode(
         current: number,
         maxz: number,
-        journeys: Journey[], brims: BrimBean[]): string {
+        journeys: Journey[]): string {
         return this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            current, maxz, journeys, brims, 2 + (this.radius * 2));
+            current, maxz, journeys);
     }
 
     /**

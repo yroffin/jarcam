@@ -30,7 +30,7 @@ export interface PaperJSGcodeInterface {
         maxx: number,
         miny: number,
         maxy: number,
-        maxz: number): string;
+        maxz: number, brims: BrimBean[], brimSize: number): string;
     build(
         minx: number,
         maxx: number,
@@ -38,5 +38,5 @@ export interface PaperJSGcodeInterface {
         maxy: number,
         current: number,
         maxz: number,
-        journeys: Journey[], brims: BrimBean[], brimSize: number): string;
+        journeys: Journey[]): string;
 }
