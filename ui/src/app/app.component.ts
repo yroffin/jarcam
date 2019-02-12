@@ -247,7 +247,7 @@ export class AppComponent implements OnInit {
   }
 
   public onLayerChange() {
-    this.layer.top = this.layerArray[this.layerIndex];
+    this.layer.top = this.layerArray.length === 0 ? 0 : this.layerArray[this.layerIndex];
     this.parametersService.dispatch({
       type: CHANGE_LAYER,
       payload: {
