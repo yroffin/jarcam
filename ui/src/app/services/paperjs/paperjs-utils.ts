@@ -2,6 +2,7 @@ import { Path, Point, PointText } from 'paper';
 import * as _ from 'lodash';
 import { Group } from 'paper';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
+import { BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
 
 export class PaperJSUtils {
     /**
@@ -49,6 +50,29 @@ export class PaperJSUtils {
         });
         axeY.strokeColor = 'green';
         axeY.strokeWidth = 0.2;
+    }
+
+    static drawBrim(name: string, brim: BrimBean, insert: boolean, size: number): Path {
+        const path = new Path({
+            fillColor: 'orange',
+            strokeColor: 'black',
+            strokeWidth: 0.25,
+            insert: insert,
+            close: true,
+            name: name
+        });
+        _.each(brim.points, (point: PointBean) => {
+            path.add(new Point(point.x, point.y));
+        });
+        const normal = path.getNormalAt(0);
+        normal.length = size / 2;
+        path.translate(normal);
+        normal.length = size;
+        normal.x = -normal.x;
+        normal.y = -normal.y;
+        path.add(path.getPointAt(path.length).add(normal));
+        path.add(path.getPointAt(0).add(normal));
+        return path;
     }
 
     /**

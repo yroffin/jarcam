@@ -1,5 +1,5 @@
-import { Path } from 'paper';
-import { Journey } from 'src/app/services/paperjs/paperjs-model';
+import { Path, Point } from 'paper';
+import { Journey, BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
 import * as _ from 'lodash';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { Group } from 'paper';
@@ -41,10 +41,18 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         maxx: number,
         miny: number,
         maxy: number,
-        current: number,
+        wanted: number,
         maxz: number,
-        journeys: Journey[]): string {
+        journeys: Journey[], brims: BrimBean[], brimSize: number): string {
+        let real = wanted;
         const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
+
+        // Build brim detector
+        const brimsArray: Path[] = [];
+        _.each(brims, (brim: BrimBean) => {
+            const path = PaperJSUtils.drawBrim('gcode#brim', brim, false, brimSize);
+            brimsArray.push(path);
+        });
 
         let gcode = ``;
 
@@ -61,12 +69,31 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
             gcode = `${gcode}(move to ${this.formatter(0)} mm on the Z axis)\n`;
             gcode = `${gcode}G00 Z${this.formatter(0)}\n`;
             gcode = `${gcode}G00 X${this.formatter(start.x)} Y${this.formatter(start.y)}\n`;
-            gcode = `${gcode}(move to ${this.formatter(current - maxz)}mm on the Z axis)\n`;
-            gcode = `${gcode}G01 Z${this.formatter(current - maxz)} F600\n`;
+            gcode = `${gcode}(move to ${this.formatter(wanted - maxz)}mm on the Z axis)\n`;
+            gcode = `${gcode}G01 Z${this.formatter(wanted - maxz)}\n`;
+            real = wanted;
             // path begin can be away from start
             const offset = journey.path.getOffsetOf(journey.position);
             for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
                 const point = journey.path.getPointAt(indice % journey.path.length);
+                // Check for brim crossing
+                const crossing = _.filter(brimsArray, (brim: Path) => {
+                    return brim.contains(point);
+                });
+                let authorized;
+                const limit = crossing.length > 0 && ((wanted - maxz) <= (2 - maxz));
+                // Limit is on
+                if (limit) {
+                    authorized = 2;
+                } else {
+                    authorized = wanted;
+                }
+                // Check for any change
+                if (authorized !== real) {
+                    gcode = `${gcode}(crossing detected ${authorized - maxz})\n`;
+                    gcode = `${gcode}G01 Z${this.formatter(authorized - maxz)}\n`;
+                    real = authorized;
+                }
                 point.x -= inner.left;
                 point.y -= inner.top;
                 gcode = `${gcode}G01 X${this.formatter(point.x)} Y${this.formatter(point.y)}\n`;

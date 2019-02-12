@@ -14,7 +14,7 @@ import { Journey, ShapeGroup, TouchBean, BrimBean } from 'src/app/services/paper
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
-import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, ADD_BRIM } from 'src/app/stores/parameters.service';
+import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, SET_BRIM } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gcode.component';
 import { ActivatedRoute } from '@angular/router';
@@ -200,9 +200,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
     };
     brim.onClick = (event) => {
       this.parametersService.dispatch({
-        type: ADD_BRIM,
+        type: SET_BRIM,
         payload: {
-          brim: brim.data
+          brim: _.concat(brim.data, this.options.brims)
         }
       });
     };
@@ -229,7 +229,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
         gcode: this.slicer.gcode(
           this.options.layer.top,
           this.options.scanPieces.maxz,
-          this.shapes.journeys)
+          this.shapes.journeys, this.options.brims)
       }
     });
 
@@ -239,5 +239,14 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   saveBrims(): void {
     this.storageService.saveAsObject('lastBrimConfig', this.options.brims);
+  }
+
+  clearBrims(): void {
+    this.parametersService.dispatch({
+      type: SET_BRIM,
+      payload: {
+        brim: []
+      }
+    });
   }
 }

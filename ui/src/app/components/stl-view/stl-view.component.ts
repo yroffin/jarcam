@@ -9,7 +9,7 @@ import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath
 import { MatTabGroup, getMatInputUnsupportedTypeError } from '@angular/material';
 import { AppComponent } from 'src/app/app.component';
 import { Store } from '@ngrx/store';
-import { ParametersState, ParametersService, ADD_BRIM } from 'src/app/stores/parameters.service';
+import { ParametersState, ParametersService, SET_BRIM } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { ActivatedRoute } from '@angular/router';
@@ -69,13 +69,11 @@ export class StlViewComponent implements AfterViewInit, OnInit {
     const lastBrimConfig = this.route.snapshot.queryParams['lastBrimConfig'];
     if (lastBrimConfig) {
       const data: BrimBean[] = this.storageService.loadAsObject('lastBrimConfig');
-      _.each(data, (brim) => {
-        this.parametersService.dispatch({
-          type: ADD_BRIM,
-          payload: {
-            brim: brim
-          }
-        });
+      this.parametersService.dispatch({
+        type: SET_BRIM,
+        payload: {
+          brim: data
+        }
       });
     }
   }

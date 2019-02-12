@@ -133,18 +133,17 @@ export class PaperJSSlicer {
      * @param brims brims
      */
     public refreshBrims(brims: BrimBean[]): void {
-        _.each(this.brims.children, (brim: Path) => {
+        const copy = _.filter(this.brims.children, (brim: Path) => {
+            return true;
+        });
+        _.each(copy, (brim: Path) => {
             brim.remove();
         });
+        let current = 0;
         _.each(brims, (brim: BrimBean) => {
-            const path = new Path({
-                fillColor: 'orange',
-                strokeColor: 'red',
-                insert: true
-            });
-            _.each(brim.points, (point: PointBean) => {
-                path.add(new Point(point.x, point.y));
-            });
+            const path = PaperJSUtils.drawBrim('count#' + current, brim, true, 2 + (this.radius * 2));
+            this.brims.addChild(path);
+            current++;
         });
     }
 
@@ -168,13 +167,13 @@ export class PaperJSSlicer {
     public gcode(
         current: number,
         maxz: number,
-        journeys: Journey[]): string {
+        journeys: Journey[], brims: BrimBean[]): string {
         return this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            current, maxz, journeys);
+            current, maxz, journeys, brims, 2 + (this.radius * 2));
     }
 
     /**

@@ -11,6 +11,7 @@ import * as _ from 'lodash';
 import { DatePipe } from '@angular/common';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
+import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
 
 @AutoUnsubscribe()
 @Component({
@@ -46,6 +47,10 @@ export class AppComponent implements OnInit {
   debugsSubscription: Subscription;
   scanPiecesSubscription: Subscription;
   radiusSubscription: Subscription;
+  brimStream: Observable<BrimBean[]>;
+  brimSubscription: Subscription;
+
+  private brims: BrimBean[] = [];
 
   public layerIndex = 0;
   public layerMin = 0;
@@ -69,6 +74,7 @@ export class AppComponent implements OnInit {
     this.debugsStream = this.parametersService.debugs();
     this.scanPiecesStream = this.parametersService.scanPieces();
     this.radiusStream = this.parametersService.radius();
+    this.brimStream = this.parametersService.brims();
   }
 
   ngOnInit() {
@@ -145,6 +151,14 @@ export class AppComponent implements OnInit {
       () => {
       }
     );
+    this.brimSubscription = this.brimStream.subscribe(
+      (brims: BrimBean[]) => {
+        this.brims = brims;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
 
     this._load();
   }
@@ -185,7 +199,7 @@ export class AppComponent implements OnInit {
       gcode += slicer.gcode(
         currentLayer.top,
         this.scanPieces.maxz,
-        shapes.journeys);
+        shapes.journeys, this.brims);
     });
 
     // Download

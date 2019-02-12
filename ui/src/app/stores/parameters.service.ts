@@ -52,7 +52,7 @@ export const SCAN_PIECES = 'SCAN_PIECES';
 export const CHANGE_BRIMMODE = 'CHANGE_BRIMMODE';
 export const CHANGE_RADIUS = 'CHANGE_RADIUS';
 export const CHANGE_SLICE = 'CHANGE_SLICE';
-export const ADD_BRIM = 'ADD_BRIM';
+export const SET_BRIM = 'SET_BRIM';
 
 // Les actions
 export class ChangeLayer implements Action {
@@ -86,7 +86,7 @@ export class ChangeSlice implements Action {
 }
 
 export class AddBrim implements Action {
-  readonly type = ADD_BRIM;
+  readonly type = SET_BRIM;
   payload: any;
 }
 
@@ -183,14 +183,14 @@ export class ParametersService {
     action: AllActions
   ): ParametersState {
     switch (action.type) {
-      case ADD_BRIM: {
+      case SET_BRIM: {
         return {
           layer: state.layer,
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
-          brims: _.concat([action.payload.brim], state.brims),
+          brims: _.concat([], action.payload.brim),
           radius: state.radius
         };
       }
