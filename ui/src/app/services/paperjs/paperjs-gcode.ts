@@ -30,6 +30,7 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         };
 
         ctx.gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
+        ctx.gcode = `${ctx.gcode}(Brim size set to ${brimSize} mm with tools diameter included)\n`;
         ctx.gcode = `${ctx.gcode}G90\n`;
         ctx.gcode = `${ctx.gcode}M03 S18000 (Spindle CW on)\n`;
 

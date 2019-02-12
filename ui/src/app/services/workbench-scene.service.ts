@@ -59,9 +59,6 @@ export class WorkbenchSceneService {
     this.layerHelper = new THREE.PlaneHelper(this.millingService.layer, 5, 0xffffff);
     this.scene.add(this.layerHelper);
 
-    // Add mill to scene
-    this.scene.add(this.millingService.mill);
-
     // slice group
     this.slices = [];
 

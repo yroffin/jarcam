@@ -133,7 +133,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
       (brims: BrimBean[]) => {
         this.options.brims = brims;
         if (this.slicer) {
-          this.slicer.refreshBrims(this.options.brims);
+          this.slicer.refreshBrims(this.options.brims, 3);
         }
       },
       (err) => console.error(err),
@@ -158,7 +158,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
     // Render shape
     this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
-    this.slicer.refreshBrims(this.options.brims);
+    this.slicer.refreshBrims(this.options.brims, 3);
 
     const brim = new Path({
       fillColor: 'orange',

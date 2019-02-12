@@ -132,7 +132,7 @@ export class PaperJSSlicer {
      * draw all brims
      * @param brims brims
      */
-    public refreshBrims(brims: BrimBean[]): void {
+    public refreshBrims(brims: BrimBean[], brimSize: number): void {
         const copy = _.filter(this.brims.children, (brim: Path) => {
             return true;
         });
@@ -141,7 +141,7 @@ export class PaperJSSlicer {
         });
         let current = 0;
         _.each(brims, (brim: BrimBean) => {
-            const path = PaperJSUtils.drawBrim('count#' + current, brim, true, 2 + (this.radius * 2));
+            const path = PaperJSUtils.drawBrim('count#' + current, brim, true, brimSize + (this.radius * 2));
             this.brims.addChild(path);
             current++;
         });
@@ -154,7 +154,7 @@ export class PaperJSSlicer {
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            maxz, brims, 2 + (this.radius * 2));
+            maxz, brims, brimSize + (this.radius * 2));
     }
 
     /**

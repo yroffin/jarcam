@@ -16,7 +16,6 @@ import { Subscription } from 'rxjs';
 export class MillingService {
 
   private _areas: Area[];
-  private _mill: THREE.Mesh;
   private _layer: THREE.Plane;
   private _radius = 1;
   private _tolerance = 0.01;
@@ -47,30 +46,14 @@ export class MillingService {
     return this._layer;
   }
 
-  public get mill() {
-    if (!this._mill) {
-      // Add mill
-      const geometry = new THREE.CylinderGeometry(this._radius, this._radius, 4, 32);
-      const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-      this._mill = new THREE.Mesh(geometry, material);
-      this._mill.geometry.rotateX(Math.PI / 2);
-      this._mill.position.x = 0;
-      this._mill.position.y = 0;
-    }
-    return this._mill;
-  }
-
   private setRadius(radius: number) {
     console.log('Set radius', radius);
     this._radius = radius;
-    const geometry = new THREE.CylinderGeometry(this._radius, this._radius, 4, 32);
-    this.mill.geometry = geometry;
   }
 
   public moveToZ(scene: THREE.Scene, from: THREE.Group, value: number): Area[] {
     // Fix plane level
     this._layer.constant = value;
-    this._mill.translateZ(this._layer.constant - this._mill.position.z);
 
     this._areas = PlanarUtils.intersect(this._radius, this._layer, from);
 
@@ -82,19 +65,11 @@ export class MillingService {
   }
 
   public getStart(): MillPosition {
-    if (this.mill) {
-      return {
-        x: this._mill.position.x,
-        y: this._mill.position.y,
-        radius: this._radius
-      };
-    } else {
-      return {
-        x: 0,
-        y: 0,
-        radius: 10
-      };
-    }
+    return {
+      x: 0,
+      y: 0,
+      radius: this._radius
+    };
   }
 
 }
