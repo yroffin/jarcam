@@ -174,7 +174,7 @@ export class PaperJSSlicer {
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            this.scanPieces.maxz, brims, 3);
+            this.scanPieces.maxz, brims, 4);
         return gcode + this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,

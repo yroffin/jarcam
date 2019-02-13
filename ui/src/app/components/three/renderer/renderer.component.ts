@@ -129,6 +129,10 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     cancelAnimationFrame(this.callback);
+    this.renderCube.forceContextLoss();
+    this.renderer.forceContextLoss();
+    this.renderCube.dispose();
+    this.renderer.dispose();
   }
 
   public onSliceChange() {
@@ -188,6 +192,5 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
       this.controls.update();
     }
   }
-
 
 }

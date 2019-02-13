@@ -182,7 +182,7 @@ export class AppComponent implements OnInit {
     };
 
     // Header
-    let gcode = slicer.header(this.scanPieces.maxz, this.brims, 3);
+    let gcode = slicer.header(this.scanPieces.maxz, this.brims, 4);
 
     // Iterate on all Z to build this piece
     _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
