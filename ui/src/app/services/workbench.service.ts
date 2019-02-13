@@ -64,8 +64,33 @@ export class WorkbenchService {
     this.cubeScene = new THREE.Scene();
     this.cubeScene.background = new THREE.Color(0xf0f0f0);
     const geometry = new THREE.BoxGeometry(100, 100, 100);
-    const material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true });
-    this.cubeMaterial = new THREE.Mesh(geometry, material);
+    const materials = [
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/left.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      }),
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/right.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      }),
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/up.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      }),
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/down.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      }),
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/back.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      }),
+      new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('assets/front.png'),
+        color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
+      })
+    ];
+    this.cubeMaterial = new THREE.Mesh(geometry, materials);
     this.cubeScene.add(this.cubeMaterial);
     let light = new THREE.PointLight(0xffffff, 1, 0);
     light.position.set(0, 200, 0);
