@@ -9,9 +9,9 @@ import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
-import { ScanPiecesBean, ParametersService, CHANGE_LAYER, LayerBean, CHANGE_RADIUS, CHANGE_SLICE } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { Subscription } from 'rxjs';
+import { ParametersService, LayerBean } from 'src/app/stores/parameters.service';
 
 @AutoUnsubscribe()
 @Component({
@@ -34,62 +34,22 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
   private renderCube: THREE.WebGLRenderer;
   private callback: any;
 
-  slice: number;
-  sliceStream: Observable<number>;
-  sliceSubscription: Subscription;
-
-  radius: number;
-  radiusStream: Observable<number>;
-  radiusSubscription: Subscription;
-
-  public layerIndex = 0;
-  public layerMin = 0;
-  public layerMax = 0;
-  public layerArray = [];
-  public layer: LayerBean = {
-    top: 0,
-    visible: true
-  };
-
-  scanPiecesStream: Observable<ScanPiecesBean>;
-  scanPieces: ScanPiecesBean;
-  scanPiecesSubscription: Subscription;
-
   public infos = [];
+
+  layer: LayerBean;
+  layerStream: Observable<LayerBean>;
+  layerSubscription: Subscription;
 
   constructor(
     private workbenchService: WorkbenchService,
     private parametersService: ParametersService) {
-    this.scanPiecesStream = this.parametersService.scanPieces();
-    this.radiusStream = this.parametersService.radius();
-    this.sliceStream = this.parametersService.slice();
   }
 
   ngOnInit() {
-    this.sliceSubscription = this.sliceStream.subscribe(
-      (slice: number) => {
-        this.slice = slice;
-      },
-      (err) => console.error(err),
-      () => {
-      }
-    );
-    this.radiusSubscription = this.radiusStream.subscribe(
-      (radius: number) => {
-        this.radius = radius;
-      },
-      (err) => console.error(err),
-      () => {
-      }
-    );
-    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
-      (scanPieces: ScanPiecesBean) => {
-        this.scanPieces = scanPieces;
-        this.layerIndex = 0;
-        this.layerMin = 0;
-        this.layerMax = scanPieces.allZ.length - 1;
-        this.layerArray = scanPieces.allZ;
-        this.onLayerChange();
+    this.layerStream = this.parametersService.layers();
+    this.layerSubscription = this.layerStream.subscribe(
+      (layer: LayerBean) => {
+        this.layer = layer;
       },
       (err) => console.error(err),
       () => {
@@ -133,35 +93,6 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderer.forceContextLoss();
     this.renderCube.dispose();
     this.renderer.dispose();
-  }
-
-  public onSliceChange() {
-    this.parametersService.dispatch({
-      type: CHANGE_SLICE,
-      payload: {
-        slice: this.slice
-      }
-    });
-  }
-
-  public onRadiusChange() {
-    this.parametersService.dispatch({
-      type: CHANGE_RADIUS,
-      payload: {
-        radius: this.radius
-      }
-    });
-  }
-
-  public onLayerChange() {
-    this.layer.top = this.layerArray.length === 0 ? 0 : this.layerArray[this.layerIndex];
-    this.parametersService.dispatch({
-      type: CHANGE_LAYER,
-      payload: {
-        visible: this.layer.visible,
-        top: this.layer.top
-      }
-    });
   }
 
   public setSize(width: number, height: number) {

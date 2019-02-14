@@ -1,4 +1,3 @@
-interface Array<T> {
-    length: number;
-    push(...optionalParams: T[]);
+export interface CanDisplaySideBar {
+    showSideBar();
 }

@@ -1,10 +1,11 @@
 .editor-3d-container {
     background: black;
+    z-index: -1;
 }
 
 .editor-3d-container .hud {
     position: absolute;
-    top: 0;
+    top: 48px;
     left: 0;
     right: 0;
     bottom: 0;
@@ -14,8 +15,8 @@
 }
 
 .editor-3d-container .hud .view-cube {
-    left: -12px;
-    top: -12px;
+    left: 0px;
+    top: 0px;
     display: block;
     position: absolute;
     outline: none;
@@ -26,8 +27,8 @@
 
 .editor-3d-container .hud .parameters {
     font-size: 9px;
-    left: 12px;
-    top: 160px;
+    left: 0px;
+    top: 300px;
     display: block;
     position: absolute;
     outline: none;
@@ -44,8 +45,8 @@ canvas {
 .info {
     position: absolute;
     color: black;
-    left: 300px;
-	top: 12px;
+    left: 10px;
+	top: 200px;
 	width: 100%;
 	text-align: left;
 	z-index: 100;

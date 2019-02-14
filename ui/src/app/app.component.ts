@@ -12,6 +12,7 @@ import { DatePipe } from '@angular/common';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
 import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
+import { CanDisplaySideBar } from 'src/app/interfaces/types';
 
 @AutoUnsubscribe()
 @Component({
@@ -27,30 +28,20 @@ export class AppComponent implements OnInit {
   title = 'ui';
 
   items: MenuItem[];
-  display = false;
-
-  axesHelper: boolean;
-  wireframe: boolean;
-  normals: boolean;
-  ground: boolean;
 
   radius: number;
-  layer: LayerBean;
-  scanPieces: ScanPiecesBean;
-  debug: DebugBean;
-
-  layersStream: Observable<LayerBean>;
-  debugsStream: Observable<DebugBean>;
-  scanPiecesStream: Observable<ScanPiecesBean>;
   radiusStream: Observable<number>;
-  layersSubscription: Subscription;
-  debugsSubscription: Subscription;
-  scanPiecesSubscription: Subscription;
   radiusSubscription: Subscription;
+
+  scanPiecesStream: Observable<ScanPiecesBean>;
+  scanPieces: ScanPiecesBean;
+  scanPiecesSubscription: Subscription;
+
+  brims: BrimBean[] = [];
   brimStream: Observable<BrimBean[]>;
   brimSubscription: Subscription;
 
-  private brims: BrimBean[] = [];
+  private activated: CanDisplaySideBar;
 
   public layerIndex = 0;
   public layerMin = 0;
@@ -62,19 +53,17 @@ export class AppComponent implements OnInit {
     private millingService: MillingService,
     private workbenchService: WorkbenchService,
     private storageService: StorageService) {
-    this.layer = {
-      visible: false,
-      top: 0,
-    };
-    this.axesHelper = false;
-    this.wireframe = false;
-    this.normals = false;
-    this.ground = false;
-    this.layersStream = this.parametersService.layers();
-    this.debugsStream = this.parametersService.debugs();
-    this.scanPiecesStream = this.parametersService.scanPieces();
     this.radiusStream = this.parametersService.radius();
     this.brimStream = this.parametersService.brims();
+    this.scanPiecesStream = this.parametersService.scanPieces();
+    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
+      (scanPieces: ScanPiecesBean) => {
+        this.scanPieces = scanPieces;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
   }
 
   ngOnInit() {
@@ -82,7 +71,7 @@ export class AppComponent implements OnInit {
       {
         icon: 'pi pi-fw pi-align-justify',
         command: (event) => {
-          this.display = true;
+          this.activated.showSideBar();
         }
       },
       {
@@ -96,6 +85,12 @@ export class AppComponent implements OnInit {
           {
             label: 'Gcode', icon: 'pi pi-fw pi-save', command: (event) => {
               this.gcodeBuild();
+            }
+          },
+          {
+            label: 'View', icon: 'pi pi-fw pi-view', command: (event) => {
+              window.open('http://nraynaud.github.io/webgcode/', '_blank');
+              window.focus();
             }
           }
         ]
@@ -120,37 +115,6 @@ export class AppComponent implements OnInit {
       () => {
       }
     );
-    this.layersSubscription = this.layersStream.subscribe(
-      (layer: LayerBean) => {
-        this.layer = layer;
-      },
-      (err) => console.error(err),
-      () => {
-      }
-    );
-    this.debugsSubscription = this.debugsStream.subscribe(
-      (debug: DebugBean) => {
-        this.debug = debug;
-      },
-      (err) => console.error(err),
-      () => {
-      }
-    );
-    this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
-      (scanPieces: ScanPiecesBean) => {
-        setTimeout(() => {
-          this.scanPieces = scanPieces;
-          this.layerIndex = 0;
-          this.layerMin = 0;
-          this.layerMax = scanPieces.allZ.length - 1;
-          this.layerArray = scanPieces.allZ;
-          this.onLayerChange();
-        }, 1);
-      },
-      (err) => console.error(err),
-      () => {
-      }
-    );
     this.brimSubscription = this.brimStream.subscribe(
       (brims: BrimBean[]) => {
         this.brims = brims;
@@ -161,6 +125,10 @@ export class AppComponent implements OnInit {
     );
 
     this._load();
+  }
+
+  onActivate(component: CanDisplaySideBar) {
+    this.activated = component;
   }
 
   public load() {
@@ -206,9 +174,19 @@ export class AppComponent implements OnInit {
     this.download(gcode);
 
     // Restore old layer position
-    this.onLayerChange();
+    this.parametersService.dispatch({
+      type: CHANGE_LAYER,
+      payload: {
+        visible: saveLayer.visible,
+        top: saveLayer.top
+      }
+    });
   }
 
+  /**
+   * download
+   * @param myOutputData download
+   */
   private download(myOutputData: string) {
     const datePipe = new DatePipe('en-US');
     const fileName = 'export-' + datePipe.transform(new Date(), 'yyyyMMdd-HHmmss') + '.txt';
@@ -244,52 +222,5 @@ export class AppComponent implements OnInit {
         stack: 'Files are not supported'
       };
     }
-  }
-
-  public onLayerChange() {
-    this.layer.top = this.layerArray.length === 0 ? 0 : this.layerArray[this.layerIndex];
-    this.parametersService.dispatch({
-      type: CHANGE_LAYER,
-      payload: {
-        visible: this.layer.visible,
-        top: this.layer.top
-      }
-    });
-  }
-
-  public onLayerVisibilityChange() {
-    this.parametersService.dispatch({
-      type: CHANGE_LAYER,
-      payload: {
-        visible: this.layer.visible,
-        top: this.layer.top
-      }
-    });
-  }
-
-  public onDebugChange(event?, name?: string) {
-    switch (name) {
-      case 'axisHelper':
-        this.axesHelper = event.checked;
-        break;
-      case 'normals':
-        this.normals = event.checked;
-        break;
-      case 'wireframe':
-        this.wireframe = event.checked;
-        break;
-      case 'ground':
-        this.ground = event.checked;
-        break;
-    }
-    this.parametersService.dispatch({
-      type: CHANGE_DEBUG,
-      payload: {
-        axesHelper: this.axesHelper,
-        normals: this.normals,
-        wireframe: this.wireframe,
-        ground: this.ground
-      }
-    });
   }
 }

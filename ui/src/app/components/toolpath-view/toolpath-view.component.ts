@@ -24,6 +24,7 @@ import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
 import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
 import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
+import { CanDisplaySideBar } from 'src/app/interfaces/types';
 
 @AutoUnsubscribe()
 @Component({
@@ -31,7 +32,7 @@ import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
   templateUrl: './toolpath-view.component.html',
   styleUrls: ['./toolpath-view.component.css']
 })
-export class ToolpathViewComponent implements OnInit, AfterViewInit {
+export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplaySideBar {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
 
@@ -144,6 +145,10 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.sliceInit();
+  }
+
+  showSideBar() {
+    this.display = true;
   }
 
   sliceInit() {

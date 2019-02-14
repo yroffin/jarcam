@@ -1,4 +1,4 @@
-<canvas #paperView resize (dblclick)="display = true"></canvas>
+<canvas #paperView resize></canvas>
 {{brim && brim.data | json}}
 <p-sidebar #side [(visible)]="display">
     <h4>zoom: {{zoom}}</h4>

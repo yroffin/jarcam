@@ -60,33 +60,40 @@ export class WorkbenchService {
     this.worldScene.add(this.light);
     this.worldScene.add(this.helper);
 
+    const txt1 = new THREE.TextureLoader();
+    const txt2 = new THREE.TextureLoader();
+    const txt3 = new THREE.TextureLoader();
+    const txt4 = new THREE.TextureLoader();
+    const txt5 = new THREE.TextureLoader();
+    const txt6 = new THREE.TextureLoader();
+
     // Create scene for cue track ball
     this.cubeScene = new THREE.Scene();
     this.cubeScene.background = new THREE.Color(0xf0f0f0);
     const geometry = new THREE.BoxGeometry(100, 100, 100);
     const materials = [
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/left.png'),
+        map: txt1.load('assets/left.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       }),
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/right.png'),
+        map: txt2.load('assets/right.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       }),
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/up.png'),
+        map: txt3.load('assets/up.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       }),
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/down.png'),
+        map: txt4.load('assets/down.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       }),
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/back.png'),
+        map: txt5.load('assets/back.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       }),
       new THREE.MeshPhongMaterial({
-        map: THREE.ImageUtils.loadTexture('assets/front.png'),
+        map: txt6.load('assets/front.png'),
         color: 0xFFFFFF, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true
       })
     ];
