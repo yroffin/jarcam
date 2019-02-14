@@ -80,8 +80,10 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateControls();
 
     this.callback = (args) => {
-      requestAnimationFrame(this.callback);
-      this.render();
+      if (this.renderer) {
+        requestAnimationFrame(this.callback);
+        this.render();
+      }
     };
 
     requestAnimationFrame(this.callback);
@@ -93,6 +95,7 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderer.forceContextLoss();
     this.renderCube.dispose();
     this.renderer.dispose();
+    this.renderer = null;
   }
 
   public setSize(width: number, height: number) {

@@ -8,10 +8,10 @@ const appRoutes: Routes = [
   { path: 'scene', component: StlViewComponent },
   { path: 'slice', component: ToolpathViewComponent },
   { path: '',
-    redirectTo: '/home',
+    redirectTo: '/scene',
     pathMatch: 'full'
   },
-  { path: '**', component: HomePageComponent }
+  { path: '**', component: StlViewComponent }
 ];
 
 @NgModule({
