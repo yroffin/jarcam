@@ -4,7 +4,7 @@ import { Group } from 'paper';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { ElementRef } from '@angular/core';
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
-import { ShapeGroup, Journey, TouchBean, BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, TouchBean, BrimBean, PointBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { Area, AreaPoint } from 'src/app/services/three/area.class';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
@@ -169,18 +169,25 @@ export class PaperJSSlicer {
         maxz: number, brims: BrimBean[], brimSize: number,
         journeys: Journey[]): string {
         // Header
-        const gcode = this.gcoder.header(
+        let gcode = this.gcoder.header(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
             this.scanPieces.maxz, brims, 4);
-        return gcode + this.gcoder.build(
+        gcode += this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            current, maxz, journeys);
+            current, maxz, JourneyClass.fill, journeys);
+        gcode += this.gcoder.build(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            current, maxz, JourneyClass.contour, journeys);
+        return gcode;
     }
 
     /**
@@ -193,13 +200,14 @@ export class PaperJSSlicer {
     public gcode(
         current: number,
         maxz: number,
+        klass: JourneyClass,
         journeys: Journey[]): string {
         return this.gcoder.build(
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
             this.scanPieces.maxy,
-            current, maxz, journeys);
+            current, maxz, klass, journeys);
     }
 
     /**

@@ -7,7 +7,13 @@ export class MillPosition {
     radius: number;
 }
 
+export enum JourneyClass {
+    fill,
+    contour
+}
+
 export class Journey {
+    class?: JourneyClass;
     position: Point;
     path: Path;
 }
@@ -30,7 +36,9 @@ export class TouchBean {
 export class ShapeGroup {
     opened: Group;
     closed: Group;
-    openPath?: Group;
-    closePath?: Group;
+    openFinePath?: Group;
+    closeFinePath?: Group;
+    openRawPath?: Group;
+    closeRawPath?: Group;
     journeys: Journey[];
 }

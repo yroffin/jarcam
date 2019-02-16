@@ -1,4 +1,4 @@
-import { ShapeGroup, Journey, BrimBean } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, BrimBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { Area } from 'src/app/services/three/area.class';
 import { ScanPiecesBean } from 'src/app/stores/parameters.service';
 import { Group, Path, Point } from 'paper';
@@ -38,5 +38,6 @@ export interface PaperJSGcodeInterface {
         maxy: number,
         current: number,
         maxz: number,
+        klass: JourneyClass,
         journeys: Journey[]): string;
 }

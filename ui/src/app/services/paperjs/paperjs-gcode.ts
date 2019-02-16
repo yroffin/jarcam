@@ -1,5 +1,5 @@
 import { Path, Point } from 'paper';
-import { Journey, BrimBean, PointBean } from 'src/app/services/paperjs/paperjs-model';
+import { Journey, BrimBean, PointBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import * as _ from 'lodash';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
 import { Group } from 'paper';
@@ -55,6 +55,7 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         maxy: number,
         wanted: number,
         maxz: number,
+        klass: JourneyClass,
         journeys: Journey[]): string {
         const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
 
@@ -66,35 +67,42 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
             gcode: ``
         };
 
-        let it = 0;
-        _.each(journeys, (journey: Journey) => {
-            if (!journey.position) {
-                return;
-            }
-            ctx.gcode = `${ctx.gcode}(Shape ${journey.path.name})\n`;
-            const start = journey.position.clone();
-            start.x -= inner.left;
-            start.y -= inner.top;
-            this.gcodeBuilder.LinearMove0ToZ(ctx, 0);
-            this.gcodeBuilder.LinearMove0ToXY(ctx, start);
-
-            // Check for Z in zero position
-            this.gcodeBuilder.LinearMove1ToZ(ctx, journey.position);
-
-            // path begin can be away from start
-            const offset = journey.path.getOffsetOf(journey.position);
-            for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
-                const point = journey.path.getPointAt(indice % journey.path.length);
-                // Check for Z
-                this.gcodeBuilder.LinearMove1ToZ(ctx, point);
-                // Apply translation
-                point.x -= inner.left;
-                point.y -= inner.top;
-                this.gcodeBuilder.LinearMove1ToXY(ctx, point);
-            }
-            it++;
+        _.each(_.filter(journeys, (journey) => {
+            return journey.class === klass;
+        }), (journey: Journey) => {
+            this.journeyToGcode(ctx, inner, journey);
         });
 
         return ctx.gcode;
+    }
+
+    private journeyToGcode(
+        ctx: GcodeCtx,
+        inner: any,
+        journey: Journey): string {
+        if (!journey.position) {
+            return;
+        }
+        ctx.gcode = `${ctx.gcode}(Shape ${journey.path.name})\n`;
+        const start = journey.position.clone();
+        start.x -= inner.left;
+        start.y -= inner.top;
+        this.gcodeBuilder.LinearMove0ToZ(ctx, 0);
+        this.gcodeBuilder.LinearMove0ToXY(ctx, start);
+
+        // Check for Z in zero position
+        this.gcodeBuilder.LinearMove1ToZ(ctx, journey.position);
+
+        // path begin can be away from start
+        const offset = journey.path.getOffsetOf(journey.position);
+        for (let indice = offset; indice < journey.path.length + offset; indice += 0.2) {
+            const point = journey.path.getPointAt(indice % journey.path.length);
+            // Check for Z
+            this.gcodeBuilder.LinearMove1ToZ(ctx, point);
+            // Apply translation
+            point.x -= inner.left;
+            point.y -= inner.top;
+            this.gcodeBuilder.LinearMove1ToXY(ctx, point);
+        }
     }
 }

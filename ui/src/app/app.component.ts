@@ -11,7 +11,7 @@ import * as _ from 'lodash';
 import { DatePipe } from '@angular/common';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
-import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
+import { BrimBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
 
 @AutoUnsubscribe()
@@ -164,10 +164,21 @@ export class AppComponent implements OnInit {
       const shapes = slicer.render(this.millingService.getAreas(), false, false);
 
       // Calc gcode
-      gcode += slicer.gcode(
-        currentLayer.top,
-        this.scanPieces.maxz,
-        shapes.journeys);
+      gcode += slicer.gcode( currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
+    });
+
+    _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
+      const currentLayer: LayerBean = {
+        top: top,
+        visible: true
+      };
+      this.workbenchService.onLayerChange(currentLayer);
+
+      // Render shape
+      const shapes = slicer.render(this.millingService.getAreas(), false, false);
+
+      // Calc gcode
+      gcode += slicer.gcode( currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
     });
 
     // Download

@@ -71,10 +71,14 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
         });
 
         // open area
-        shapes.openPath = this.openedShape(shapes.opened, radius, domInsert);
+        shapes.openFinePath = this.openedShape(shapes.opened, radius, domInsert);
+        // Raw path use a larger tool radius
+        shapes.openRawPath = this.openedShape(shapes.opened, radius + 0.75, domInsert);
 
         // closed area and bound
-        shapes.closePath = this.closedShape(shapes.closed, radius, domInsert);
+        shapes.closeFinePath = this.closedShape(shapes.closed, radius, domInsert);
+        // Raw path use a larger tool radius
+        shapes.closeRawPath = this.closedShape(shapes.closed, radius + 0.75, domInsert);
 
         return shapes;
     }

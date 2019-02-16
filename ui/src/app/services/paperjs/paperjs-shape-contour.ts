@@ -1,5 +1,5 @@
 import { PaperJSShapeAroundInterface } from 'src/app/services/paperjs/paperjs-interface';
-import { ShapeGroup, Journey } from 'src/app/services/paperjs/paperjs-model';
+import { ShapeGroup, Journey, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { Group, Path, Point, Rectangle, CurveLocation } from 'paper';
 import { AreaPoint, Area } from 'src/app/services/three/area.class';
 
@@ -50,9 +50,11 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
 
         const result: Journey[] = [];
         _.each(aroundJourney, (journey) => {
+            journey.class = JourneyClass.contour;
             result.push(journey);
         });
         _.each(fillJourney, (journey) => {
+            journey.class = JourneyClass.fill;
             result.push(journey);
         });
         return result;
@@ -65,7 +67,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
         // Search all element in path with a tiny area
         const detectors: Journey[] = [];
 
-        _.each(shapeGroup.openPath.children, (contour: Path) => {
+        _.each(shapeGroup.openFinePath.children, (contour: Path) => {
             const center = contour.bounds.center;
             detectors.push(<Journey>{
                 path: contour,
@@ -73,7 +75,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
             });
         });
 
-        _.each(shapeGroup.closePath.children, (contour: Path) => {
+        _.each(shapeGroup.closeFinePath.children, (contour: Path) => {
             const center = contour.bounds.center;
             detectors.push(<Journey>{
                 path: contour,
@@ -140,7 +142,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
             });
 
             let allIntersects = [];
-            _.each(shapeGroup.openPath.children, (opened: Path) => {
+            _.each(shapeGroup.openRawPath.children, (opened: Path) => {
                 const intersections = hittest.getIntersections(opened);
                 const intersects = _.flatMap(intersections, (intersection: CurveLocation) => {
                     allIntersects.push({
@@ -181,7 +183,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
             }));
 
             const touching = _.flatMap(crossinglines, (line: Path.Line) => {
-                const touch = _.filter(shapeGroup.openPath.children, (opened: Path) => {
+                const touch = _.filter(shapeGroup.openRawPath.children, (opened: Path) => {
                     return opened.contains(line.bounds.center);
                 });
                 return {

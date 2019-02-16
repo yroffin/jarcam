@@ -53,7 +53,7 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
                 const dists: TouchBean[] = _.take(takes, 1);
                 // Only 2 points is relevant
                 if (dists.length === 1) {
-                    const closest = _.take(_.sortBy(_.flatMap(shapes.closePath.children, (path: Path) => {
+                    const closest = _.take(_.sortBy(_.flatMap(shapes.closeFinePath.children, (path: Path) => {
                         return <TouchBean>{
                             id: path.name,
                             touch: path.bounds.center,

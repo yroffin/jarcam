@@ -79,7 +79,7 @@ export class PaperJSContour {
      * @param smoothAngle angle for smoothing straight contour
      * @param domInsert display (debug) any graphic helper
      */
-    static calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, domInsert: boolean): Path[] {
+    private static calcNormals(open: boolean, path: Path, distance: number, smoothAngle: number, domInsert: boolean): Path[] {
         const normals: Path[] = [];
 
         if (path.clockwise) {
