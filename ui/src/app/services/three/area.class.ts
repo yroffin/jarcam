@@ -40,6 +40,20 @@ export class Area {
         return (this.area() - this.areaNormal()) < 0;
     }
 
+    public position(): Point {
+        let minx = 0;
+        let miny = 0;
+        _.each(this.internalPoints, (point: AreaPoint) => {
+            if (point.origin.x < minx) {
+                minx = point.origin.x;
+            }
+            if (point.origin.x < minx) {
+                miny = point.origin.y;
+            }
+        });
+        return new Point(minx, miny);
+    }
+
     public area(): number {
         const shape: Array<THREE.Vector2> = [];
         _.each(this.internalPoints, (point: AreaPoint) => {

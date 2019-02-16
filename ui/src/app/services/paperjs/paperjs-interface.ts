@@ -17,7 +17,12 @@ export interface PaperJSShapeBuilderInterface {
 }
 
 export interface PaperJSShapeAroundInterface {
-    around(shapes: ShapeGroup, minx: number, maxx: number, miny: number, maxy: number, radius: number, domInsert: boolean): Journey[];
+    /**
+     * compute journey
+     * tolerance is used to compute path around for fill path
+     */
+    around(shapes: ShapeGroup,
+        minx: number, maxx: number, miny: number, maxy: number, radius: number, tolerance: number, domInsert: boolean): Journey[];
 }
 
 export interface PaperJSSimulatorInterface {

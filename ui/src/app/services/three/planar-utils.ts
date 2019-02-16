@@ -79,7 +79,12 @@ export class PlanarUtils {
             // Find all chain
             PlanarUtils.findAllChains(from.name, segments, areas);
         });
-        return areas;
+
+        // Sort area by X, then X
+        return _.sortBy(areas, (area: Area) => {
+            const bound = area.position();
+            return bound.y * 1000000 + bound.x;
+        });
     }
 
     /**

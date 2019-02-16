@@ -14,10 +14,10 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
 
     /**
      * around all shape
-     * @param domInsert should insert in dom ?
      */
-    public around(shapes: ShapeGroup,
-        minx: number, maxx: number, miny: number, maxy: number, radius: number, domInsert: boolean): Journey[] {
+     public around(shapes: ShapeGroup,
+        minx: number,
+        maxx: number, miny: number, maxy: number, radius: number, fillTolerance: number, domInsert: boolean): Journey[] {
         // Compute bound
         const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, radius);
 
@@ -46,7 +46,7 @@ export class PaperJSShapeContour implements PaperJSShapeAroundInterface {
         });
 
         // Compute path for fill all area
-        const fillJourney = this._computePath(shapes, radius, area.bounds, [], domInsert);
+        const fillJourney = this._computePath(shapes, radius - fillTolerance, area.bounds, [], domInsert);
 
         const result: Journey[] = [];
         _.each(aroundJourney, (journey) => {

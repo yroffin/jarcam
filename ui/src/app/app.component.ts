@@ -151,6 +151,8 @@ export class AppComponent implements OnInit {
 
     // Header
     let gcode = slicer.header(this.scanPieces.maxz, this.brims, 4);
+    let gcodeContour = '';
+    let gcodeFill = '';
 
     // Iterate on all Z to build this piece
     _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
@@ -164,22 +166,13 @@ export class AppComponent implements OnInit {
       const shapes = slicer.render(this.millingService.getAreas(), false, false);
 
       // Calc gcode
-      gcode += slicer.gcode( currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
+      gcodeContour += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
+      gcodeFill += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
     });
 
-    _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
-      const currentLayer: LayerBean = {
-        top: top,
-        visible: true
-      };
-      this.workbenchService.onLayerChange(currentLayer);
-
-      // Render shape
-      const shapes = slicer.render(this.millingService.getAreas(), false, false);
-
-      // Calc gcode
-      gcode += slicer.gcode( currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
-    });
+    // Build global GCODE
+    gcode += gcodeContour;
+    gcode += gcodeFill;
 
     // Header
     gcode += slicer.footer(this.scanPieces.maxz, this.brims, 4);

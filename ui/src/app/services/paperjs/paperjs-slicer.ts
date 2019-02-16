@@ -119,7 +119,7 @@ export class PaperJSSlicer {
             this.scanPieces.minx,
             this.scanPieces.maxx,
             this.scanPieces.miny,
-            this.scanPieces.maxy, this.radius, domInsert);
+            this.scanPieces.maxy, this.radius, 1, domInsert);
 
         if (fill) {
             this.simulator.simulation(shapes.journeys, this.radius, domInsert);
