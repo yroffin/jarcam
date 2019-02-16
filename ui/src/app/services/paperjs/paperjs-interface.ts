@@ -40,4 +40,10 @@ export interface PaperJSGcodeInterface {
         maxz: number,
         klass: JourneyClass,
         journeys: Journey[]): string;
+    footer(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
+        maxz: number, brims: BrimBean[], brimSize: number): string;
 }

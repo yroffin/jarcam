@@ -157,6 +157,16 @@ export class PaperJSSlicer {
             maxz, brims, brimSize + (this.radius * 2));
     }
 
+    public footer(
+        maxz: number, brims: BrimBean[], brimSize: number): string {
+        return this.gcoder.footer(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            maxz, brims, brimSize + (this.radius * 2));
+    }
+
     /**
      * build gcode
      * @param current current Z
@@ -187,6 +197,12 @@ export class PaperJSSlicer {
             this.scanPieces.miny,
             this.scanPieces.maxy,
             current, maxz, JourneyClass.contour, journeys);
+        gcode += this.gcoder.footer(
+            this.scanPieces.minx,
+            this.scanPieces.maxx,
+            this.scanPieces.miny,
+            this.scanPieces.maxy,
+            this.scanPieces.maxz, brims, 4);
         return gcode;
     }
 

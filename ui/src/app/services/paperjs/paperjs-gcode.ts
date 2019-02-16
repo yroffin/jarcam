@@ -44,6 +44,31 @@ export class PaperJSGcode implements PaperJSGcodeInterface {
         return ctx.gcode;
     }
 
+    public footer(
+        minx: number,
+        maxx: number,
+        miny: number,
+        maxy: number,
+        maxz: number, brims: BrimBean[], brimSize: number
+    ): string {
+        const inner = PaperJSUtils.bounds(minx, maxx, miny, maxy, 4);
+
+        const ctx: GcodeCtx = {
+            maxz: maxz,
+            wanted: 0,
+            real: 0,
+            limit: 2,
+            gcode: ``
+        };
+
+        ctx.gcode = `\n(Translate ${inner.left} / ${inner.top} )\n`;
+        this.gcodeBuilder.LinearMove0ToZ(ctx, 10);
+
+        ctx.gcode = `${ctx.gcode}G01 S0\n`;
+
+        return ctx.gcode;
+    }
+
     private formatter(value: number) {
         return StringUtils.format('%5.4f', [value]);
     }

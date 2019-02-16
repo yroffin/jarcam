@@ -181,6 +181,9 @@ export class AppComponent implements OnInit {
       gcode += slicer.gcode( currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
     });
 
+    // Header
+    gcode += slicer.footer(this.scanPieces.maxz, this.brims, 4);
+
     // Download
     this.download(gcode);
 
