@@ -24,12 +24,14 @@ import { OverlayPanel } from 'primeng/overlaypanel';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Pipe } from '@angular/core';
 import { PipeTransform } from '@angular/core/src/change_detection/pipe_transform';
+import { MessageService } from 'primeng/components/common/messageservice';
 
 @AutoUnsubscribe()
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  providers: [MessageService]
 })
 export class AppComponent implements OnInit {
 
@@ -74,6 +76,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private sanitizer: DomSanitizer,
+    private messageService: MessageService,
     private http: HttpClient,
     private parametersService: ParametersService,
     private millingService: MillingService,
@@ -254,6 +257,7 @@ export class AppComponent implements OnInit {
     a.href = fileURL;
     a.download = fileName;
     a.click();
+    this.messageService.add({ severity: 'success', summary: 'Gcode wrote to ' + fileName, detail: myOutputData.length + ' byte(s)' });
   }
 
   private _load() {
