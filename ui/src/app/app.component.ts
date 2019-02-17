@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import {
   ParametersService,
-  CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean, ParametersBean
+  CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean, ParametersBean, SET_BRIM
 } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { WorkbenchService } from 'src/app/services/workbench.service';
@@ -164,6 +164,14 @@ export class AppComponent implements OnInit {
       () => {
       }
     );
+
+    const data: BrimBean[] = this.storageService.loadAsObject('lastBrimConfig');
+    this.parametersService.dispatch({
+      type: SET_BRIM,
+      payload: {
+        brim: data
+      }
+    });
 
     this._load();
   }

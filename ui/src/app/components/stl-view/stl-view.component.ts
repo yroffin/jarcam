@@ -125,18 +125,6 @@ export class StlViewComponent implements AfterViewInit, OnInit, CanDisplaySideBa
       this.workbenchService.loadBinary(data, () => {
       });
     }
-
-    // get param
-    const lastBrimConfig = this.route.snapshot.queryParams['lastBrimConfig'];
-    if (lastBrimConfig) {
-      const data: BrimBean[] = this.storageService.loadAsObject('lastBrimConfig');
-      this.parametersService.dispatch({
-        type: SET_BRIM,
-        payload: {
-          brim: data
-        }
-      });
-    }
   }
 
   showSideBar() {
