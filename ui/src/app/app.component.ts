@@ -1,6 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { ParametersService, CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean } from 'src/app/stores/parameters.service';
+import {
+  ParametersService,
+  CHANGE_LAYER, CHANGE_DEBUG, DebugBean, LayerBean, ScanPiecesBean, ParametersBean
+} from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
@@ -13,6 +16,14 @@ import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Subscription } from 'rxjs';
 import { BrimBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { DialogParametersComponent } from 'src/app/components/dialog-parameters/dialog-parameters.component';
+import { Dialog } from 'primeng/dialog';
+import { HttpClient } from '@angular/common/http';
+import { OverlayPanel } from 'primeng/overlaypanel';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Pipe } from '@angular/core';
+import { PipeTransform } from '@angular/core/src/change_detection/pipe_transform';
 
 @AutoUnsubscribe()
 @Component({
@@ -22,8 +33,12 @@ import { CanDisplaySideBar } from 'src/app/interfaces/types';
 })
 export class AppComponent implements OnInit {
 
+  @ViewChild('op') op: OverlayPanel;
   @ViewChild('fileInput') fileInput;
   @ViewChild('gcodeView') paperCanvas: ElementRef;
+
+  private displayDlg = false;
+  private displayHelp = false;
 
   title = 'ui';
 
@@ -41,7 +56,16 @@ export class AppComponent implements OnInit {
   brimStream: Observable<BrimBean[]>;
   brimSubscription: Subscription;
 
+  parameters: ParametersBean;
+  parametersStream: Observable<ParametersBean>;
+  parametersSubscription: Subscription;
+
+  private svg = '';
+  private parameterTable = [
+  ];
+
   private activated: CanDisplaySideBar;
+  private dialogSubscription: Subscription;
 
   public layerIndex = 0;
   public layerMin = 0;
@@ -49,6 +73,8 @@ export class AppComponent implements OnInit {
   public layerArray = [];
 
   constructor(
+    private sanitizer: DomSanitizer,
+    private http: HttpClient,
     private parametersService: ParametersService,
     private millingService: MillingService,
     private workbenchService: WorkbenchService,
@@ -59,6 +85,21 @@ export class AppComponent implements OnInit {
     this.scanPiecesSubscription = this.scanPiecesStream.subscribe(
       (scanPieces: ScanPiecesBean) => {
         this.scanPieces = scanPieces;
+      },
+      (err) => console.error(err),
+      () => {
+      }
+    );
+    this.parametersStream = this.parametersService.parameters();
+    this.parametersSubscription = this.parametersStream.subscribe(
+      (parameters: ParametersBean) => {
+        this.parameterTable = [];
+        _.each(parameters, (v, k) => {
+          this.parameterTable.push({
+            name: k,
+            value: v
+          });
+        });
       },
       (err) => console.error(err),
       () => {
@@ -229,5 +270,17 @@ export class AppComponent implements OnInit {
         stack: 'Files are not supported'
       };
     }
+  }
+
+  validate(): void {
+    this.displayDlg = false;
+  }
+
+  public refresh(event, key: string) {
+    this.http.get('https://raw.githubusercontent.com/yroffin/jarcam/master/ui/helps/' + key + '.svg',
+      { responseType: 'text' }).subscribe((res) => {
+        this.svg = res;
+        this.displayHelp = true;
+      });
   }
 }

@@ -1,0 +1,25 @@
+<h1 mat-dialog-title>Parameters</h1>
+<div mat-dialog-content>
+  <p-table [value]="parameterTable">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Value</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-record>
+      <tr>
+        <td (click)="op.toggle($event)">{{record.name}}</td>
+        <td>{{record.value}}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="data.gcode" cdkFocusInitial>Close</button>
+  <button mat-button (click)="onNoClick()">Refresh</button>
+</div>
+
+<p-overlayPanel #op>
+  <svg href="assets/data.svg"></svg>
+</p-overlayPanel>

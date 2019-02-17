@@ -34,11 +34,17 @@ export interface ScanPiecesBean {
   allZ: number[];
 }
 
+export interface ParametersBean {
+  radius: number;
+  slice: number;
+}
+
 // State Type
 export interface ParametersState {
   layer: LayerBean;
   debug: DebugBean;
   brimMode: string;
+  parameters: ParametersBean;
   radius: number;
   slice: number;
   scanPieces: ScanPiecesBean;
@@ -120,6 +126,11 @@ export const initialState: ParametersState = {
     allZ: []
   },
 
+  parameters: {
+    radius: 4,
+    slice: 2,
+  },
+
   brimMode: 'cross',
   radius: 4,
   slice: 2,
@@ -152,6 +163,9 @@ export class ParametersService {
   // brims
   getBrims: Selector<object, BrimBean[]>;
 
+  // parameters
+  getParameterss: Selector<object, ParametersBean>;
+
   constructor(
     private _store: Store<ParametersState>
   ) {
@@ -175,6 +189,9 @@ export class ParametersService {
 
     // brims
     this.getBrims = createSelector(this.getParametersState, (state: ParametersState) => state.brims);
+
+    // parameters
+    this.getParameterss = createSelector(this.getParametersState, (state: ParametersState) => state.parameters);
   }
 
   // REDUCER
@@ -190,6 +207,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          parameters: state.parameters,
           brims: _.concat([], action.payload.brim),
           radius: state.radius
         };
@@ -202,6 +220,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          parameters: state.parameters,
           brims: state.brims,
           radius: state.radius
         };
@@ -214,6 +233,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: action.payload.brimMode,
           slice: state.slice,
+          parameters: state.parameters,
           brims: state.brims,
           radius: state.radius
         };
@@ -226,6 +246,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          parameters: state.parameters,
           brims: state.brims,
           radius: action.payload.radius
         };
@@ -238,6 +259,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: action.payload.slice,
+          parameters: state.parameters,
           brims: state.brims,
           radius: state.radius
         };
@@ -255,6 +277,7 @@ export class ParametersService {
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
           slice: state.slice,
+          parameters: state.parameters,
           brims: state.brims,
           radius: state.radius
         };
@@ -274,6 +297,7 @@ export class ParametersService {
             maxz: action.payload.maxz,
             allZ: action.payload.allZ
           },
+          parameters: state.parameters,
           brims: state.brims,
           brimMode: state.brimMode,
           slice: state.slice,
@@ -326,6 +350,13 @@ export class ParametersService {
    */
   public brims(): Observable<BrimBean[]> {
     return this._store.select(this.getBrims);
+  }
+
+  /**
+   * select this store service
+   */
+  public parameters(): Observable<ParametersBean> {
+    return this._store.select(this.getParameterss);
   }
 
   /**

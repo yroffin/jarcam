@@ -1,6 +1,5 @@
 import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle, Segment } from 'paper';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 import * as _ from 'lodash';
 
@@ -16,7 +15,6 @@ import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
 import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, SET_BRIM } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
-import { DialogGcodeComponent } from 'src/app/components/dialog-gcode/dialog-gcode.component';
 import { ActivatedRoute } from '@angular/router';
 import { WorkbenchService } from 'src/app/services/workbench.service';
 import { StorageService } from 'src/app/services/utility/storage.service';
@@ -25,12 +23,14 @@ import { Subscription } from 'rxjs';
 import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-interface';
 import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
+import { MessageService } from 'primeng/components/common/messageservice';
 
 @AutoUnsubscribe()
 @Component({
   selector: 'app-toolpath-view',
   templateUrl: './toolpath-view.component.html',
-  styleUrls: ['./toolpath-view.component.css']
+  styleUrls: ['./toolpath-view.component.css'],
+  providers: [MessageService]
 })
 export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplaySideBar {
 
@@ -56,8 +56,6 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   brimStream: Observable<BrimBean[]>;
   brimSubscription: Subscription;
 
-  dialogSubscription: Subscription;
-
   public options: {
     layer: LayerBean,
     scanPieces: ScanPiecesBean
@@ -68,9 +66,9 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
 
   constructor(
     private appComponent: AppComponent,
+    private messageService: MessageService,
     private parametersService: ParametersService,
     private millingService: MillingService,
-    private dialog: MatDialog,
     private route: ActivatedRoute,
     private workbenchService: WorkbenchService,
     private storageService: StorageService
@@ -227,19 +225,18 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     });
   }
 
-  openDialog(): void {
-    const dialogRef = this.dialog.open(DialogGcodeComponent, {
-      width: '100%',
-      data: {
-        gcode: this.slicer.sampleGcode(
-          this.options.layer.top,
-          this.options.scanPieces.maxz, this.options.brims, 3,
-          this.shapes.journeys)
-      }
-    });
-
-    this.dialogSubscription = dialogRef.afterClosed().subscribe(result => {
-    });
+  gcodeCopy(): void {
+    // Copy gcode to clipboard
+    const el = document.createElement('textarea');
+    el.value = this.slicer.sampleGcode(
+      this.options.layer.top,
+      this.options.scanPieces.maxz, this.options.brims, 3,
+      this.shapes.journeys);
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    this.messageService.add({ severity: 'success', summary: 'Gcode copied to clipboard', detail: el.value.length + ' byte(s)' });
+    document.body.removeChild(el);
   }
 
   saveBrims(): void {

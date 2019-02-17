@@ -14,9 +14,11 @@
         <p-radioButton (onClick)="onClick()" name="groupname" value="border" label="border" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <br>
-    <button pButton type="button" label="Gcode" (click)="openDialog()"></button>
+    <button pButton type="button" label="Gcode" (click)="gcodeCopy()"></button>
     <br>
     <button pButton type="button" label="Save brims" (click)="saveBrims()"></button>
     <br>
     <button pButton type="button" label="Clear all brims" (click)="clearBrims()"></button>
 </p-sidebar>
+<p-toast position="top-right"></p-toast>
+    

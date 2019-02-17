@@ -1,6 +1,42 @@
-<p-menubar [model]="items" [autoDisplay]="false" ></p-menubar>
+<p-menubar [model]="items" [autoDisplay]="false">
+    <div>
+        <button pButton label="Parameters" icon="fa fa-sign-out" style="margin-left:.25em" (click)="displayDlg = true"></button>
+    </div>
+</p-menubar>
 
 <router-outlet (activate)='onActivate($event)'></router-outlet>
 
-<input [ngStyle]="{'display': 'none'}" #fileInput type="file" id="txtfiletoread"/>
+<input [ngStyle]="{'display': 'none'}" #fileInput type="file" id="txtfiletoread" />
 <canvas [ngStyle]="{'display': 'none'}" #gcodeView [width]="0" [height]="0"></canvas>
+
+<p-dialog modal="true" [(visible)]="displayDlg">
+    <p-header>
+        Parameters
+    </p-header>
+    <p-table [value]="parameterTable">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-record>
+            <tr>
+                <td (click)="refresh($event, record.name)">{{record.name}}</td>
+                <td>{{record.value}}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+    <p-footer>
+        <button type="button" pButton icon="pi pi-check" (click)="validate()" label="Validate"></button>
+        <button type="button" pButton icon="pi pi-close" (click)="displayDlg=false" label="Close" class="ui-button-secondary"></button>
+    </p-footer>
+</p-dialog>
+
+<p-overlayPanel #op>
+    <svg [innerHTML]="svg | safeHtml" width="400" height="400"></svg>
+</p-overlayPanel>
+
+<p-dialog modal="true" [(visible)]="displayHelp">
+    <div [innerHTML]="svg | safeHtml"></div>
+</p-dialog>

@@ -59,7 +59,9 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
 import { ParametersService } from 'src/app/stores/parameters.service';
-import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.component';
+import { DialogParametersComponent } from './components/dialog-parameters/dialog-parameters.component';
+import { HttpClientModule } from '@angular/common/http';
+import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 
 @NgModule({
   declarations: [
@@ -68,7 +70,8 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     HomePageComponent,
     RendererComponent,
     ToolpathViewComponent,
-    DialogGcodeComponent
+    DialogParametersComponent,
+    SafeHtmlPipe
   ],
   imports: [
     BrowserModule,
@@ -78,6 +81,7 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     AppRoutingModule,
     BrowserAnimationsModule,
     FormsModule,
+    HttpClientModule,
     /*
      * primeng
      */
@@ -132,7 +136,7 @@ import { DialogGcodeComponent } from './components/dialog-gcode/dialog-gcode.com
     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }
   ],
   entryComponents: [
-    DialogGcodeComponent
+    DialogParametersComponent
   ],
   bootstrap: [AppComponent],
   schemas: [
