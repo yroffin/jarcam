@@ -45,8 +45,6 @@ export interface ParametersState {
   debug: DebugBean;
   brimMode: string;
   parameters: ParametersBean;
-  radius: number;
-  slice: number;
   scanPieces: ScanPiecesBean;
   brims: BrimBean[];
 }
@@ -132,8 +130,6 @@ export const initialState: ParametersState = {
   },
 
   brimMode: 'cross',
-  radius: 4,
-  slice: 2,
   brims: []
 };
 
@@ -182,10 +178,10 @@ export class ParametersService {
     this.getScanPieces = createSelector(this.getParametersState, (state: ParametersState) => state.scanPieces);
 
     // radius
-    this.getRadius = createSelector(this.getParametersState, (state: ParametersState) => state.radius);
+    this.getRadius = createSelector(this.getParametersState, (state: ParametersState) => state.parameters.radius);
 
     // slice
-    this.getSlice = createSelector(this.getParametersState, (state: ParametersState) => state.slice);
+    this.getSlice = createSelector(this.getParametersState, (state: ParametersState) => state.parameters.slice);
 
     // brims
     this.getBrims = createSelector(this.getParametersState, (state: ParametersState) => state.brims);
@@ -206,10 +202,8 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
-          slice: state.slice,
           parameters: state.parameters,
-          brims: _.concat([], action.payload.brim),
-          radius: state.radius
+          brims: _.concat([], action.payload.brim)
         };
       }
 
@@ -219,10 +213,8 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
-          slice: state.slice,
           parameters: state.parameters,
-          brims: state.brims,
-          radius: state.radius
+          brims: state.brims
         };
       }
 
@@ -232,10 +224,8 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: action.payload.brimMode,
-          slice: state.slice,
           parameters: state.parameters,
-          brims: state.brims,
-          radius: state.radius
+          brims: state.brims
         };
       }
 
@@ -245,10 +235,11 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
-          slice: state.slice,
-          parameters: state.parameters,
-          brims: state.brims,
-          radius: action.payload.radius
+          parameters: {
+            slice: state.parameters.slice,
+            radius: action.payload.radius
+          },
+          brims: state.brims
         };
       }
 
@@ -258,10 +249,11 @@ export class ParametersService {
           debug: state.debug,
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
-          slice: action.payload.slice,
-          parameters: state.parameters,
-          brims: state.brims,
-          radius: state.radius
+          parameters: {
+            slice: action.payload.slice,
+            radius: state.parameters.radius
+          },
+          brims: state.brims
         };
       }
 
@@ -276,10 +268,8 @@ export class ParametersService {
           },
           scanPieces: state.scanPieces,
           brimMode: state.brimMode,
-          slice: state.slice,
           parameters: state.parameters,
-          brims: state.brims,
-          radius: state.radius
+          brims: state.brims
         };
         return nstate;
       }
@@ -299,9 +289,7 @@ export class ParametersService {
           },
           parameters: state.parameters,
           brims: state.brims,
-          brimMode: state.brimMode,
-          slice: state.slice,
-          radius: state.radius
+          brimMode: state.brimMode
         };
       }
 
