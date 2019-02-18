@@ -102,7 +102,7 @@ export const initialState: ParametersState = {
   // layers
   layer: {
     visible: true,
-    top: 6836,
+    top: 0,
   },
 
   // debug
@@ -126,7 +126,7 @@ export const initialState: ParametersState = {
 
   parameters: {
     radius: 4,
-    slice: 2,
+    slice: 0.5,
   },
 
   brimMode: 'cross',

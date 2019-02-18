@@ -26,13 +26,16 @@ export class PaperJSContour {
         domInsert: boolean): Path {
 
         const contour = new Path();
-        contour.strokeColor = 'black';
+        contour.strokeColor = 'green';
         contour.strokeWidth = 0.2;
         contour.dashArray = [2, 0.5];
         contour.closed = true;
         contour.selected = false;
-        contour.name = path.name + '.contour';
+        contour.name = path.name + '#contour';
         contour.visible = true;
+
+        contour.name += open ? '#open' : '#closed';
+        contour.name += '#' + distance;
 
         if (path.clockwise) {
             path.reverse();
@@ -44,6 +47,7 @@ export class PaperJSContour {
         } else {
             cnt = PaperJSOffset.offsetPath(path, distance, false);
         }
+
         cnt.strokeWidth = 0.2;
         cnt.strokeColor = 'black';
         cnt.selected = false;
@@ -66,7 +70,23 @@ export class PaperJSContour {
 
         cnt.remove();
 
-        PaperJSUtils.display(contour.bounds.bottomRight, contour.name);
+        contour.onMouseEnter = function (event) {
+            this.selected = true;
+            _.each(this.data.linked, (link) => {
+                link.visible = true;
+            });
+        };
+        contour.onMouseLeave = function (event) {
+            this.selected = false;
+            _.each(this.data.linked, (link) => {
+                link.visible = false;
+            });
+        };
+        const dsp = PaperJSUtils.display(contour.bounds.bottomRight, contour.name, domInsert);
+        // Use data to store all linked element
+        // a linked element is just paper object associated to this path
+        // Text description etc ...
+        contour.data.linked = [dsp];
 
         return contour;
     }

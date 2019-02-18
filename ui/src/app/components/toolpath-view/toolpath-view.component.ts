@@ -1,5 +1,6 @@
 import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle, Segment } from 'paper';
+import { TreeNode } from 'primeng/api';
 
 import * as _ from 'lodash';
 
@@ -13,7 +14,7 @@ import { Journey, ShapeGroup, TouchBean, BrimBean } from 'src/app/services/paper
 import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
 import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
-import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, SET_BRIM } from 'src/app/stores/parameters.service';
+import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, SET_BRIM, CHANGE_LAYER } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { WorkbenchService } from 'src/app/services/workbench.service';
@@ -37,6 +38,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   @ViewChild('paperView') paperCanvas: ElementRef;
 
   public zoom = 5;
+  public infos: TreeNode[];
 
   private slicer: PaperJSSlicer;
   private shapes: ShapeGroup;
@@ -101,6 +103,18 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     if (lastLoaded) {
       const data = this.storageService.load('lastLoaded');
       this.workbenchService.loadBinary(data, () => {
+      });
+    }
+
+    // get param
+    const l = this.route.snapshot.queryParams['layer'];
+    if (l) {
+      this.parametersService.dispatch({
+        type: CHANGE_LAYER,
+        payload: {
+          visible: true,
+          top: Number(l)
+        }
       });
     }
 
@@ -209,6 +223,50 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
         }
       });
     };
+
+    // Build info
+    this.infos = [
+      {
+        'data': {
+          'name': 'Opened shapes',
+          'type': 'Folder',
+          'description': ''
+        },
+        'children': []
+      },
+      {
+        'data': {
+          'name': 'Closed shapes',
+          'type': 'Folder',
+          'description': ''
+        },
+        'children': []
+      }
+    ];
+    // Opened
+    _.each(this.shapes.opened.children, (shape) => {
+      this.infos[0].children.push({
+        'data': {
+          'name': shape.name,
+          'type': 'Shape',
+          'description': 'Opened shape'
+        },
+        'children': []
+      });
+    });
+    this.infos[0].data.description = this.infos[0].children.length + ' shapes(s)';
+    // Closed
+    _.each(this.shapes.closed.children, (shape) => {
+      this.infos[1].children.push({
+        'data': {
+          'name': shape.name,
+          'type': 'Shape',
+          'description': 'Closed shape'
+        },
+        'children': []
+      });
+    });
+    this.infos[1].data.description = this.infos[1].children.length + ' shapes(s)';
   }
 
   public onToolChange() {

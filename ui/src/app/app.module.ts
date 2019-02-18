@@ -48,6 +48,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MenubarModule } from 'primeng/menubar';
 import { SidebarModule } from 'primeng/sidebar';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { TreeTableModule } from 'primeng/treetable';
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
@@ -59,7 +60,6 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { MillingService } from 'src/app/services/three/milling.service';
 import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.component';
 import { ParametersService } from 'src/app/stores/parameters.service';
-import { DialogParametersComponent } from './components/dialog-parameters/dialog-parameters.component';
 import { HttpClientModule } from '@angular/common/http';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 
@@ -70,7 +70,6 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
     HomePageComponent,
     RendererComponent,
     ToolpathViewComponent,
-    DialogParametersComponent,
     SafeHtmlPipe
   ],
   imports: [
@@ -109,6 +108,7 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
     MenubarModule,
     SidebarModule,
     OverlayPanelModule,
+    TreeTableModule,
     /*
      * material
      */
@@ -136,7 +136,6 @@ import { SafeHtmlPipe } from './pipes/safe-html.pipe';
     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }
   ],
   entryComponents: [
-    DialogParametersComponent
   ],
   bootstrap: [AppComponent],
   schemas: [

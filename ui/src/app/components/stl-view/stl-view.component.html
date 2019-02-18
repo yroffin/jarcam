@@ -27,7 +27,7 @@
     <input type="text" [(ngModel)]="layerIndex" pInputText placeholder="Layer">
     <span class="ui-inputgroup-addon">in mm</span>
   </div>
-  <div pTooltip="Layer height (max: {{layerMax}})" tooltipPosition="left">
+  <div pTooltip="Layer height (value: {{layerArray[layerIndex]}} index: {{layerIndex}} max: {{layerMax}})" tooltipPosition="left">
     <p-slider (onChange)="onLayerChange()" [(ngModel)]="layerIndex" [min]="layerMin" [max]="layerMax" [step]="1"></p-slider>
   </div>
   <br>

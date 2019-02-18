@@ -17,7 +17,6 @@ import { Subscription } from 'rxjs';
 import { BrimBean, JourneyClass } from 'src/app/services/paperjs/paperjs-model';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { DialogParametersComponent } from 'src/app/components/dialog-parameters/dialog-parameters.component';
 import { Dialog } from 'primeng/dialog';
 import { HttpClient } from '@angular/common/http';
 import { OverlayPanel } from 'primeng/overlaypanel';
@@ -39,8 +38,8 @@ export class AppComponent implements OnInit {
   @ViewChild('fileInput') fileInput;
   @ViewChild('gcodeView') paperCanvas: ElementRef;
 
-  private displayDlg = false;
-  private displayHelp = false;
+  public displayDlg = false;
+  public displayHelp = false;
 
   title = 'ui';
 
@@ -62,8 +61,8 @@ export class AppComponent implements OnInit {
   parametersStream: Observable<ParametersBean>;
   parametersSubscription: Subscription;
 
-  private svg = '';
-  private parameterTable = [
+  public svg = '';
+  public parameterTable = [
   ];
 
   private activated: CanDisplaySideBar;
@@ -127,8 +126,13 @@ export class AppComponent implements OnInit {
             }
           },
           {
-            label: 'Gcode', icon: 'pi pi-fw pi-save', command: (event) => {
-              this.gcodeBuild();
+            label: 'Gcode (F/C)', icon: 'pi pi-fw pi-save', command: (event) => {
+              this.gcodeBuild(true, true);
+            }
+          },
+          {
+            label: 'Gcode (C)', icon: 'pi pi-fw pi-save', command: (event) => {
+              this.gcodeBuild(false, true);
             }
           },
           {
@@ -187,7 +191,7 @@ export class AppComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
-  public gcodeBuild() {
+  public gcodeBuild(fill: boolean, contour: true) {
     const slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
 
     // Init slice
@@ -207,6 +211,7 @@ export class AppComponent implements OnInit {
     let gcodeFill = '';
 
     // Iterate on all Z to build this piece
+    let layer = 0;
     _.each(_.reverse(_.clone(this.scanPieces.allZ)), (top: number) => {
       const currentLayer: LayerBean = {
         top: top,
@@ -218,8 +223,13 @@ export class AppComponent implements OnInit {
       const shapes = slicer.render(this.millingService.getAreas(), false, false);
 
       // Calc gcode
-      gcodeContour += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
-      gcodeFill += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
+      if (contour) {
+        gcodeContour += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.contour, shapes.journeys);
+      }
+      if (fill) {
+        gcodeFill += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
+      }
+      layer ++;
     });
 
     // Build global GCODE

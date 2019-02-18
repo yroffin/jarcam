@@ -30,43 +30,12 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
                 segments.push([vertice.origin.x, vertice.origin.y]);
             });
 
+            const areaPath = this.createPath(segments, area.name, domInsert);
             // is open ?
             if (area.isOpen()) {
-                const areaPath = new Path({
-                    segments: segments,
-                    selected: false,
-                    closed: true,
-                    name: area.name,
-                    strokeColor: 'red',
-                    strokeWidth: 0.1,
-                    visible: true
-                });
-                areaPath.onMouseEnter = function (event) {
-                    this.selected = true;
-                };
-                areaPath.onMouseLeave = function (event) {
-                    this.selected = false;
-                };
                 shapes.opened.addChild(areaPath);
-                PaperJSUtils.display(areaPath.bounds.bottomRight, areaPath.name);
             } else {
-                const areaPath = new Path({
-                    segments: segments,
-                    selected: false,
-                    closed: true,
-                    name: area.name,
-                    strokeColor: 'purple',
-                    strokeWidth: 0.2,
-                    visible: true
-                });
-                areaPath.onMouseEnter = function (event) {
-                    this.selected = true;
-                };
-                areaPath.onMouseLeave = function (event) {
-                    this.selected = false;
-                };
                 shapes.closed.addChild(areaPath);
-                PaperJSUtils.display(areaPath.bounds.bottomRight, areaPath.name);
             }
         });
 
@@ -81,6 +50,43 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
         shapes.closeRawPath = this.closedShape(shapes.closed, radius + 0.75, domInsert);
 
         return shapes;
+    }
+
+    /**
+     * create a path
+     * @param segments segments
+     * @param name name
+     * @param domInsert insert in dom ?
+     */
+    private createPath(segments: any, name: string, domInsert: boolean): Path {
+        const areaPath = new Path({
+            segments: segments,
+            selected: false,
+            closed: true,
+            name: name,
+            strokeColor: 'red',
+            strokeWidth: 0.4,
+            visible: true,
+            insert: domInsert
+        });
+        areaPath.onMouseEnter = function (event) {
+            this.selected = true;
+            _.each(this.data.linked, (link) => {
+                link.visible = true;
+            });
+        };
+        areaPath.onMouseLeave = function (event) {
+            this.selected = false;
+            _.each(this.data.linked, (link) => {
+                link.visible = false;
+            });
+        };
+        const dsp = PaperJSUtils.display(areaPath.bounds.bottomRight, areaPath.name, domInsert);
+        // Use data to store all linked element
+        // a linked element is just paper object associated to this path
+        // Text description etc ...
+        areaPath.data.linked = [dsp];
+        return areaPath;
     }
 
     /**

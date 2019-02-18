@@ -1,7 +1,43 @@
-.info {
-    font-size: 9px;
+.editor-3d-container {
+    background: white;
+    z-index: -1;
 }
-canvas {
-    display: inline-block;
-    vertical-align: baseline;
+
+.editor-3d-container .hud {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.editor-3d-container .hud .view-cube {
+    left: 0px;
+    top: 0px;
+    display: block;
+    position: absolute;
+    outline: none;
+    opacity: 1 !important;
+    margin: 0;
+    transition: opacity 0.2s ease;
+}
+
+.info {
+    position: absolute;
+    color: black;
+    left: 10px;
+	top: 50px;
+	width: 30%;
+	text-align: left;
+	z-index: 100;
+    display:block;
+    font-size: 8px;
+    opacity: 0.5 !important;
+}
+
+.info-font {
+    font-size: 8px;
 }

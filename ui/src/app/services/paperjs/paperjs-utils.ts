@@ -80,15 +80,18 @@ export class PaperJSUtils {
      * @param center text position
      * @param message message
      */
-    static display(center: Point, message: string): void {
+    static display(center: Point, message: string, domInsert: boolean): PointText {
         // Angle Label
         const text = new PointText({
             point: center,
             content: message,
             fillColor: 'black',
             fontSize: 1.5,
+            visible: false,
+            inset: domInsert
         });
         text.scale(1, -1);
+        return text;
     }
 
     /**

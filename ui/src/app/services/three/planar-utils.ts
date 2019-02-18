@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as _ from 'lodash';
 import { Area } from 'src/app/services/three/area.class';
 import { MathUtils } from 'src/app/services/math-utils';
+import { StringUtils } from 'src/app/services/string-utils';
 
 class Segment {
     start: THREE.Vector3;
@@ -184,35 +185,6 @@ export class PlanarUtils {
         }
     }
 
-    private static split(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
-        const geometry = new THREE.Geometry();
-        _.each(PlanarUtils.splitWithDuplicates(a, b, distance), (vertices) => {
-            geometry.vertices.push(vertices);
-        });
-        geometry.mergeVertices();
-        return geometry.vertices;
-    }
-
-    private static splitWithDuplicates(a: THREE.Vector3, b: THREE.Vector3, distance: number): THREE.Vector3[] {
-        const result: THREE.Vector3[] = [];
-        const geometry = new THREE.Geometry();
-        geometry.vertices.push(a);
-        geometry.vertices.push(b);
-        geometry.computeBoundingSphere();
-        if ((geometry.boundingSphere.radius * 2) > distance) {
-            _.each(PlanarUtils.split(a, geometry.boundingSphere.center, distance), (vertice) => {
-                result.push(vertice);
-            });
-            _.each(PlanarUtils.split(geometry.boundingSphere.center, b, distance), (vertice) => {
-                result.push(vertice);
-            });
-            result.push(a);
-            result.push(b);
-            return result;
-        }
-        return result;
-    }
-
     private static findNextChain(segments: Segment[]): Segment[] {
         const chain: Segment[] = [];
         let current = _.find(segments, (segment) => {
@@ -267,8 +239,11 @@ export class PlanarUtils {
      * @param right right
      */
     private static compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
-        return Math.round(left.x * 10000 + Number.EPSILON) / 10000 === Math.round(right.x * 10000 + Number.EPSILON) / 10000
-            && Math.round(left.y * 10000 + Number.EPSILON) / 10000 === Math.round(right.y * 10000 + Number.EPSILON) / 10000
-            && Math.round(left.z * 10000 + Number.EPSILON) / 10000 === Math.round(right.z * 10000 + Number.EPSILON) / 10000;
+        return this.formatter(left.x) === this.formatter(right.x)
+            && this.formatter(left.y) === this.formatter(right.y);
+    }
+
+    private static formatter(value: number) {
+        return StringUtils.format('%5.4f', [value]);
     }
 }

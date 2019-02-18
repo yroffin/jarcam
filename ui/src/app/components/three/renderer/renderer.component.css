@@ -25,23 +25,6 @@
     transition: opacity 0.2s ease;
 }
 
-.editor-3d-container .hud .parameters {
-    font-size: 9px;
-    left: 0px;
-    top: 300px;
-    display: block;
-    position: absolute;
-    outline: none;
-    opacity: 0.6 !important;
-    margin: 0;
-    transition: opacity 0.2s ease;
-}
-
-canvas {
-    display: inline-block;
-    vertical-align: baseline;
-}
-
 .info {
     position: absolute;
     color: black;
