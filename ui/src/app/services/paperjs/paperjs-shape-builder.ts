@@ -65,7 +65,7 @@ export class PaperJSShapeBuilder implements PaperJSShapeBuilderInterface {
             closed: true,
             name: name,
             strokeColor: 'red',
-            strokeWidth: 0.4,
+            strokeWidth: 0.2,
             visible: true,
             insert: domInsert
         });

@@ -3,12 +3,77 @@ import * as _ from 'lodash';
 import { Area } from 'src/app/services/three/area.class';
 import { MathUtils } from 'src/app/services/math-utils';
 import { StringUtils } from 'src/app/services/string-utils';
+import { Point, Path, Group, CompoundPath } from 'paper';
 
 class Segment {
-    start: THREE.Vector3;
-    end: THREE.Vector3;
-    linked: boolean;
-    normal: THREE.Vector3;
+    public from: Point;
+    public to: Point;
+    private linked: boolean;
+    private tag: number;
+    private norm: Point;
+    private z: number;
+
+    private _from: THREE.Vector3;
+    private _to: THREE.Vector3;
+    private _normal: THREE.Vector3;
+
+    constructor(x1: number, y1: number, x2: number, y2: number, nx: number, ny: number, z: number, linked: boolean) {
+        this.from = new Point(x1, y1);
+        this.to = new Point(x2, y2);
+        this.linked = linked;
+        this.norm = new Point(nx, ny);
+        this.z = z;
+        this.tag = -1;
+
+        this._from = new THREE.Vector3(this.from.x, this.from.y, this.z);
+        this._to = new THREE.Vector3(this.to.x, this.to.y, this.z);
+        this._normal = new THREE.Vector3(this.norm.x, this.norm.y, this.z);
+    }
+
+    public isTagged(tag: number): boolean {
+        return this.tag === tag;
+    }
+
+    public setTag(tag: number): void {
+        this.tag = tag;
+    }
+
+    public getFrom(): THREE.Vector3 {
+        return this._from;
+    }
+
+    public getTo(): THREE.Vector3 {
+        return this._to;
+    }
+
+    public getNormal(): THREE.Vector3 {
+        return this._normal;
+    }
+
+    public getZ(): number {
+        return this.z;
+    }
+
+    public isLinked(): boolean {
+        return this.linked;
+    }
+}
+
+class MetaData {
+    public guid: string;
+    public ordered: boolean;
+    public normal: THREE.Vector3;
+    private z: number;
+
+    constructor(z: number, normal: THREE.Vector3) {
+        this.ordered = false;
+        this.normal = normal;
+        this.z = z;
+    }
+
+    public vector(point: Point, z: number): THREE.Vector3 {
+        return new THREE.Vector3(point.x, point.y, z);
+    }
 }
 
 export class PlanarUtils {
@@ -49,7 +114,7 @@ export class PlanarUtils {
             _.each(keep, (face) => {
                 const l1 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.b]);
                 const l2 = new THREE.Line3(fromGeometry.vertices[face.b], fromGeometry.vertices[face.c]);
-                const l3 = new THREE.Line3(fromGeometry.vertices[face.c], fromGeometry.vertices[face.a]);
+                const l3 = new THREE.Line3(fromGeometry.vertices[face.a], fromGeometry.vertices[face.c]);
                 const arr: THREE.Vector3[] = [];
                 let output;
                 output = new THREE.Vector3();
@@ -69,12 +134,8 @@ export class PlanarUtils {
                 }
 
                 // push it
-                segments.push({
-                    start: arr[0],
-                    end: arr[1],
-                    linked: false,
-                    normal: face.normal
-                });
+                const segment = new Segment(arr[0].x, arr[0].y, arr[1].x, arr[1].y, face.normal.x, face.normal.y, layer.constant, false);
+                segments.push(segment);
             });
 
             // Find all chain
@@ -111,18 +172,157 @@ export class PlanarUtils {
     /**
      * compute all chains
      */
+    private static createGroups(lines: Path.Line[]): Group[] {
+        let reste = _.filter(lines, (line) => {
+            return !line.data.guid;
+        });
+        const groups: Group[] = [];
+        while (reste.length !== 0) {
+            // Build group
+            const group = this.hittest(reste);
+            // Compute order
+            const newGroup = this.orderGroup(group);
+            newGroup.data = group.data;
+            group.remove();
+            // Push it
+            groups.push(newGroup);
+            // Fix remainder
+            reste = _.filter(lines, (line) => {
+                return !line.data.guid;
+            });
+        }
+        return groups;
+    }
+
+    /**
+     * order group
+     * @param group group to order
+     */
+    private static orderGroup(group: Group): Group {
+        const newGroup = new Group();
+        _.each(group.children, (line: Path.Line) => {
+            console.log(`${line.getPointAt(0)} => ${line.getPointAt(line.length)}`);
+        });
+        console.log(`done`);
+        let current: Path.Line = <Path.Line>group.children[0];
+        current.data.ordered = true;
+        newGroup.addChild(current);
+        while (current !== undefined) {
+            console.log(`${current.getPointAt(0)} => ${current.getPointAt(current.length)}`);
+            const remainder = _.filter(group.children, (line: Path.Line) => {
+                return !line.data.ordered;
+            });
+            let newCurrent = this.findByStart(current, remainder);
+            if (newCurrent) {
+                newCurrent.data.ordered = true;
+                newGroup.addChild(newCurrent);
+                current = newCurrent;
+            } else {
+                newCurrent = this.findByEnd(current, remainder);
+                if (newCurrent) {
+                    newCurrent.reverse();
+                    newCurrent.data.ordered = true;
+                    newGroup.addChild(newCurrent);
+                    current = newCurrent;
+                } else {
+                    current = newCurrent;
+                }
+            }
+        }
+
+        return newGroup;
+    }
+
+    private static findByStart(current: Path.Line, lines: Path.Line[]): Path.Line {
+        return _.find(lines, (line) => {
+            return current.getPointAt(current.length).getDistance(line.getPointAt(0)) < 0.001;
+        });
+    }
+
+    private static findByEnd(current: Path.Line, lines: Path.Line[]): Path.Line {
+        return _.find(lines, (line) => {
+            return current.getPointAt(current.length).getDistance(line.getPointAt(line.length)) < 0.001;
+        });
+    }
+
+    /**
+     * create a group
+     * @param lines all lines
+     */
+    private static hittest(lines: Path.Line[]): Group {
+        const guid = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        const group = new Group();
+        group.data = guid();
+        group.addChild(lines[0]);
+        while (this._hittest(group, group.data, lines)) {
+        }
+        return group;
+    }
+
+    /**
+     * check for hits
+     * @param group group to check
+     * @param lines all lines
+     */
+    private static _hittest(group: Group, guid: string, lines: Path.Line[]): boolean {
+        let hit = false;
+        _.each(group.children, (item: Path.Line) => {
+            item.data.guid = guid;
+        });
+        const untagged = _.filter(lines, (line: Path.Line) => {
+            return (line.data.guid !== guid);
+        });
+        _.each(untagged, (line: Path.Line) => {
+            if (group.hitTestAll(line.getPointAt(0), {
+                tolerance: 0.01
+            }) !== null
+                || group.hitTestAll(line.getPointAt(line.length), {
+                    tolerance: 0.01
+                }) !== null) {
+                group.addChild(line);
+                hit = true;
+            }
+        });
+        _.each(group.children, (item: Path.Line) => {
+            item.data.guid = guid;
+        });
+        return hit;
+    }
+
+    /**
+     * compute all chains
+     */
     private static findAllChains(name: string, segments: Segment[], areas: Array<Area>): void {
-        let chain: Array<Segment>;
+        let lines = _.flatMap(segments, (segment: Segment) => {
+            const line = new Path.Line({
+                from: segment.from,
+                to: segment.to,
+                intert: false,
+                data: new MetaData(segment.getZ(), segment.getNormal())
+            });
+            return line;
+        });
+
+        // Add a group
+        const groups = this.createGroups(lines);
+
         let offset = 1;
-        chain = PlanarUtils.findNextChain(segments);
-        while (chain && chain.length > 0) {
+        _.each(groups, (group) => {
             const localArea: Area = new Area(name + '.shape#' + offset++);
+
+            let index = 0;
 
             // Build contour
             const geometry = new THREE.Geometry();
-            _.each(chain, (element: Segment) => {
-                geometry.vertices.push(element.start);
-                geometry.vertices.push(element.end);
+            _.each(group.children, (element: Path.Line) => {
+                geometry.vertices.push(element.data.vector(element.getPointAt(0), element.data.z));
+                geometry.vertices.push(element.data.vector(element.getPointAt(element.length), element.data.z));
             });
 
             localArea.meshes.push(new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
@@ -133,23 +333,25 @@ export class PlanarUtils {
 
             // Build normals
             const normals = new THREE.Geometry();
-            _.each(chain, (element: Segment) => {
+            _.each(group.children, (element: Path.Line) => {
+                const from = element.data.vector(element.getPointAt(0), element.data.z);
+                const to = element.data.vector(element.getPointAt(element.length), element.data.z);
                 // First normal
-                normals.vertices.push(element.start);
-                let end = element.start.clone();
-                end.x += element.normal.x;
-                end.y += element.normal.y;
-                end.z += element.normal.z;
+                normals.vertices.push(from);
+                let end = from.clone();
+                end.x += element.data.normal.x;
+                end.y += element.data.normal.y;
+                end.z += element.data.normal.z;
                 normals.vertices.push(end);
                 // Segment between 2 normals
-                normals.vertices.push(element.start);
-                normals.vertices.push(element.end);
+                normals.vertices.push(from);
+                normals.vertices.push(to);
                 // Normal on end vertice
-                normals.vertices.push(element.end);
-                end = element.end.clone();
-                end.x += element.normal.x;
-                end.y += element.normal.y;
-                end.z += element.normal.z;
+                normals.vertices.push(to);
+                end = to.clone();
+                end.x += element.data.normal.x;
+                end.y += element.data.normal.y;
+                end.z += element.data.normal.z;
                 normals.vertices.push(end);
             });
 
@@ -162,27 +364,26 @@ export class PlanarUtils {
 
             // Build contour for 2D render
             let indice = 0;
-            _.each(chain, (element: Segment) => {
+            _.each(group.children, (element: Path.Line) => {
+                const from = element.data.vector(element.getPointAt(0), element.data.z);
+                const to = element.data.vector(element.getPointAt(element.length), element.data.z);
                 if (indice === 0) {
                     localArea.add(
-                        element.start.x,
-                        element.start.y,
-                        element.normal.x,
-                        element.normal.y);
+                        from.x,
+                        from.y,
+                        element.data.normal.x,
+                        element.data.normal.y);
                 }
                 localArea.add(
-                    element.end.x,
-                    element.end.y,
-                    element.normal.x,
-                    element.normal.y);
+                    to.x,
+                    to.y,
+                    element.data.normal.x,
+                    element.data.normal.y);
                 indice++;
             });
 
             areas.push(localArea);
-
-            // Find next chain
-            chain = PlanarUtils.findNextChain(segments);
-        }
+        });
     }
 
     private static findNextChain(segments: Segment[]): Segment[] {
@@ -202,48 +403,32 @@ export class PlanarUtils {
 
     private static findNext(current: Segment, segments: Segment[]): Segment {
         const nextByStart = _.find(segments, (it: Segment) => {
-            if (it.linked === true) {
+            if (it.isLinked() === true) {
                 return false;
             }
-            return PlanarUtils.compare(current.end, it.start);
+            return current.to.getDistance(it.from) < 0.01;
         });
         if (nextByStart) {
             nextByStart.linked = true;
-            return {
-                start: nextByStart.start,
-                end: nextByStart.end,
-                normal: nextByStart.normal,
-                linked: true
-            };
+            return new Segment(
+                nextByStart.getFrom().x, nextByStart.getFrom().y,
+                nextByStart.getTo().x, nextByStart.getTo().y,
+                nextByStart.getNormal().x, nextByStart.getNormal().y,
+                nextByStart.getZ(), true);
         }
         const nextByEnd = _.find(segments, (it: Segment) => {
-            if (it.linked === true) {
+            if (it.isLinked() === true) {
                 return false;
             }
-            return PlanarUtils.compare(current.end, it.end);
+            return current.to.getDistance(it.to) < 0.01;
         });
         if (nextByEnd) {
             nextByEnd.linked = true;
-            return {
-                start: nextByEnd.end,
-                end: nextByEnd.start,
-                normal: nextByEnd.normal,
-                linked: true
-            };
+            return new Segment(
+                nextByEnd.getTo().x, nextByEnd.getTo().y,
+                nextByEnd.getFrom().x, nextByEnd.getFrom().y,
+                nextByEnd.getNormal().x, nextByEnd.getNormal().y,
+                nextByEnd.getZ(), true);
         }
-    }
-
-    /**
-     * simple comparaison of two vector
-     * @param left left
-     * @param right right
-     */
-    private static compare(left: THREE.Vector3, right: THREE.Vector3): boolean {
-        return this.formatter(left.x) === this.formatter(right.x)
-            && this.formatter(left.y) === this.formatter(right.y);
-    }
-
-    private static formatter(value: number) {
-        return StringUtils.format('%5.4f', [value]);
     }
 }

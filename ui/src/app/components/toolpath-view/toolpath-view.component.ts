@@ -99,14 +99,6 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
 
   ngOnInit() {
     // get param
-    const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];
-    if (lastLoaded) {
-      const data = this.storageService.load('lastLoaded');
-      this.workbenchService.loadBinary(data, () => {
-      });
-    }
-
-    // get param
     const l = this.route.snapshot.queryParams['layer'];
     if (l) {
       this.parametersService.dispatch({
@@ -156,7 +148,19 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   }
 
   ngAfterViewInit() {
-    this.sliceInit();
+    console.log('Render slice of current layer');
+    this.slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
+
+    // get param
+    const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];
+    if (lastLoaded) {
+      const data = this.storageService.load('lastLoaded');
+      this.workbenchService.loadBinary(data, () => {
+        this.sliceInit();
+      });
+    } else {
+      this.sliceInit();
+    }
   }
 
   showSideBar() {
@@ -164,9 +168,6 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   }
 
   sliceInit() {
-    console.log('Render slice of current layer');
-    this.slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
-
     // Init slice
     this.slicer.init(
       this.options.scanPieces,
@@ -224,6 +225,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
       });
     };
 
+    setTimeout(() => {
+      this.buildInfo();
+    }, 1);
+  }
+
+  public buildInfo() {
     // Build info
     this.infos = [
       {
@@ -244,24 +251,24 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
       }
     ];
     // Opened
-    _.each(this.shapes.opened.children, (shape) => {
+    _.each(this.shapes.opened.children, (shape: Path) => {
       this.infos[0].children.push({
         'data': {
           'name': shape.name,
           'type': 'Shape',
-          'description': 'Opened shape'
+          'description': 'Opened shape with ' + shape.segments.length + ' segment(s)'
         },
         'children': []
       });
     });
     this.infos[0].data.description = this.infos[0].children.length + ' shapes(s)';
     // Closed
-    _.each(this.shapes.closed.children, (shape) => {
+    _.each(this.shapes.closed.children, (shape: Path) => {
       this.infos[1].children.push({
         'data': {
           'name': shape.name,
           'type': 'Shape',
-          'description': 'Closed shape'
+          'description': 'Closed shape with ' + shape.segments.length + ' segment(s)'
         },
         'children': []
       });
