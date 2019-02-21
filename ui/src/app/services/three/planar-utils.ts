@@ -5,67 +5,13 @@ import { MathUtils } from 'src/app/services/math-utils';
 import { StringUtils } from 'src/app/services/string-utils';
 import { Point, Path, Group, CompoundPath } from 'paper';
 
-class Segment {
-    public from: Point;
-    public to: Point;
-    private linked: boolean;
-    private tag: number;
-    private norm: Point;
-    private z: number;
-
-    private _from: THREE.Vector3;
-    private _to: THREE.Vector3;
-    private _normal: THREE.Vector3;
-
-    constructor(x1: number, y1: number, x2: number, y2: number, nx: number, ny: number, z: number, linked: boolean) {
-        this.from = new Point(x1, y1);
-        this.to = new Point(x2, y2);
-        this.linked = linked;
-        this.norm = new Point(nx, ny);
-        this.z = z;
-        this.tag = -1;
-
-        this._from = new THREE.Vector3(this.from.x, this.from.y, this.z);
-        this._to = new THREE.Vector3(this.to.x, this.to.y, this.z);
-        this._normal = new THREE.Vector3(this.norm.x, this.norm.y, this.z);
-    }
-
-    public isTagged(tag: number): boolean {
-        return this.tag === tag;
-    }
-
-    public setTag(tag: number): void {
-        this.tag = tag;
-    }
-
-    public getFrom(): THREE.Vector3 {
-        return this._from;
-    }
-
-    public getTo(): THREE.Vector3 {
-        return this._to;
-    }
-
-    public getNormal(): THREE.Vector3 {
-        return this._normal;
-    }
-
-    public getZ(): number {
-        return this.z;
-    }
-
-    public isLinked(): boolean {
-        return this.linked;
-    }
-}
-
 class MetaData {
     public guid: string;
     public ordered: boolean;
-    public normal: THREE.Vector3;
+    public normal: Point;
     private z: number;
 
-    constructor(z: number, normal: THREE.Vector3) {
+    constructor(z: number, normal: Point) {
         this.ordered = false;
         this.normal = normal;
         this.z = z;
@@ -82,7 +28,7 @@ export class PlanarUtils {
      * planar intersect compute
      */
     public static intersect(radius: number, layer: THREE.Plane, group: THREE.Group): Area[] {
-        const segments: Segment[] = [];
+        const lines: Path.Line[] = [];
         // Reset
         const areas: Area[] = [];
         _.each(group.children, (from: THREE.Mesh) => {
@@ -134,12 +80,17 @@ export class PlanarUtils {
                 }
 
                 // push it
-                const segment = new Segment(arr[0].x, arr[0].y, arr[1].x, arr[1].y, face.normal.x, face.normal.y, layer.constant, false);
-                segments.push(segment);
+                const line = new Path.Line({
+                    from: new Point(arr[0].x, arr[0].y),
+                    to: new Point(arr[1].x, arr[1].y),
+                    intert: false,
+                    data: new MetaData(layer.constant, new Point(face.normal.x, face.normal.y))
+                });
+                lines.push(line);
             });
 
             // Find all chain
-            PlanarUtils.findAllChains(from.name, segments, areas);
+            PlanarUtils.findAllChains(from.name, lines, areas);
         });
 
         // Sort area by X, then X
@@ -298,17 +249,7 @@ export class PlanarUtils {
     /**
      * compute all chains
      */
-    private static findAllChains(name: string, segments: Segment[], areas: Array<Area>): void {
-        let lines = _.flatMap(segments, (segment: Segment) => {
-            const line = new Path.Line({
-                from: segment.from,
-                to: segment.to,
-                intert: false,
-                data: new MetaData(segment.getZ(), segment.getNormal())
-            });
-            return line;
-        });
-
+    private static findAllChains(name: string, lines: Path.Line[], areas: Array<Area>): void {
         // Add a group
         const groups = this.createGroups(lines);
 
@@ -384,51 +325,5 @@ export class PlanarUtils {
 
             areas.push(localArea);
         });
-    }
-
-    private static findNextChain(segments: Segment[]): Segment[] {
-        const chain: Segment[] = [];
-        let current = _.find(segments, (segment) => {
-            return segment.linked === false;
-        });
-        if (current) {
-            current.linked = true;
-            while (current) {
-                chain.push(current);
-                current = PlanarUtils.findNext(current, segments);
-            }
-        }
-        return chain;
-    }
-
-    private static findNext(current: Segment, segments: Segment[]): Segment {
-        const nextByStart = _.find(segments, (it: Segment) => {
-            if (it.isLinked() === true) {
-                return false;
-            }
-            return current.to.getDistance(it.from) < 0.01;
-        });
-        if (nextByStart) {
-            nextByStart.linked = true;
-            return new Segment(
-                nextByStart.getFrom().x, nextByStart.getFrom().y,
-                nextByStart.getTo().x, nextByStart.getTo().y,
-                nextByStart.getNormal().x, nextByStart.getNormal().y,
-                nextByStart.getZ(), true);
-        }
-        const nextByEnd = _.find(segments, (it: Segment) => {
-            if (it.isLinked() === true) {
-                return false;
-            }
-            return current.to.getDistance(it.to) < 0.01;
-        });
-        if (nextByEnd) {
-            nextByEnd.linked = true;
-            return new Segment(
-                nextByEnd.getTo().x, nextByEnd.getTo().y,
-                nextByEnd.getFrom().x, nextByEnd.getFrom().y,
-                nextByEnd.getNormal().x, nextByEnd.getNormal().y,
-                nextByEnd.getZ(), true);
-        }
     }
 }
