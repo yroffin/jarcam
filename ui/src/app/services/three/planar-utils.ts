@@ -15,6 +15,7 @@ class MetaData {
         this.ordered = false;
         this.normal = normal;
         this.z = z;
+        this.guid = undefined;
     }
 
     public vector(point: Point, z: number): THREE.Vector3 {
@@ -28,10 +29,10 @@ export class PlanarUtils {
      * planar intersect compute
      */
     public static intersect(radius: number, layer: THREE.Plane, group: THREE.Group): Area[] {
-        const lines: Path.Line[] = [];
         // Reset
         const areas: Area[] = [];
         _.each(group.children, (from: THREE.Mesh) => {
+            const lines: Path.Line[] = [];
             const fromGeometry = (<THREE.Geometry>from.geometry);
 
             // find all matching faces
@@ -124,21 +125,17 @@ export class PlanarUtils {
      * compute all chains
      */
     private static createGroups(lines: Path.Line[]): Group[] {
-        let reste = _.filter(lines, (line) => {
+        let remainder = _.filter(lines, (line) => {
             return !line.data.guid;
         });
         const groups: Group[] = [];
-        while (reste.length !== 0) {
-            // Build group
-            const group = this.hittest(reste);
+        while (remainder.length !== 0) {
             // Compute order
-            const newGroup = this.orderGroup(group);
-            newGroup.data = group.data;
-            group.remove();
+            const newGroup = this.orderGroup(remainder);
             // Push it
             groups.push(newGroup);
             // Fix remainder
-            reste = _.filter(lines, (line) => {
+            remainder = _.filter(lines, (line) => {
                 return !line.data.guid;
             });
         }
@@ -149,31 +146,38 @@ export class PlanarUtils {
      * order group
      * @param group group to order
      */
-    private static orderGroup(group: Group): Group {
-        const newGroup = new Group();
-        _.each(group.children, (line: Path.Line) => {
-            console.log(`${line.getPointAt(0)} => ${line.getPointAt(line.length)}`);
+    private static orderGroup(lines: Path.Line[]): Group {
+        const guid = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        const group = new Group();
+        group.data = guid();
+
+        // find first line with no guid
+        let current = _.find(lines, (line) => {
+            return !line.data.guid;
         });
-        console.log(`done`);
-        let current: Path.Line = <Path.Line>group.children[0];
-        current.data.ordered = true;
-        newGroup.addChild(current);
+        current.data.guid = group.data;
+        group.addChild(current);
         while (current !== undefined) {
-            console.log(`${current.getPointAt(0)} => ${current.getPointAt(current.length)}`);
-            const remainder = _.filter(group.children, (line: Path.Line) => {
-                return !line.data.ordered;
+            const remainder = _.filter(lines, (line: Path.Line) => {
+                return !line.data.guid;
             });
             let newCurrent = this.findByStart(current, remainder);
             if (newCurrent) {
-                newCurrent.data.ordered = true;
-                newGroup.addChild(newCurrent);
+                newCurrent.data.guid = group.data;
+                group.addChild(newCurrent);
                 current = newCurrent;
             } else {
                 newCurrent = this.findByEnd(current, remainder);
                 if (newCurrent) {
                     newCurrent.reverse();
-                    newCurrent.data.ordered = true;
-                    newGroup.addChild(newCurrent);
+                    newCurrent.data.guid = group.data;
+                    group.addChild(newCurrent);
                     current = newCurrent;
                 } else {
                     current = newCurrent;
@@ -181,7 +185,7 @@ export class PlanarUtils {
             }
         }
 
-        return newGroup;
+        return group;
     }
 
     private static findByStart(current: Path.Line, lines: Path.Line[]): Path.Line {
@@ -194,56 +198,6 @@ export class PlanarUtils {
         return _.find(lines, (line) => {
             return current.getPointAt(current.length).getDistance(line.getPointAt(line.length)) < 0.001;
         });
-    }
-
-    /**
-     * create a group
-     * @param lines all lines
-     */
-    private static hittest(lines: Path.Line[]): Group {
-        const guid = () => {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        };
-
-        const group = new Group();
-        group.data = guid();
-        group.addChild(lines[0]);
-        while (this._hittest(group, group.data, lines)) {
-        }
-        return group;
-    }
-
-    /**
-     * check for hits
-     * @param group group to check
-     * @param lines all lines
-     */
-    private static _hittest(group: Group, guid: string, lines: Path.Line[]): boolean {
-        let hit = false;
-        _.each(group.children, (item: Path.Line) => {
-            item.data.guid = guid;
-        });
-        const untagged = _.filter(lines, (line: Path.Line) => {
-            return (line.data.guid !== guid);
-        });
-        _.each(untagged, (line: Path.Line) => {
-            if (group.hitTestAll(line.getPointAt(0), {
-                tolerance: 0.01
-            }) !== null
-                || group.hitTestAll(line.getPointAt(line.length), {
-                    tolerance: 0.01
-                }) !== null) {
-                group.addChild(line);
-                hit = true;
-            }
-        });
-        _.each(group.children, (item: Path.Line) => {
-            item.data.guid = guid;
-        });
-        return hit;
     }
 
     /**

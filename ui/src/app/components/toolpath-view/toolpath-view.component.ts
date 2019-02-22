@@ -65,6 +65,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   };
 
   private brim: PaperJSShapeBrimInterface = new PaperJSShapeBrim();
+  private selectedBrim: Path;
 
   constructor(
     private appComponent: AppComponent,
@@ -178,7 +179,7 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     this.shapes = this.slicer.render(this.millingService.getAreas(), false, true);
     this.slicer.refreshBrims(this.options.brims, 3);
 
-    const brim = new Path({
+    this.selectedBrim = new Path({
       fillColor: 'orange',
       strokeColor: 'red',
       insert: true
@@ -209,20 +210,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     bound.onMouseMove = (event) => {
       this.brim.brim(
         this.shapes,
-        brim,
+        this.selectedBrim,
         this.brimMode,
         event.point,
         this.radius,
         bound,
         this.options.scanPieces.minx, this.options.scanPieces.maxx, this.options.scanPieces.miny, this.options.scanPieces.maxy);
-    };
-    brim.onClick = (event) => {
-      this.parametersService.dispatch({
-        type: SET_BRIM,
-        payload: {
-          brim: _.concat(brim.data, this.options.brims)
-        }
-      });
     };
 
     setTimeout(() => {
@@ -280,7 +273,16 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     this.slicer.onToolChange(this.zoom);
   }
 
-  public onClick() {
+  public selectBrim() {
+    this.parametersService.dispatch({
+      type: SET_BRIM,
+      payload: {
+        brim: _.concat(this.selectedBrim.data, this.options.brims)
+      }
+    });
+}
+
+  public setBrimMode() {
     this.slicer.setBrimMode(this.brimMode);
     this.parametersService.dispatch({
       type: CHANGE_BRIMMODE,

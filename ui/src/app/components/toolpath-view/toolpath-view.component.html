@@ -1,4 +1,4 @@
-<div class="editor-3d-container">
+<div class="editor-3d-container" (click)="selectBrim()">
     <div class="hud">
         <div class="view-cube">
         </div>
@@ -33,13 +33,13 @@
     <br> Brim mode = {{brimMode}}
     <br>
     <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="cross" label="cross" [(ngModel)]="brimMode"></p-radioButton>
+        <p-radioButton (onClick)="setBrimMode()" name="groupname" value="cross" label="cross" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="inline" label="inline" [(ngModel)]="brimMode"></p-radioButton>
+        <p-radioButton (onClick)="setBrimMode()" name="groupname" value="inline" label="inline" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <div>
-        <p-radioButton (onClick)="onClick()" name="groupname" value="border" label="border" [(ngModel)]="brimMode"></p-radioButton>
+        <p-radioButton (onClick)="setBrimMode()" name="groupname" value="border" label="border" [(ngModel)]="brimMode"></p-radioButton>
     </div>
     <br>
     <button pButton type="button" label="Gcode" (click)="gcodeCopy()"></button>
