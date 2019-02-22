@@ -53,7 +53,7 @@ export class PlanarUtils {
             }
 
             if (manifoldDown.length > 0) {
-                layer.constant += 0.05;
+                layer.constant += 0.1;
                 keep = PlanarUtils.filter(fromGeometry, layer);
             }
 

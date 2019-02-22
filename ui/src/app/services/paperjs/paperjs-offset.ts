@@ -327,8 +327,11 @@ export class PaperJSOffset {
 
     private static addRoundJoin(path, dest, center, radius) {
         // return path.lineTo(dest);
-        const middle = path.lastSegment.point.add(dest).divide(2),
-            through = center.add(middle.subtract(center).normalize(radius));
-        path.arcTo(through, dest);
+        const middle = path.lastSegment.point.add(dest).divide(2);
+        const through = center.add(middle.subtract(center).normalize(radius));
+        // TODO : bug ?
+        if (through.getDistance(dest) > 0.01) {
+            path.arcTo(through, dest);
+        }
     }
 }
