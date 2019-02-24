@@ -174,12 +174,14 @@ export class AppComponent implements OnInit {
     );
 
     const data: BrimBean[] = this.storageService.loadAsObject('lastBrimConfig');
-    this.parametersService.dispatch({
-      type: SET_BRIM,
-      payload: {
-        brim: data
-      }
-    });
+    if (data) {
+      this.parametersService.dispatch({
+        type: SET_BRIM,
+        payload: {
+          brim: data
+        }
+      });
+    }
 
     this._load();
   }
@@ -234,7 +236,7 @@ export class AppComponent implements OnInit {
       if (fill) {
         gcodeFill += slicer.gcode(currentLayer.top, this.scanPieces.maxz, JourneyClass.fill, shapes.journeys);
       }
-      layer ++;
+      layer++;
     });
 
     // Build global GCODE
