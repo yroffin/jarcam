@@ -84,7 +84,7 @@ export class PlanarUtils {
                 const line = new Path.Line({
                     from: new Point(arr[0].x, arr[0].y),
                     to: new Point(arr[1].x, arr[1].y),
-                    intert: false,
+                    insert: false,
                     data: new MetaData(layer.constant, new Point(face.normal.x, face.normal.y))
                 });
                 lines.push(line);

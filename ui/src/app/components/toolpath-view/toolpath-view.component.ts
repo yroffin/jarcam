@@ -1,18 +1,14 @@
-import { Component, Input, ViewChild, OnInit, AfterViewInit } from '@angular/core';
-import { PaperScope, Project, Path, Shape, Point, Size, Group, Color, PointText, Matrix, Rectangle, Segment } from 'paper';
+import { Component, ViewChild, OnInit, AfterViewInit } from '@angular/core';
+import { Path, Point, PaperScope, Project } from 'paper';
 import { TreeNode } from 'primeng/api';
 
 import * as _ from 'lodash';
 
 import { ElementRef } from '@angular/core';
 import { MillingService } from '../../services/three/milling.service';
-import { Area, AreaPoint } from 'src/app/services/three/area.class';
-import { injectElementRef } from '@angular/core/src/render3/view_engine_compatibility';
 import { AppComponent } from 'src/app/app.component';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
-import { Journey, ShapeGroup, TouchBean, BrimBean } from 'src/app/services/paperjs/paperjs-model';
-import { PaperJSGcode } from 'src/app/services/paperjs/paperjs-gcode';
-import { PaperJSContour } from 'src/app/services/paperjs/paperjs-contour';
+import { ShapeGroup, BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { PaperJSSlicer } from 'src/app/services/paperjs/paperjs-slicer';
 import { ParametersService, ScanPiecesBean, LayerBean, CHANGE_BRIMMODE, SET_BRIM, CHANGE_LAYER } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
@@ -149,8 +145,12 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   }
 
   ngAfterViewInit() {
+    // For using paper libs
+    const scope = new PaperScope();
+    const project = new Project(this.paperCanvas.nativeElement);
+
     console.log('Render slice of current layer');
-    this.slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
+    this.slicer = new PaperJSSlicer(project);
 
     // get param
     const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];

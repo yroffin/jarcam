@@ -19,6 +19,7 @@ import { WorkbenchService } from 'src/app/services/workbench.service';
 import { Subscription } from 'rxjs';
 import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
+import { PaperScope, Project } from 'paper';
 
 @AutoUnsubscribe()
 @Component({
@@ -28,6 +29,7 @@ import { CanDisplaySideBar } from 'src/app/interfaces/types';
 })
 export class StlViewComponent implements AfterViewInit, OnInit, CanDisplaySideBar {
 
+  @ViewChild('paperView') paperCanvas: ElementRef;
   @ViewChild(RendererComponent) rendererComponent: RendererComponent;
 
   public display = false;
@@ -118,6 +120,10 @@ export class StlViewComponent implements AfterViewInit, OnInit, CanDisplaySideBa
   }
 
   ngOnInit() {
+    // For using paper libs
+    const scope = new PaperScope();
+    const project = new Project(this.paperCanvas.nativeElement);
+
     // get param
     const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];
     if (lastLoaded) {

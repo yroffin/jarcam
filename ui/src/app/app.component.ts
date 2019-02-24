@@ -24,6 +24,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Pipe } from '@angular/core';
 import { PipeTransform } from '@angular/core/src/change_detection/pipe_transform';
 import { MessageService } from 'primeng/components/common/messageservice';
+import { PaperScope, Project } from 'paper';
 
 @AutoUnsubscribe()
 @Component({
@@ -192,7 +193,11 @@ export class AppComponent implements OnInit {
   }
 
   public gcodeBuild(fill: boolean, contour: true) {
-    const slicer = new PaperJSSlicer(this.paperCanvas.nativeElement);
+    // For using paper libs
+    const scope = new PaperScope();
+    const project = new Project(this.paperCanvas.nativeElement);
+
+    const slicer = new PaperJSSlicer(project);
 
     // Init slice
     slicer.init(

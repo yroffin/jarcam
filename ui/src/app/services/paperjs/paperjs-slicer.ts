@@ -26,7 +26,6 @@ export class PaperJSSlicer {
     private scanPieces: ScanPiecesBean;
 
     private zoom = 5;
-    private scope: PaperScope;
     private project: Project;
     private brims: Group;
     private brimMode = 'cross';
@@ -40,12 +39,9 @@ export class PaperJSSlicer {
      * constructor
      * @param target html element ref
      */
-    constructor(target?: HTMLCanvasElement) {
-        this.scope = new PaperScope();
-
-        this.project = new Project(target);
+    constructor(target?: Project) {
+        this.project = target;
         this.project.currentStyle = {
-            fontFamily: 'roboto'
         };
 
         this.project.view.scale(this.zoom, -this.zoom);
