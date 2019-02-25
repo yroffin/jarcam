@@ -52,7 +52,6 @@ import { TreeTableModule } from 'primeng/treetable';
 
 import { StlViewComponent } from './components/stl-view/stl-view.component';
 import { HomePageComponent } from './components/home-page/home-page.component';
-import { RendererComponent } from './components/three/renderer/renderer.component';
 
 import { StlLoaderService } from './services/three/stl-loader.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
@@ -62,15 +61,18 @@ import { ToolpathViewComponent } from './components/toolpath-view/toolpath-view.
 import { ParametersService } from 'src/app/stores/parameters.service';
 import { HttpClientModule } from '@angular/common/http';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
+import { PaperComponent } from './components/renderer/paper/paper.component';
+import { ThreejsComponent } from './components/renderer/threejs/threejs.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     StlViewComponent,
     HomePageComponent,
-    RendererComponent,
     ToolpathViewComponent,
-    SafeHtmlPipe
+    SafeHtmlPipe,
+    PaperComponent,
+    ThreejsComponent
   ],
   imports: [
     BrowserModule,

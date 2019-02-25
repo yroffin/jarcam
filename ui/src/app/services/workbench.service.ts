@@ -157,11 +157,11 @@ export class WorkbenchService {
 
   infos() {
     const infos = [];
-    infos.push(`camera.position.x : ${this.worldCamera.position.x}`);
-    infos.push(`camera.position.y : ${this.worldCamera.position.y}`);
-    infos.push(`camera.position.z : ${this.worldCamera.position.z}`);
+    infos.push({description: 'camera.position.x', value: this.worldCamera.position.x});
+    infos.push({description: 'camera.position.y', value: this.worldCamera.position.y});
+    infos.push({description: 'camera.position.z', value: this.worldCamera.position.z});
     _.each(this.workbenchSceneService.infos(), (info) => {
-      infos.push(info);
+      infos.push({description: info.description, value: info.value});
     });
     return infos;
   }

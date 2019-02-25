@@ -1,0 +1,28 @@
+<div class="editor-3d-container" (click)="selectBrim()">
+    <div class="hud">
+        <div class="view-cube">
+        </div>
+    </div>
+    <canvas #paperView resize></canvas>
+</div>
+<div class="info">
+    <p-treeTable [value]="infos">
+        <ng-template pTemplate="header">
+            <tr class="info-font">
+                <th>Object</th>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+            <tr class="info-font" [ttRow]="rowNode">
+                <td>
+                    <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                    {{rowData.name}}
+                </td>
+                <td>{{rowData.type}}</td>
+                <td>{{rowData.description}}</td>
+            </tr>
+        </ng-template>
+    </p-treeTable>
+</div>

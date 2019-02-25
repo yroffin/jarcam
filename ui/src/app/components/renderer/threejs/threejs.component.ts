@@ -1,30 +1,30 @@
-import { Component, OnChanges, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import { Directive, ElementRef, Input, ContentChild, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { ElementRef, Input, ViewChild } from '@angular/core';
+import * as _ from 'lodash';
 
 import * as THREE from 'three';
 import * as OrbitControls from 'three-orbitcontrols';
-
-import { StlLoaderService } from 'src/app/services/three/stl-loader.service';
-
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { WorkbenchService } from 'src/app/services/workbench.service';
-import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { Observable } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { ParametersService, LayerBean } from 'src/app/stores/parameters.service';
+import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
+import { TreeNode } from 'primeng/api';
+import { StringUtils } from 'src/app/services/string-utils';
 
 @AutoUnsubscribe()
 @Component({
-  selector: 'app-renderer',
-  templateUrl: './renderer.component.html',
-  styleUrls: ['./renderer.component.css']
+  selector: 'app-threejs',
+  templateUrl: './threejs.component.html',
+  styleUrls: ['./threejs.component.css']
 })
-export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ThreejsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public width = window.innerWidth;
   public height = window.innerHeight;
 
   @Input() orbit = true;
+  @Input() infos: TreeNode[];
 
   @ViewChild('cubeView') cubeCanvas: ElementRef;
   @ViewChild('threeView') threeCanvas: ElementRef;
@@ -33,8 +33,6 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
   private controls: OrbitControls;
   private renderCube: THREE.WebGLRenderer;
   private callback: any;
-
-  public infos = [];
 
   layer: LayerBean;
   layerStream: Observable<LayerBean>;
@@ -109,7 +107,35 @@ export class RendererComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderer.render(this.workbenchService.getWorldScene(), this.workbenchService.getWorldCamera());
     this.renderCube.render(this.workbenchService.getCubeScene(), this.workbenchService.getCubeCamera());
 
-    this.infos = this.workbenchService.infos();
+    this.infos = this.buildInfo();
+  }
+
+  public buildInfo() {
+    // Build info
+    const infos = [
+      {
+        data: {
+          name: 'Info',
+          type: 'Folder',
+          description: ''
+        },
+        expanded: true,
+        children: []
+      }
+    ];
+    // Opened
+    _.each(this.workbenchService.infos(), (info: any) => {
+      infos[0].children.push({
+        data: {
+          name: info.description,
+          type: 'Information',
+          description: StringUtils.format('%5.3f', [info.value])
+        },
+        children: []
+      });
+    });
+    infos[0].data.description = infos[0].children.length + ' info(s)';
+    return infos;
   }
 
   load(url: string, done: any) {

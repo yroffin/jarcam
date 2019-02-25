@@ -1,16 +1,11 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { ViewChild } from '@angular/core';
-import { RendererComponent } from '../three/renderer/renderer.component';
 import { HostListener, Input } from '@angular/core';
 import { ElementRef } from '@angular/core';
 
 import * as _ from 'lodash';
-import { ToolpathViewComponent } from 'src/app/components/toolpath-view/toolpath-view.component';
-import { MatTabGroup, getMatInputUnsupportedTypeError } from '@angular/material';
-import { AppComponent } from 'src/app/app.component';
-import { Store } from '@ngrx/store';
-import { SET_BRIM, CHANGE_SLICE, CHANGE_RADIUS, CHANGE_LAYER, LayerBean, CHANGE_DEBUG } from 'src/app/stores/parameters.service';
-import { ParametersState, ParametersService, ScanPiecesBean } from 'src/app/stores/parameters.service';
+import { CHANGE_SLICE, CHANGE_RADIUS, CHANGE_LAYER, LayerBean, CHANGE_DEBUG } from 'src/app/stores/parameters.service';
+import { ParametersService, ScanPiecesBean } from 'src/app/stores/parameters.service';
 import { Observable } from 'rxjs';
 import { AutoUnsubscribe } from 'src/app/services/utility/decorators';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +15,7 @@ import { Subscription } from 'rxjs';
 import { BrimBean } from 'src/app/services/paperjs/paperjs-model';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
 import { PaperScope, Project } from 'paper';
+import { ThreejsComponent } from '../renderer/threejs/threejs.component';
 
 @AutoUnsubscribe()
 @Component({
@@ -30,7 +26,7 @@ import { PaperScope, Project } from 'paper';
 export class StlViewComponent implements AfterViewInit, OnInit, CanDisplaySideBar {
 
   @ViewChild('paperView') paperCanvas: ElementRef;
-  @ViewChild(RendererComponent) rendererComponent: RendererComponent;
+  @ViewChild(ThreejsComponent) threejsComponent: ThreejsComponent;
 
   public display = false;
   public selected = 0;
@@ -211,6 +207,6 @@ export class StlViewComponent implements AfterViewInit, OnInit, CanDisplaySideBa
   resetWidthHeight() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    this.rendererComponent.setSize(width, height);
+    this.threejsComponent.setSize(width, height);
   }
 }

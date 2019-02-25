@@ -237,12 +237,12 @@ export class WorkbenchSceneService {
   public infos() {
     const infos = [];
     if (this.scan) {
-      infos.push(`scan.minx : ${this.scan.minx}`);
-      infos.push(`scan.maxx : ${this.scan.maxx}`);
-      infos.push(`scan.miny : ${this.scan.miny}`);
-      infos.push(`scan.maxy : ${this.scan.maxy}`);
-      infos.push(`scan.minz : ${this.scan.minz}`);
-      infos.push(`scan.maxz : ${this.scan.maxz}`);
+      infos.push({description: 'scan.minx', value: this.scan.minx});
+      infos.push({description: 'scan.maxx', value: this.scan.maxx});
+      infos.push({description: 'scan.miny', value: this.scan.miny});
+      infos.push({description: 'scan.maxy', value: this.scan.maxy});
+      infos.push({description: 'scan.minz', value: this.scan.minz});
+      infos.push({description: 'scan.maxz', value: this.scan.maxz});
     }
     return infos;
   }

@@ -21,6 +21,7 @@ import { PaperJSShapeBrimInterface } from 'src/app/services/paperjs/paperjs-inte
 import { PaperJSShapeBrim } from 'src/app/services/paperjs/paperjs-shape-brim';
 import { CanDisplaySideBar } from 'src/app/interfaces/types';
 import { MessageService } from 'primeng/components/common/messageservice';
+import { PaperComponent } from '../renderer/paper/paper.component';
 
 @AutoUnsubscribe()
 @Component({
@@ -31,7 +32,7 @@ import { MessageService } from 'primeng/components/common/messageservice';
 })
 export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplaySideBar {
 
-  @ViewChild('paperView') paperCanvas: ElementRef;
+  @ViewChild('paperView') paperComponent: PaperComponent;
 
   public zoom = 5;
   public infos: TreeNode[];
@@ -145,12 +146,8 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
   }
 
   ngAfterViewInit() {
-    // For using paper libs
-    const scope = new PaperScope();
-    const project = new Project(this.paperCanvas.nativeElement);
-
     console.log('Render slice of current layer');
-    this.slicer = new PaperJSSlicer(project);
+    this.slicer = new PaperJSSlicer(this.paperComponent.project);
 
     // get param
     const lastLoaded = this.route.snapshot.queryParams['lastLoaded'];
