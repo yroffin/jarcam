@@ -1,6 +1,9 @@
-<div class="editor-3d-container" (click)="selectBrim()">
+<div class="editor-3d-container">
     <div class="hud">
-        <div class="view-cube">
+        <div #paperCube (wheel)="onWheel($event)">
+            <svg class="view-cube">
+                <rect x="20" y="20" width="80" height="80" style="fill:rgb(168, 168, 168);stroke-width:1;stroke:rgb(0,0,0)" />
+            </svg>
         </div>
     </div>
     <canvas #paperView resize></canvas>

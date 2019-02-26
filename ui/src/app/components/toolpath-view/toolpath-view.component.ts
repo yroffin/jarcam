@@ -1,10 +1,9 @@
 import { Component, ViewChild, OnInit, AfterViewInit } from '@angular/core';
-import { Path, Point, PaperScope, Project } from 'paper';
+import { Path, Point } from 'paper';
 import { TreeNode } from 'primeng/api';
 
 import * as _ from 'lodash';
 
-import { ElementRef } from '@angular/core';
 import { MillingService } from '../../services/three/milling.service';
 import { AppComponent } from 'src/app/app.component';
 import { PaperJSUtils } from 'src/app/services/paperjs/paperjs-utils';
@@ -32,7 +31,7 @@ import { PaperComponent } from '../renderer/paper/paper.component';
 })
 export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplaySideBar {
 
-  @ViewChild('paperView') paperComponent: PaperComponent;
+  @ViewChild(PaperComponent) paperComponent: PaperComponent;
 
   public zoom = 5;
   public infos: TreeNode[];
@@ -266,18 +265,27 @@ export class ToolpathViewComponent implements OnInit, AfterViewInit, CanDisplayS
     this.infos[1].data.description = this.infos[1].children.length + ' shapes(s)';
   }
 
-  public onToolChange() {
+  public zoomin(event: any) {
+    this.zoom += Math.abs(event.deltaY) / 10;
+    this.slicer.onToolChange(this.zoom);
+  }
+
+  public zoomout(event: any) {
+    this.zoom -= Math.abs(event.deltaY) / 10;
+    this.zoom = this.zoom < 1 ? 1 : this.zoom;
     this.slicer.onToolChange(this.zoom);
   }
 
   public selectBrim() {
-    this.parametersService.dispatch({
-      type: SET_BRIM,
-      payload: {
-        brim: _.concat(this.selectedBrim.data, this.options.brims)
-      }
-    });
-}
+    if (this.selectedBrim.data.points) {
+      this.parametersService.dispatch({
+        type: SET_BRIM,
+        payload: {
+          brim: _.concat(this.selectedBrim.data, this.options.brims)
+        }
+      });
+    }
+  }
 
   public setBrimMode() {
     this.slicer.setBrimMode(this.brimMode);

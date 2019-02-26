@@ -17,6 +17,7 @@
 .editor-3d-container .hud .view-cube {
     left: 0px;
     top: 0px;
+    color: black;
     display: block;
     position: absolute;
     outline: none;

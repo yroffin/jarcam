@@ -17,7 +17,8 @@ export class PaperJSShapeBrim implements PaperJSShapeBrimInterface {
         segment: Path,
         brimMode: string,
         pointer: Point,
-        radius, area: Path, minx, maxx, miny, maxy: number): boolean {
+        radius: number, area: Path,
+        minx: number, maxx: number, miny: number, maxy: number): boolean {
         // Store all points in a map
         const nearests: TouchBean[] = [];
 
