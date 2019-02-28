@@ -30,7 +30,7 @@ export class PaperComponent implements OnInit {
     this.project = new Project(this.paperCanvas.nativeElement);
   }
 
-  private onWheel(event: any) {
+  public onWheel(event: any) {
     event.preventDefault();
     if (event.deltaY < 0) {
       this.zoomout.emit(event);
