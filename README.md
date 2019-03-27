@@ -1,6 +1,6 @@
 # Intro
 
-Just a simple tool to generate gcode from STL
+Just a simple tool to generate gcode from STL (with integrated slicer)
 
 # Online site
 
